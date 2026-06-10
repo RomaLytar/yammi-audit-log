@@ -26,6 +26,12 @@ interface AuditRecordRepository
     public function findByCorrelation(string $correlationId): array;
 
     /**
+     * @param  list<string>  $correlationIds
+     * @return array<string, int>
+     */
+    public function countByCorrelations(array $correlationIds): array;
+
+    /**
      * @return list<string>
      */
     public function distinctModels(): array;

@@ -11,6 +11,7 @@ final class ChangeListData
      * @param  list<string>  $models
      * @param  list<string>  $actorTypes
      * @param  list<string>  $events
+     * @param  array<string, int>  $correlationSizes
      */
     public function __construct(
         public readonly array $entries,
@@ -22,7 +23,20 @@ final class ChangeListData
         public readonly array $actorTypes,
         public readonly array $events,
         public readonly AuditFilterData $filters,
+        public readonly array $correlationSizes = [],
     ) {}
+
+    /**
+     * How many changes belong to this entry's chain (1 when it stands alone).
+     */
+    public function chainSize(?string $correlationId): int
+    {
+        if ($correlationId === null) {
+            return 1;
+        }
+
+        return $this->correlationSizes[$correlationId] ?? 1;
+    }
 
     public function isEmpty(): bool
     {

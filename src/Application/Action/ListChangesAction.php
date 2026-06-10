@@ -36,9 +36,15 @@ final class ListChangesAction
         $paged = $this->repository->paginate($criteria, max(1, $filters->page), self::PER_PAGE);
 
         $entries = [];
+        $correlationIds = [];
 
         foreach ($paged->records as $record) {
-            $entries[] = TimelineEntryData::fromRecord($record);
+            $entry = TimelineEntryData::fromRecord($record);
+            $entries[] = $entry;
+
+            if ($entry->correlationId !== null) {
+                $correlationIds[$entry->correlationId] = true;
+            }
         }
 
         return new ChangeListData(
@@ -51,6 +57,7 @@ final class ListChangesAction
             actorTypes: $this->repository->distinctActorTypes(),
             events: array_map(static fn (ChangeType $type): string => $type->value, ChangeType::cases()),
             filters: $filters,
+            correlationSizes: $this->repository->countByCorrelations(array_keys($correlationIds)),
         );
     }
 

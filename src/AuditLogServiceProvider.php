@@ -4,8 +4,13 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog;
 
+use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\ServiceProvider;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\Clock;
@@ -16,7 +21,11 @@ use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveActorStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
-use Yammi\AuditLog\Infrastructure\Actor\SystemActorResolver;
+use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
+use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
+use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
+use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
+use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
 use Yammi\AuditLog\Infrastructure\Label\NullLabelResolver;
@@ -37,7 +46,23 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->app->bind(AuditRecordRepository::class, EloquentAuditRecordRepository::class);
         $this->app->bind(Clock::class, SystemClock::class);
         $this->app->bind(LabelResolver::class, NullLabelResolver::class);
-        $this->app->bind(ActorResolver::class, SystemActorResolver::class);
+
+        $this->app->singleton(ActorContext::class);
+
+        $this->app->bind(AuthenticatedUserProvider::class, function (): AuthenticatedUserProvider {
+            return new AuthenticatedUserProvider(
+                $this->app->make(AuthFactory::class),
+                $this->stringList($this->config()->get('audit-log.actor.guards', [])),
+            );
+        });
+
+        $this->app->bind(ActorResolver::class, function (): ActorResolver {
+            return new ActorResolverChain([
+                $this->app->make(QueuedJobActorProvider::class),
+                $this->app->make(ConsoleActorProvider::class),
+                $this->app->make(AuthenticatedUserProvider::class),
+            ]);
+        });
 
         $this->app->bind(ValueRedactor::class, function (): ValueRedactor {
             $config = $this->config();
@@ -88,6 +113,25 @@ final class AuditLogServiceProvider extends ServiceProvider
         foreach (['created', 'updated', 'deleted', 'restored'] as $verb) {
             $events->listen("eloquent.{$verb}: *", [EloquentChangeRecorder::class, 'handle']);
         }
+
+        $this->trackActorContext($events);
+    }
+
+    private function trackActorContext(Dispatcher $events): void
+    {
+        $context = $this->app->make(ActorContext::class);
+
+        $events->listen(JobProcessing::class, static function (JobProcessing $event) use ($context): void {
+            $context->enterJob($event->job->resolveName());
+        });
+
+        $events->listen([JobProcessed::class, JobFailed::class], static function () use ($context): void {
+            $context->leaveJob();
+        });
+
+        $events->listen(CommandStarting::class, static function (CommandStarting $event) use ($context): void {
+            $context->enterCommand($event->command);
+        });
     }
 
     private function config(): ConfigRepository

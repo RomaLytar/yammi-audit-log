@@ -13,13 +13,27 @@
         <span class="text-xs text-muted-foreground tabular-nums">{{ $records->total() }} records</span>
     </div>
 
+    @php $hasFilters = trim(implode('', $filters)) !== ''; @endphp
+
+    @if (count($types) > 0 || $hasFilters)
+        @include('audit-log::partials.filters')
+    @endif
+
     @if ($records->isEmpty())
         <div class="rounded-xl border border-border bg-card p-12 text-center">
             <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <i data-lucide="inbox"></i>
+                <i data-lucide="{{ $hasFilters ? 'search-x' : 'inbox' }}"></i>
             </div>
-            <p class="text-sm font-medium">No changes recorded yet</p>
-            <p class="text-xs text-muted-foreground mt-1">As your models are created, updated or deleted, they appear here.</p>
+            @if ($hasFilters)
+                <p class="text-sm font-medium">No changes match these filters</p>
+                <p class="text-xs text-muted-foreground mt-1">
+                    Try widening the range or
+                    <a href="{{ route('audit-log.dashboard') }}" class="text-brand hover:underline">clear the filters</a>.
+                </p>
+            @else
+                <p class="text-sm font-medium">No changes recorded yet</p>
+                <p class="text-xs text-muted-foreground mt-1">As your models are created, updated or deleted, they appear here.</p>
+            @endif
         </div>
     @else
         <div class="rounded-xl border border-border bg-card shadow-xs overflow-hidden">

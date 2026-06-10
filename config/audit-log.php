@@ -42,6 +42,8 @@ return [
     'ui' => [
         'enabled' => (bool) env('AUDIT_LOG_UI_ENABLED', true),
         'path' => env('AUDIT_LOG_UI_PATH', 'audit-log'),
-        'middleware' => ['web'],
+        // The dashboard is gated to authenticated users by default. Override to
+        // add a stricter gate (e.g. an 'can:viewAuditLog' middleware).
+        'middleware' => ['web', 'auth'],
     ],
 ];

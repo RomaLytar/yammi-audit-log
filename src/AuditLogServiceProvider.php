@@ -4,23 +4,13 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog;
 
-use Illuminate\Console\Events\CommandFinished;
-use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Illuminate\Contracts\Events\Dispatcher;
-use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
-use Illuminate\Foundation\Http\Kernel as HttpKernel;
-use Illuminate\Queue\Events\JobFailed;
-use Illuminate\Queue\Events\JobProcessed;
-use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Routing\Router;
-use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
-use Illuminate\Support\Str;
 use Throwable;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
@@ -35,16 +25,16 @@ use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
 use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
-use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
-use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
+use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
-use Yammi\AuditLog\Infrastructure\Http\Middleware\StartAuditCorrelation;
+use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Label\NullLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
@@ -157,14 +147,9 @@ final class AuditLogServiceProvider extends ServiceProvider
             return;
         }
 
-        $events = $this->app->make(Dispatcher::class);
-
-        foreach (['created', 'updated', 'deleted', 'restored'] as $verb) {
-            $events->listen("eloquent.{$verb}: *", [EloquentChangeRecorder::class, 'handle']);
-        }
-
-        $this->trackActorContext($events);
-        $this->registerCorrelationMiddleware();
+        $this->app->make(CaptureRegistrar::class)->register();
+        $this->app->make(ContextRegistrar::class)->register();
+        $this->app->make(CorrelationMiddlewareRegistrar::class)->register();
     }
 
     private function registerRetention(ConfigRepository $config): void
@@ -202,17 +187,6 @@ final class AuditLogServiceProvider extends ServiceProvider
         );
     }
 
-    private function registerCorrelationMiddleware(): void
-    {
-        $this->app->booted(function (): void {
-            $kernel = $this->app->make(HttpKernelContract::class);
-
-            if ($kernel instanceof HttpKernel) {
-                $kernel->pushMiddleware(StartAuditCorrelation::class);
-            }
-        });
-    }
-
     private function registerRoutes(ConfigRepository $config): void
     {
         $path = $config->get('audit-log.ui.path', 'audit-log');
@@ -223,57 +197,6 @@ final class AuditLogServiceProvider extends ServiceProvider
             'middleware' => is_array($middleware) ? $middleware : ['web'],
         ], function (): void {
             $this->loadRoutesFrom(self::ROUTES_PATH);
-        });
-    }
-
-    private function trackActorContext(Dispatcher $events): void
-    {
-        $context = $this->app->make(ActorContext::class);
-        $correlation = $this->app->make(CorrelationContext::class);
-        $serializer = $this->app->make(ActorSerializer::class);
-
-        $events->listen(JobProcessing::class, function (JobProcessing $event) use ($context, $correlation, $serializer): void {
-            $payload = $event->job->payload();
-
-            $origin = isset($payload['audit_origin']) && is_array($payload['audit_origin'])
-                ? $serializer->fromArray($payload['audit_origin'])
-                : $this->app->make(ActorResolver::class)->resolve();
-
-            $context->enterJob($event->job->resolveName(), $origin);
-
-            $correlationId = isset($payload['audit_correlation']) && is_string($payload['audit_correlation'])
-                ? $payload['audit_correlation']
-                : ($correlation->current() ?? (string) Str::uuid());
-
-            $correlation->push($correlationId);
-        });
-
-        $events->listen([JobProcessed::class, JobFailed::class], static function () use ($context, $correlation): void {
-            $context->leaveJob();
-            $correlation->pop();
-        });
-
-        $events->listen(CommandStarting::class, static function (CommandStarting $event) use ($context, $correlation): void {
-            $context->enterCommand($event->command);
-            $correlation->push((string) Str::uuid());
-        });
-
-        $events->listen(CommandFinished::class, static function () use ($correlation): void {
-            $correlation->pop();
-        });
-
-        Queue::createPayloadUsing(function ($connection, $queue, $payload) use ($correlation, $serializer): array {
-            $extra = ['audit_correlation' => $correlation->current() ?? (string) Str::uuid()];
-
-            // The actor dispatching the job is the job's immediate parent, so a
-            // nested job records who actually spawned it (job -> job -> job).
-            $origin = $this->app->make(ActorResolver::class)->resolve();
-
-            if (! $origin->isAnonymous()) {
-                $extra['audit_origin'] = $serializer->toArray($origin);
-            }
-
-            return $extra;
         });
     }
 

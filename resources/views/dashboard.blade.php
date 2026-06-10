@@ -90,6 +90,14 @@
                         </tr>
                         <tr id="{{ $rowId }}" class="hidden">
                             <td colspan="6" class="px-5 py-4 bg-muted/30 animate-slide-down">
+                                @if ($record->correlation_id)
+                                    <div class="mb-3">
+                                        <a href="{{ route('audit-log.trace', $record->correlation_id) }}"
+                                           class="inline-flex items-center gap-1.5 rounded-md border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand hover:bg-brand/15">
+                                            <i data-lucide="git-fork" class="text-[12px]"></i> View full change chain
+                                        </a>
+                                    </div>
+                                @endif
                                 @if ($record->origin_label)
                                     <div class="mb-3 flex items-center gap-2 text-xs">
                                         <span class="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 font-medium text-brand ring-1 ring-inset ring-brand/30">

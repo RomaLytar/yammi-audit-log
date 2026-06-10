@@ -5,6 +5,8 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Domain\Audit\Repository;
 
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
+use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
+use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 
 interface AuditRecordRepository
@@ -15,4 +17,21 @@ interface AuditRecordRepository
      * @return list<AuditRecord>
      */
     public function timelineFor(AuditableReference $auditable, int $limit = 50): array;
+
+    public function paginate(AuditCriteria $criteria, int $page = 1, int $perPage = 25): PagedRecords;
+
+    /**
+     * @return list<AuditRecord>
+     */
+    public function findByCorrelation(string $correlationId): array;
+
+    /**
+     * @return list<string>
+     */
+    public function distinctModels(): array;
+
+    /**
+     * @return list<string>
+     */
+    public function distinctActorTypes(): array;
 }

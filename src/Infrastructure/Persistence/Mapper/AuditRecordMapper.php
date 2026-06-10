@@ -13,33 +13,28 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\FieldDiff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
+use Yammi\AuditLog\Infrastructure\Persistence\DTO\AuditRecordRow;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
 final class AuditRecordMapper
 {
-    /**
-     * @return array<string, mixed>
-     */
-    public function toAttributes(AuditRecord $record): array
+    public function toRow(AuditRecord $record): AuditRecordRow
     {
-        $occurredAt = $record->occurredAt()->format('Y-m-d H:i:s');
-
-        return [
-            'auditable_type' => $record->auditable()->type,
-            'auditable_id' => $record->auditable()->id,
-            'event' => $record->event()->value,
-            'changes' => $record->diff()->toArray(),
-            'actor_type' => $record->actor()->type->value,
-            'actor_id' => $record->actor()->identifier,
-            'actor_label' => $record->actor()->label,
-            'origin_type' => $record->origin()?->type->value,
-            'origin_id' => $record->origin()?->identifier,
-            'origin_label' => $record->origin()?->label,
-            'labels' => $record->labels()->all(),
-            'correlation_id' => $record->correlationId(),
-            'occurred_at' => $occurredAt,
-            'created_at' => $occurredAt,
-        ];
+        return new AuditRecordRow(
+            auditableType: $record->auditable()->type,
+            auditableId: $record->auditable()->id,
+            event: $record->event()->value,
+            changes: $record->diff()->toArray(),
+            actorType: $record->actor()->type->value,
+            actorId: $record->actor()->identifier,
+            actorLabel: $record->actor()->label,
+            originType: $record->origin()?->type->value,
+            originId: $record->origin()?->identifier,
+            originLabel: $record->origin()?->label,
+            labels: $record->labels()->all(),
+            correlationId: $record->correlationId(),
+            occurredAt: $record->occurredAt()->format('Y-m-d H:i:s'),
+        );
     }
 
     public function toDomain(AuditRecordModel $model): AuditRecord

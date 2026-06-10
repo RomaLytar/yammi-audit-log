@@ -115,8 +115,12 @@ final class EloquentAuditLogQuery implements AuditLogQuery
             $query->where('is_noise', $criteria->onlyNoise);
         }
 
-        foreach (array_filter(['>=' => $criteria->from, '<=' => $criteria->to]) as $operator => $date) {
-            $query->whereDate('occurred_at', $operator, $date->format('Y-m-d'));
+        if ($criteria->from !== null) {
+            $query->where('occurred_at', '>=', $criteria->from->setTime(0, 0)->format('Y-m-d H:i:s'));
+        }
+
+        if ($criteria->to !== null) {
+            $query->where('occurred_at', '<', $criteria->to->setTime(0, 0)->modify('+1 day')->format('Y-m-d H:i:s'));
         }
     }
 

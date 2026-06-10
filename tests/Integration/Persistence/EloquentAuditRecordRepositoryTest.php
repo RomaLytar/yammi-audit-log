@@ -13,6 +13,9 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
+use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
+use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
 use Yammi\AuditLog\Tests\TestCase;
 
 final class EloquentAuditRecordRepositoryTest extends TestCase
@@ -73,5 +76,46 @@ final class EloquentAuditRecordRepositoryTest extends TestCase
         $other = AuditableReference::to('App\\Models\\Order', 2);
 
         $this->assertCount(0, $repository->timelineFor($other));
+    }
+
+    public function test_prune_deletes_across_multiple_chunks(): void
+    {
+        $repository = new EloquentAuditRecordRepository(
+            $this->app->make(AuditRecordMapper::class),
+            pruneChunkSize: 2,
+        );
+
+        foreach (range(1, 5) as $hour) {
+            $repository->save($this->recordAt(new DateTimeImmutable("2020-01-01T0{$hour}:00:00+00:00")));
+        }
+
+        $repository->save($this->recordAt(new DateTimeImmutable('2026-06-01T10:00:00+00:00')));
+
+        $deleted = $repository->deleteOlderThan(new DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+
+        $this->assertSame(5, $deleted);
+        $this->assertSame(1, AuditRecordModel::query()->count());
+    }
+
+    public function test_prune_deletes_nothing_when_all_records_are_recent(): void
+    {
+        $repository = $this->app->make(AuditRecordRepository::class);
+        $repository->save($this->recordAt(new DateTimeImmutable('2026-06-01T10:00:00+00:00')));
+
+        $this->assertSame(0, $repository->deleteOlderThan(new DateTimeImmutable('2026-01-01T00:00:00+00:00')));
+        $this->assertSame(1, AuditRecordModel::query()->count());
+    }
+
+    private function recordAt(DateTimeImmutable $occurredAt): AuditRecord
+    {
+        return new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 1),
+            event: ChangeType::Created,
+            diff: Diff::empty(),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: $occurredAt,
+        );
     }
 }

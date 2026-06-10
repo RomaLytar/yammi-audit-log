@@ -14,8 +14,11 @@ use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 /** @internal */
 final class EloquentAuditRecordRepository implements AuditRecordRepository
 {
+    private const PRUNE_CHUNK = 1000;
+
     public function __construct(
         private readonly AuditRecordMapper $mapper,
+        private readonly int $pruneChunkSize = self::PRUNE_CHUNK,
     ) {}
 
     public function save(AuditRecord $record): void
@@ -44,8 +47,23 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
 
     public function deleteOlderThan(DateTimeImmutable $cutoff): int
     {
-        return AuditRecordModel::query()
-            ->where('occurred_at', '<', $cutoff->format('Y-m-d H:i:s'))
-            ->delete();
+        $total = 0;
+
+        do {
+            $ids = AuditRecordModel::query()
+                ->where('occurred_at', '<', $cutoff->format('Y-m-d H:i:s'))
+                ->orderBy('id')
+                ->limit($this->pruneChunkSize)
+                ->pluck('id')
+                ->all();
+
+            if ($ids === []) {
+                return $total;
+            }
+
+            $total += AuditRecordModel::query()->whereIn('id', $ids)->delete();
+        } while (count($ids) === $this->pruneChunkSize);
+
+        return $total;
     }
 }

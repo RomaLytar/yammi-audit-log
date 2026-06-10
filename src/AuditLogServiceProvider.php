@@ -6,6 +6,7 @@ namespace Yammi\AuditLog;
 
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher;
@@ -40,6 +41,7 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
+use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\Middleware\StartAuditCorrelation;
@@ -149,6 +151,8 @@ final class AuditLogServiceProvider extends ServiceProvider
             $this->registerNavComposer();
         }
 
+        $this->registerRetention($config);
+
         if (! (bool) $config->get('audit-log.enabled', true)) {
             return;
         }
@@ -161,6 +165,27 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->trackActorContext($events);
         $this->registerCorrelationMiddleware();
+    }
+
+    private function registerRetention(ConfigRepository $config): void
+    {
+        if ($this->app->runningInConsole()) {
+            $this->commands([PruneAuditLogCommand::class]);
+        }
+
+        $days = (int) $config->get('audit-log.retention.days', 0);
+
+        if ($days <= 0 || ! (bool) $config->get('audit-log.retention.schedule.enabled', true)) {
+            return;
+        }
+
+        $this->app->booted(function () use ($config): void {
+            $this->app->make(Schedule::class)
+                ->command(PruneAuditLogCommand::class)
+                ->cron((string) $config->get('audit-log.retention.schedule.cron', '0 3 * * *'))
+                ->name('audit-log:prune')
+                ->withoutOverlapping();
+        });
     }
 
     private function registerNavComposer(): void

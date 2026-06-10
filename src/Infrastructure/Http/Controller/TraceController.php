@@ -6,27 +6,23 @@ namespace Yammi\AuditLog\Infrastructure\Http\Controller;
 
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
-use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
+use Yammi\AuditLog\Application\Action\BuildChainAction;
 
 final class TraceController
 {
     public function __construct(
         private readonly ViewFactory $view,
+        private readonly BuildChainAction $buildChain,
     ) {}
 
     public function __invoke(string $correlation): View
     {
-        $records = AuditRecordModel::query()
-            ->where('correlation_id', $correlation)
-            ->orderBy('occurred_at')
-            ->orderBy('id')
-            ->get();
+        $chain = ($this->buildChain)($correlation);
 
-        abort_if($records->isEmpty(), 404);
+        if ($chain === null) {
+            abort(404);
+        }
 
-        return $this->view->make('audit-log::trace', [
-            'correlation' => $correlation,
-            'records' => $records,
-        ]);
+        return $this->view->make('audit-log::trace', ['chain' => $chain]);
     }
 }

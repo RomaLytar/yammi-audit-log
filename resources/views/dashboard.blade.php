@@ -10,21 +10,19 @@
             </h1>
             <p class="text-sm text-muted-foreground mt-1">Who changed what, and when — across your models.</p>
         </div>
-        <span class="text-xs text-muted-foreground tabular-nums">{{ $records->total() }} records</span>
+        <span class="text-xs text-muted-foreground tabular-nums">{{ $list->total }} records</span>
     </div>
 
-    @php $hasFilters = trim(implode('', $filters)) !== ''; @endphp
-
-    @if (count($types) > 0 || $hasFilters)
-        @include('audit-log::partials.filters')
+    @if (count($list->models) > 0 || $list->filters->isActive())
+        @include('audit-log::partials.filters', ['list' => $list])
     @endif
 
-    @if ($records->isEmpty())
+    @if ($list->isEmpty())
         <div class="rounded-xl border border-border bg-card p-12 text-center">
             <div class="mx-auto mb-3 flex h-12 w-12 items-center justify-center rounded-full bg-muted text-muted-foreground">
-                <i data-lucide="{{ $hasFilters ? 'search-x' : 'inbox' }}"></i>
+                <i data-lucide="{{ $list->filters->isActive() ? 'search-x' : 'inbox' }}"></i>
             </div>
-            @if ($hasFilters)
+            @if ($list->filters->isActive())
                 <p class="text-sm font-medium">No changes match these filters</p>
                 <p class="text-xs text-muted-foreground mt-1">
                     Try widening the range or
@@ -49,69 +47,62 @@
                     </tr>
                 </thead>
                 <tbody class="divide-y divide-border">
-                    @foreach ($records as $record)
-                        @php
-                            $parts = explode('\\', (string) $record->auditable_type);
-                            $short = end($parts);
-                            $changes = is_array($record->changes) ? $record->changes : [];
-                            $rowId = 'al-row-'.$record->id;
-                        @endphp
+                    @foreach ($list->entries as $entry)
+                        @php $rowId = 'al-row-'.$loop->index; @endphp
                         <tr class="hover:bg-accent/40 cursor-pointer" onclick="__alToggleRow('{{ $rowId }}')">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i data-lucide="chevron-right" class="text-[14px] text-muted-foreground"></i>
                                     <div class="flex flex-col leading-tight min-w-0">
-                                        <span class="font-medium truncate">{{ $short }}</span>
-                                        <span class="text-[11px] text-muted-foreground font-mono">#{{ $record->auditable_id }}</span>
+                                        <span class="font-medium truncate">{{ $entry->model() }}</span>
+                                        <span class="text-[11px] text-muted-foreground font-mono">#{{ $entry->auditableId }}</span>
                                     </div>
                                 </div>
                             </td>
-                            <td class="px-4 py-3">@include('audit-log::partials.event-badge', ['event' => $record->event])</td>
+                            <td class="px-4 py-3">@include('audit-log::partials.event-badge', ['event' => $entry->event])</td>
                             <td class="px-4 py-3">
-                                @include('audit-log::partials.actor-badge', [
-                                    'type' => $record->actor_type,
-                                    'label' => $record->actor_label ?? ucfirst((string) $record->actor_type),
-                                ])
+                                @include('audit-log::partials.actor-badge', ['type' => $entry->actorType, 'label' => $entry->actorLabel])
                             </td>
                             <td class="px-4 py-3 hidden md:table-cell text-xs">
-                                @if ($record->origin_label)
-                                    <span class="inline-flex items-center gap-1 text-muted-foreground" title="Triggered by {{ $record->origin_label }}">
-                                        <i data-lucide="corner-down-right" class="text-[13px] text-brand"></i>
-                                        {{ $record->origin_label }}
+                                @if ($entry->originLabel)
+                                    <span class="inline-flex items-center gap-1 text-muted-foreground" title="Triggered by {{ $entry->originLabel }}">
+                                        <i data-lucide="corner-down-right" class="text-[13px] text-brand"></i> {{ $entry->originLabel }}
                                     </span>
                                 @else
                                     <span class="text-muted-foreground">—</span>
                                 @endif
                             </td>
                             <td class="px-4 py-3 hidden lg:table-cell text-xs text-muted-foreground tabular-nums">
-                                {{ count($changes) }} {{ \Illuminate\Support\Str::plural('field', count($changes)) }}
+                                {{ count($entry->changes) }} {{ \Illuminate\Support\Str::plural('field', count($entry->changes)) }}
                             </td>
-                            <td class="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap font-mono">{{ $record->occurred_at }}</td>
+                            <td class="px-4 py-3 text-xs text-muted-foreground whitespace-nowrap font-mono">
+                                {{ \Illuminate\Support\Carbon::parse($entry->occurredAt)->format('Y-m-d H:i') }}
+                            </td>
                         </tr>
                         <tr id="{{ $rowId }}" class="hidden">
                             <td colspan="6" class="px-5 py-4 bg-muted/30 animate-slide-down">
-                                @if ($record->correlation_id)
+                                @if ($entry->correlationId)
                                     <div class="mb-3">
-                                        <a href="{{ route('audit-log.trace', $record->correlation_id) }}"
+                                        <a href="{{ route('audit-log.trace', $entry->correlationId) }}"
                                            class="inline-flex items-center gap-1.5 rounded-md border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand hover:bg-brand/15">
                                             <i data-lucide="git-fork" class="text-[12px]"></i> View full change chain
                                         </a>
                                     </div>
                                 @endif
-                                @if ($record->origin_label)
+                                @if ($entry->originLabel)
                                     <div class="mb-3 flex items-center gap-2 text-xs">
                                         <span class="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 font-medium text-brand ring-1 ring-inset ring-brand/30">
                                             <i data-lucide="git-commit-horizontal" class="text-[12px]"></i> Chain
                                         </span>
                                         <span class="text-muted-foreground">
-                                            <span class="font-medium text-foreground">{{ $record->origin_label }}</span>
+                                            <span class="font-medium text-foreground">{{ $entry->originLabel }}</span>
                                             <i data-lucide="arrow-right" class="inline text-[12px]"></i>
-                                            <span class="font-medium text-foreground">{{ $record->actor_label ?? ucfirst((string) $record->actor_type) }}</span>
+                                            <span class="font-medium text-foreground">{{ $entry->actorLabel }}</span>
                                             triggered this change
                                         </span>
                                     </div>
                                 @endif
-                                @if (count($changes) === 0)
+                                @if (count($entry->changes) === 0)
                                     <p class="text-xs text-muted-foreground">No field-level changes recorded.</p>
                                 @else
                                     <div class="overflow-hidden rounded-lg border border-border">
@@ -124,16 +115,14 @@
                                                 </tr>
                                             </thead>
                                             <tbody class="divide-y divide-border">
-                                                @foreach ($changes as $field => $pair)
+                                                @foreach ($entry->changes as $field => $pair)
                                                     @php
-                                                        $old = is_array($pair) ? ($pair['old'] ?? null) : null;
-                                                        $new = is_array($pair) ? ($pair['new'] ?? null) : null;
                                                         $fmt = fn ($v) => $v === null ? '—' : (is_array($v) ? json_encode($v) : (string) $v);
                                                     @endphp
                                                     <tr>
                                                         <td class="px-3 py-1.5 font-medium text-foreground">{{ $field }}</td>
-                                                        <td class="px-3 py-1.5 text-destructive break-all">{{ $fmt($old) }}</td>
-                                                        <td class="px-3 py-1.5 text-success break-all">{{ $fmt($new) }}</td>
+                                                        <td class="px-3 py-1.5 text-destructive break-all">{{ $fmt($pair['old'] ?? null) }}</td>
+                                                        <td class="px-3 py-1.5 text-success break-all">{{ $fmt($pair['new'] ?? null) }}</td>
                                                     </tr>
                                                 @endforeach
                                             </tbody>
@@ -148,15 +137,15 @@
         </div>
 
         <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-            <span>Page {{ $records->currentPage() }} of {{ $records->lastPage() }}</span>
+            <span>Page {{ $list->page }} of {{ $list->lastPage }}</span>
             <div class="flex gap-2">
-                @if ($records->previousPageUrl())
-                    <a href="{{ $records->previousPageUrl() }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
+                @if ($list->page > 1)
+                    <a href="{{ request()->fullUrlWithQuery(['page' => $list->page - 1]) }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
                         <i data-lucide="chevron-left" class="text-[14px]"></i> Prev
                     </a>
                 @endif
-                @if ($records->nextPageUrl())
-                    <a href="{{ $records->nextPageUrl() }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
+                @if ($list->page < $list->lastPage)
+                    <a href="{{ request()->fullUrlWithQuery(['page' => $list->page + 1]) }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
                         Next <i data-lucide="chevron-right" class="text-[14px]"></i>
                     </a>
                 @endif

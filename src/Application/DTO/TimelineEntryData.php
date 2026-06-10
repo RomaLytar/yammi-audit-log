@@ -15,6 +15,8 @@ final class TimelineEntryData
      */
     public function __construct(
         public readonly ?int $id,
+        public readonly string $auditableType,
+        public readonly string $auditableId,
         public readonly string $event,
         public readonly string $actorType,
         public readonly string $actorLabel,
@@ -22,13 +24,15 @@ final class TimelineEntryData
         public readonly array $changes,
         public readonly array $labels,
         public readonly string $occurredAt,
-        public readonly ?string $correlationId = null,
+        public readonly ?string $correlationId,
     ) {}
 
     public static function fromRecord(AuditRecord $record): self
     {
         return new self(
             id: $record->id(),
+            auditableType: $record->auditable()->type,
+            auditableId: $record->auditable()->id,
             event: $record->event()->value,
             actorType: $record->actor()->type->value,
             actorLabel: $record->actor()->displayLabel(),
@@ -38,5 +42,12 @@ final class TimelineEntryData
             occurredAt: $record->occurredAt()->format(DateTimeInterface::ATOM),
             correlationId: $record->correlationId(),
         );
+    }
+
+    public function model(): string
+    {
+        $parts = explode('\\', $this->auditableType);
+
+        return end($parts) ?: $this->auditableType;
     }
 }

@@ -11,6 +11,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\Clock;
@@ -39,6 +40,10 @@ final class AuditLogServiceProvider extends ServiceProvider
     private const CONFIG_PATH = __DIR__.'/../config/audit-log.php';
 
     private const MIGRATIONS_PATH = __DIR__.'/../database/migrations';
+
+    private const VIEWS_PATH = __DIR__.'/../resources/views';
+
+    private const ROUTES_PATH = __DIR__.'/../routes/web.php';
 
     public function register(): void
     {
@@ -93,6 +98,7 @@ final class AuditLogServiceProvider extends ServiceProvider
     public function boot(): void
     {
         $this->loadMigrationsFrom(self::MIGRATIONS_PATH);
+        $this->loadViewsFrom(self::VIEWS_PATH, 'audit-log');
 
         if ($this->app->runningInConsole()) {
             $this->publishes(
@@ -104,9 +110,20 @@ final class AuditLogServiceProvider extends ServiceProvider
                 [self::MIGRATIONS_PATH => database_path('migrations')],
                 'audit-log-migrations',
             );
+
+            $this->publishes(
+                [self::VIEWS_PATH => resource_path('views/vendor/audit-log')],
+                'audit-log-views',
+            );
         }
 
-        if (! (bool) $this->config()->get('audit-log.enabled', true)) {
+        $config = $this->config();
+
+        if ((bool) $config->get('audit-log.ui.enabled', true)) {
+            $this->registerRoutes($config);
+        }
+
+        if (! (bool) $config->get('audit-log.enabled', true)) {
             return;
         }
 
@@ -117,6 +134,19 @@ final class AuditLogServiceProvider extends ServiceProvider
         }
 
         $this->trackActorContext($events);
+    }
+
+    private function registerRoutes(ConfigRepository $config): void
+    {
+        $path = $config->get('audit-log.ui.path', 'audit-log');
+        $middleware = $config->get('audit-log.ui.middleware', ['web']);
+
+        $this->app->make(Router::class)->group([
+            'prefix' => is_string($path) ? $path : 'audit-log',
+            'middleware' => is_array($middleware) ? $middleware : ['web'],
+        ], function (): void {
+            $this->loadRoutesFrom(self::ROUTES_PATH);
+        });
     }
 
     private function trackActorContext(Dispatcher $events): void

@@ -9,6 +9,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 
+/** @internal */
 final class RecordChangeContext
 {
     public function __construct(

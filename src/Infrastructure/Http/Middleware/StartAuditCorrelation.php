@@ -9,6 +9,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 
+/** @internal */
 final class StartAuditCorrelation
 {
     public function __construct(

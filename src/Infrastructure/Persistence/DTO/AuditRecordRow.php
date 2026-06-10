@@ -8,6 +8,8 @@ namespace Yammi\AuditLog\Infrastructure\Persistence\DTO;
  * Typed representation of a single audit_log row. The mapper builds it from a
  * domain record; toArray() is the single, localized conversion to the column
  * array Eloquent needs.
+ *
+ * @internal
  */
 final class AuditRecordRow
 {

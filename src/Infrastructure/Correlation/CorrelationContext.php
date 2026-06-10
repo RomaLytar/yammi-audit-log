@@ -8,6 +8,8 @@ namespace Yammi\AuditLog\Infrastructure\Correlation;
  * Holds the correlation id of the unit of work currently in flight. Pushed at
  * the root of a unit of work (request, command or job) and popped when it ends;
  * a stack supports nested units (a job dispatched within a request).
+ *
+ * @internal
  */
 final class CorrelationContext
 {

@@ -8,6 +8,7 @@ use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeStage;
 
+/** @internal */
 final class ResolveActorStage implements RecordChangeStage
 {
     public function __construct(

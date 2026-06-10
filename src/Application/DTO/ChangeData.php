@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Application\DTO;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 
+/** @internal */
 final class ChangeData
 {
     /**

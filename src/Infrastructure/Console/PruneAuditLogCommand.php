@@ -8,6 +8,7 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
 
+/** @internal */
 final class PruneAuditLogCommand extends Command
 {
     protected $signature = 'audit-log:prune';

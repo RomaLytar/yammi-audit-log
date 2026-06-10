@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Infrastructure\Correlation;
 
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 
+/** @internal */
 final class ContextCorrelationResolver implements CorrelationResolver
 {
     public function __construct(

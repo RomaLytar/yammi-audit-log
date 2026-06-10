@@ -8,6 +8,7 @@ use Yammi\AuditLog\Application\Contract\LabelResolver;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeStage;
 
+/** @internal */
 final class ResolveLabelsStage implements RecordChangeStage
 {
     public function __construct(

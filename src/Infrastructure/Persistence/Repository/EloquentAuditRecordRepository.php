@@ -11,6 +11,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 
+/** @internal */
 final class EloquentAuditRecordRepository implements AuditRecordRepository
 {
     public function __construct(

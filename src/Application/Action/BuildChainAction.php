@@ -8,6 +8,7 @@ use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 
+/** @internal */
 final class BuildChainAction
 {
     public function __construct(

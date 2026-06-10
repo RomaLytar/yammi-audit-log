@@ -14,6 +14,7 @@ use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 
+/** @internal */
 final class ListChangesAction
 {
     private const PER_PAGE = 25;

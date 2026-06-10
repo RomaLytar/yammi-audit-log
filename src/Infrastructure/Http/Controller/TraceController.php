@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Yammi\AuditLog\Application\Action\BuildChainAction;
 use Yammi\AuditLog\Presentation\ViewModel\TraceViewModel;
 
+/** @internal */
 final class TraceController
 {
     public function __construct(

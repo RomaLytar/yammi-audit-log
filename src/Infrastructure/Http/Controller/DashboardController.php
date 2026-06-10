@@ -11,6 +11,7 @@ use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 use Yammi\AuditLog\Presentation\ViewModel\DashboardViewModel;
 
+/** @internal */
 final class DashboardController
 {
     public function __construct(

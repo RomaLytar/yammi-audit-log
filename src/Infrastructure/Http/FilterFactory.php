@@ -14,6 +14,8 @@ use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
  * Strict parser for the dashboard filter inputs: every value is validated and
  * normalised, and anything unexpected is dropped, so only known, well-formed
  * filters reach the query.
+ *
+ * @internal
  */
 final class FilterFactory
 {

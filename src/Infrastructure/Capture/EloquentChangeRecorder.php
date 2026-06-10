@@ -10,6 +10,7 @@ use Throwable;
 use Yammi\AuditLog\Application\Action\RecordChangeAction;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 
+/** @internal */
 final class EloquentChangeRecorder
 {
     public function __construct(

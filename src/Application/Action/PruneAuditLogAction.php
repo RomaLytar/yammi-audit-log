@@ -8,6 +8,7 @@ use DateInterval;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 
+/** @internal */
 final class PruneAuditLogAction
 {
     public function __construct(

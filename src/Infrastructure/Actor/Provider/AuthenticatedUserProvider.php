@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Application\Contract\ActorProvider;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 
+/** @internal */
 final class AuthenticatedUserProvider implements ActorProvider
 {
     /**

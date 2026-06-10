@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Presentation\ViewModel;
 use Yammi\AuditLog\Application\DTO\AuditFilterData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
 
+/** @internal */
 final class DashboardViewModel
 {
     /** @var list<TimelineEntryViewModel> */

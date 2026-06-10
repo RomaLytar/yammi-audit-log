@@ -47,4 +47,15 @@ final class ActorTest extends TestCase
         $this->assertFalse(Actor::user('1', 'A')->equals(Actor::user('1', 'B')));
         $this->assertFalse(Actor::user('1')->equals(Actor::command('1')));
     }
+
+    public function test_it_normalises_blank_and_overlong_values(): void
+    {
+        $this->assertNull(Actor::user('   ')->identifier);
+
+        $long = str_repeat('a', 300);
+        $actor = Actor::user($long, $long);
+
+        $this->assertSame(191, mb_strlen((string) $actor->identifier));
+        $this->assertSame(191, mb_strlen((string) $actor->label));
+    }
 }

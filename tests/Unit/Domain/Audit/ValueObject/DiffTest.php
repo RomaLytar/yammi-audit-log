@@ -67,6 +67,27 @@ final class DiffTest extends TestCase
         $this->assertSame(['n' => ['old' => 1, 'new' => 2]], $diff->toArray());
     }
 
+    public function test_it_caps_the_number_of_fields(): void
+    {
+        $before = [];
+        $after = [];
+
+        for ($i = 0; $i < 300; $i++) {
+            $before["f{$i}"] = 0;
+            $after["f{$i}"] = 1;
+        }
+
+        $this->assertSame(250, Diff::between($before, $after)->count());
+    }
+
+    public function test_a_field_caps_an_overlong_string_value(): void
+    {
+        $field = new FieldDiff('blob', str_repeat('a', 70000), 'short');
+
+        $this->assertStringEndsWith('(truncated)', (string) $field->old);
+        $this->assertSame('short', $field->new);
+    }
+
     public function test_from_fields_indexes_by_field_name(): void
     {
         $diff = Diff::fromFields([

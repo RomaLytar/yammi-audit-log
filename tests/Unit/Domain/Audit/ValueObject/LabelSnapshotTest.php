@@ -17,6 +17,13 @@ final class LabelSnapshotTest extends TestCase
         $this->assertNull($snapshot->for('user_id'));
     }
 
+    public function test_it_caps_overlong_label_values(): void
+    {
+        $snapshot = new LabelSnapshot(['user_id' => str_repeat('a', 300)]);
+
+        $this->assertSame(191, mb_strlen((string) $snapshot->for('user_id')));
+    }
+
     public function test_it_returns_the_captured_label_for_a_field(): void
     {
         $snapshot = new LabelSnapshot(['user_id' => 'John Doe', 'order_id' => 'Order #1024']);

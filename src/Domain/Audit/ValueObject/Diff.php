@@ -21,7 +21,7 @@ final class Diff
     }
 
     /**
-     * @param  array<string, FieldDiff>  $fields
+     * @param  array<array-key, FieldDiff>  $fields
      */
     public static function fromFields(array $fields): self
     {

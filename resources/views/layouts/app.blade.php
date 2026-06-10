@@ -114,6 +114,15 @@
         *::-webkit-scrollbar-track { background: transparent; }
         *::-webkit-scrollbar-thumb { background: hsl(var(--border)); border-radius: 10px; border: 2px solid transparent; background-clip: padding-box; }
         [data-lucide] { width: 1em; height: 1em; stroke-width: 2; }
+
+        .al-input {
+            width: 100%; height: 2.25rem;
+            border-radius: calc(var(--radius) - 2px);
+            border: 1px solid hsl(var(--border));
+            background: hsl(var(--card)); color: hsl(var(--foreground));
+            padding: 0 0.6rem; font-size: 0.8125rem;
+        }
+        .al-input:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4); }
     </style>
 </head>
 <body class="bg-background text-foreground min-h-screen antialiased">

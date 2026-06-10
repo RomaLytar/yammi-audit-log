@@ -22,6 +22,7 @@ final class TimelineEntryData
         public readonly array $changes,
         public readonly array $labels,
         public readonly string $occurredAt,
+        public readonly ?string $correlationId = null,
     ) {}
 
     public static function fromRecord(AuditRecord $record): self
@@ -35,6 +36,7 @@ final class TimelineEntryData
             changes: $record->diff()->toArray(),
             labels: $record->labels()->all(),
             occurredAt: $record->occurredAt()->format(DateTimeInterface::ATOM),
+            correlationId: $record->correlationId(),
         );
     }
 }

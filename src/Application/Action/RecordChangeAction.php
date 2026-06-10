@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Application\Action;
 
 use Yammi\AuditLog\Application\Contract\Clock;
+use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 use Yammi\AuditLog\Application\DTO\ChangeData;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
@@ -19,6 +20,7 @@ final class RecordChangeAction
         private readonly RecordChangePipeline $pipeline,
         private readonly AuditRecordRepository $repository,
         private readonly Clock $clock,
+        private readonly CorrelationResolver $correlation,
     ) {}
 
     public function __invoke(ChangeData $change): ?AuditRecord
@@ -37,6 +39,7 @@ final class RecordChangeAction
             origin: $context->origin,
             labels: $context->labels,
             occurredAt: $this->clock->now(),
+            correlationId: $this->correlation->resolve(),
         );
 
         $this->repository->save($record);

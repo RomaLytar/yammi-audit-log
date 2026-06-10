@@ -10,7 +10,8 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
  * Holds the currently executing job and command so actor providers can attribute
  * a change to the work that caused it. Each job frame also carries the origin —
  * the actor that triggered the job — so a user -> job -> change chain is kept.
- * Jobs are stacked to support a job dispatching another job.
+ * Jobs and commands are stacked to support nesting (a job dispatching another
+ * job, a command calling another command).
  *
  * @internal
  */
@@ -19,7 +20,8 @@ final class ActorContext
     /** @var list<array{job: string, origin: ?Actor}> */
     private array $frames = [];
 
-    private ?string $command = null;
+    /** @var list<string> */
+    private array $commands = [];
 
     public function enterJob(string $jobClass, ?Actor $origin = null): void
     {
@@ -47,11 +49,18 @@ final class ActorContext
 
     public function enterCommand(string $command): void
     {
-        $this->command = $command;
+        $this->commands[] = $command;
+    }
+
+    public function leaveCommand(): void
+    {
+        array_pop($this->commands);
     }
 
     public function currentCommand(): ?string
     {
-        return $this->command;
+        $key = array_key_last($this->commands);
+
+        return $key === null ? null : $this->commands[$key];
     }
 }

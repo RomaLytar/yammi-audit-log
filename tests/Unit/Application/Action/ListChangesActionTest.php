@@ -62,7 +62,20 @@ final class ListChangesActionTest extends TestCase
         $this->assertSame(3, $list->total);
     }
 
-    private function record(string $type, ChangeType $event, Actor $actor): AuditRecord
+    public function test_it_reports_the_chain_size_of_correlated_changes(): void
+    {
+        $repository = new InMemoryAuditRecordRepository;
+        $repository->save($this->record('App\\Models\\Order', ChangeType::Created, Actor::system(), 'chain-1'));
+        $repository->save($this->record('App\\Models\\Invoice', ChangeType::Created, Actor::system(), 'chain-1'));
+        $repository->save($this->record('App\\Models\\Product', ChangeType::Created, Actor::system()));
+
+        $list = (new ListChangesAction($repository))(new AuditFilterData);
+
+        $this->assertSame(2, $list->chainSize('chain-1'));
+        $this->assertSame(1, $list->chainSize(null));
+    }
+
+    private function record(string $type, ChangeType $event, Actor $actor, ?string $correlationId = null): AuditRecord
     {
         return new AuditRecord(
             auditable: AuditableReference::to($type, 1),
@@ -72,6 +85,7 @@ final class ListChangesActionTest extends TestCase
             origin: null,
             labels: LabelSnapshot::empty(),
             occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
+            correlationId: $correlationId,
         );
     }
 }

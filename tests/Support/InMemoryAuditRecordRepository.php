@@ -52,6 +52,21 @@ final class InMemoryAuditRecordRepository implements AuditRecordRepository
         ));
     }
 
+    public function countByCorrelations(array $correlationIds): array
+    {
+        $counts = [];
+
+        foreach ($this->saved as $record) {
+            $id = $record->correlationId();
+
+            if ($id !== null && in_array($id, $correlationIds, true)) {
+                $counts[$id] = ($counts[$id] ?? 0) + 1;
+            }
+        }
+
+        return $counts;
+    }
+
     public function distinctModels(): array
     {
         $models = [];

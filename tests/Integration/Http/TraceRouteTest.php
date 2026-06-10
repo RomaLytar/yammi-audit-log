@@ -39,6 +39,10 @@ final class TraceRouteTest extends TestCase
         $response->assertSee('Change chain');
         $response->assertSee('Root');
         $response->assertSee('Post');
+        // The chain shows the field-level old to new detail.
+        $response->assertSee('status');
+        $response->assertSee('draft');
+        $response->assertSee('published');
     }
 
     public function test_an_unknown_correlation_returns_404(): void

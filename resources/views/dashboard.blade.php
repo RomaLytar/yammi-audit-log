@@ -48,14 +48,26 @@
                 </thead>
                 <tbody class="divide-y divide-border">
                     @foreach ($list->entries as $entry)
-                        @php $rowId = 'al-row-'.$loop->index; @endphp
+                        @php
+                            $rowId = 'al-row-'.$loop->index;
+                            $chainSize = $list->chainSize($entry->correlationId);
+                        @endphp
                         <tr class="hover:bg-accent/40 cursor-pointer" onclick="__alToggleRow('{{ $rowId }}')">
                             <td class="px-4 py-3">
                                 <div class="flex items-center gap-2 min-w-0">
                                     <i data-lucide="chevron-right" class="text-[14px] text-muted-foreground"></i>
                                     <div class="flex flex-col leading-tight min-w-0">
                                         <span class="font-medium truncate">{{ $entry->model() }}</span>
-                                        <span class="text-[11px] text-muted-foreground font-mono">#{{ $entry->auditableId }}</span>
+                                        <div class="flex items-center gap-1.5">
+                                            <span class="text-[11px] text-muted-foreground font-mono">#{{ $entry->auditableId }}</span>
+                                            @if ($chainSize > 1)
+                                                <a href="{{ route('audit-log.trace', $entry->correlationId) }}" onclick="event.stopPropagation()"
+                                                   title="Part of a chain of {{ $chainSize }} changes"
+                                                   class="inline-flex items-center gap-0.5 rounded bg-brand/10 px-1.5 py-0.5 text-[10px] font-medium text-brand ring-1 ring-inset ring-brand/20 hover:bg-brand/15">
+                                                    <i data-lucide="git-fork" class="text-[10px]"></i> {{ $chainSize }} in chain
+                                                </a>
+                                            @endif
+                                        </div>
                                     </div>
                                 </div>
                             </td>

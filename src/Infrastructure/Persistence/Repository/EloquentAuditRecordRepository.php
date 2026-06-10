@@ -63,6 +63,31 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
         return $this->toDomainList($models->all());
     }
 
+    public function countByCorrelations(array $correlationIds): array
+    {
+        if ($correlationIds === []) {
+            return [];
+        }
+
+        $counts = [];
+
+        $rows = AuditRecordModel::query()
+            ->whereIn('correlation_id', $correlationIds)
+            ->groupBy('correlation_id')
+            ->selectRaw('correlation_id, count(*) as total')
+            ->get();
+
+        foreach ($rows as $row) {
+            $id = $row->getAttribute('correlation_id');
+
+            if (is_string($id)) {
+                $counts[$id] = (int) $row->getAttribute('total');
+            }
+        }
+
+        return $counts;
+    }
+
     public function distinctModels(): array
     {
         return $this->distinctColumn('auditable_type');

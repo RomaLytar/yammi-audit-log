@@ -98,6 +98,13 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(ComputeDiffStage::class, function (): ComputeDiffStage {
+            return new ComputeDiffStage(
+                $this->app->make(ValueRedactor::class),
+                $this->stringList($this->config()->get('audit-log.capture.ignore_attributes', [])),
+            );
+        });
+
         $this->app->bind(RecordChangePipeline::class, function (): RecordChangePipeline {
             return new RecordChangePipeline([
                 $this->app->make(ComputeDiffStage::class),

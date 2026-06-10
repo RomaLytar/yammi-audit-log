@@ -49,6 +49,37 @@ final class ComputeDiffStageTest extends TestCase
         $this->assertSame('blocked', $context->diff->field('status')?->new);
     }
 
+    public function test_it_drops_ignored_attributes_from_the_diff(): void
+    {
+        $stage = new ComputeDiffStage(new StripKeysRedactor([]), ['updated_at']);
+
+        $context = $stage(RecordChangeContext::start(new ChangeData(
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: ChangeType::Updated,
+            before: ['status' => 'pending', 'updated_at' => '2026-01-01 10:00:00'],
+            after: ['status' => 'paid', 'updated_at' => '2026-01-01 11:00:00'],
+        )));
+
+        $this->assertTrue($context->diff->has('status'));
+        $this->assertFalse($context->diff->has('updated_at'));
+    }
+
+    public function test_a_change_that_only_touches_ignored_attributes_is_empty(): void
+    {
+        $stage = new ComputeDiffStage(new StripKeysRedactor([]), ['created_at', 'updated_at']);
+
+        $context = $stage(RecordChangeContext::start(new ChangeData(
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: ChangeType::Updated,
+            before: ['updated_at' => '2026-01-01 10:00:00'],
+            after: ['updated_at' => '2026-01-01 11:00:00'],
+        )));
+
+        $this->assertTrue($context->diff->isEmpty());
+    }
+
     public function test_a_changed_secret_is_kept_but_its_values_are_redacted(): void
     {
         $stage = new ComputeDiffStage(new StripKeysRedactor(['password']));

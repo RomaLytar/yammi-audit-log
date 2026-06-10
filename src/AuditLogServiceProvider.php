@@ -22,6 +22,7 @@ use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
 use Throwable;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
+use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\LabelResolver;
@@ -43,6 +44,7 @@ use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\Middleware\StartAuditCorrelation;
 use Yammi\AuditLog\Infrastructure\Label\NullLabelResolver;
+use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
@@ -63,6 +65,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->mergeConfigFrom(self::CONFIG_PATH, 'audit-log');
 
         $this->app->bind(AuditRecordRepository::class, EloquentAuditRecordRepository::class);
+        $this->app->bind(AuditLogQuery::class, EloquentAuditLogQuery::class);
         $this->app->bind(Clock::class, SystemClock::class);
         $this->app->bind(LabelResolver::class, NullLabelResolver::class);
         $this->app->singleton(AuditReader::class);
@@ -166,7 +169,7 @@ final class AuditLogServiceProvider extends ServiceProvider
             'audit-log::layouts.app',
             function (View $view): void {
                 try {
-                    $view->with('auditNoiseCount', $this->app->make(AuditRecordRepository::class)->countNoise());
+                    $view->with('auditNoiseCount', $this->app->make(AuditLogQuery::class)->countNoise());
                 } catch (Throwable) {
                     $view->with('auditNoiseCount', 0);
                 }

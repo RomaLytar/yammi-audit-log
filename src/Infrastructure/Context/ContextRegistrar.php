@@ -63,11 +63,20 @@ final class ContextRegistrar
         });
 
         $this->events->listen(CommandStarting::class, static function (CommandStarting $event) use ($actors, $correlation): void {
-            $actors->enterCommand($event->command);
+            $command = self::commandName($event->command);
+
+            if ($command !== null) {
+                $actors->enterCommand($command);
+            }
+
             $correlation->push((string) Str::uuid());
         });
 
-        $this->events->listen(CommandFinished::class, static function () use ($correlation): void {
+        $this->events->listen(CommandFinished::class, static function (CommandFinished $event) use ($actors, $correlation): void {
+            if (self::commandName($event->command) !== null) {
+                $actors->leaveCommand();
+            }
+
             $correlation->pop();
         });
 
@@ -82,5 +91,14 @@ final class ContextRegistrar
 
             return $extra;
         });
+    }
+
+    /**
+     * The framework documents the event command as string, but dispatches null
+     * when the command name cannot be resolved.
+     */
+    private static function commandName(mixed $command): ?string
+    {
+        return is_string($command) && $command !== '' ? $command : null;
     }
 }

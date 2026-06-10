@@ -4,9 +4,14 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Tests\Integration\Actor;
 
+use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Schema;
+use Symfony\Component\Console\Input\ArrayInput;
+use Symfony\Component\Console\Output\NullOutput;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
@@ -71,6 +76,37 @@ final class ActorAttributionTest extends TestCase
         $this->assertSame(ActorType::Job, $timeline[0]->actor()->type);
         $this->assertStringContainsString('PublishPostJob', $timeline[0]->actor()->displayLabel());
         $this->assertSame(ActorType::System, $timeline[1]->actor()->type);
+    }
+
+    public function test_a_running_command_is_attributed_as_the_actor(): void
+    {
+        Event::dispatch(new CommandStarting('app:sync', new ArrayInput([]), new NullOutput));
+
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+
+        $actor = $this->timelineFor($post)[0]->actor();
+
+        $this->assertSame(ActorType::Command, $actor->type);
+        $this->assertSame('app:sync', $actor->displayLabel());
+    }
+
+    public function test_a_change_after_a_command_finished_is_not_attributed_to_the_command(): void
+    {
+        Event::dispatch(new CommandStarting('app:sync', new ArrayInput([]), new NullOutput));
+        Event::dispatch(new CommandFinished('app:sync', new ArrayInput([]), new NullOutput, 0));
+
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+
+        $this->assertSame(ActorType::System, $this->timelineFor($post)[0]->actor()->type);
+    }
+
+    public function test_a_command_starting_without_a_name_is_ignored(): void
+    {
+        Event::dispatch(new CommandStarting(null, new ArrayInput([]), new NullOutput));
+
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+
+        $this->assertSame(ActorType::System, $this->timelineFor($post)[0]->actor()->type);
     }
 
     /**

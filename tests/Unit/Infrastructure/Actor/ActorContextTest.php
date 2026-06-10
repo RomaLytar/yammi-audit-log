@@ -52,4 +52,28 @@ final class ActorContextTest extends TestCase
         $context->enterCommand('app:sync');
         $this->assertSame('app:sync', $context->currentCommand());
     }
+
+    public function test_commands_are_tracked_as_a_stack(): void
+    {
+        $context = new ActorContext;
+
+        $context->enterCommand('app:outer');
+        $context->enterCommand('app:inner');
+        $this->assertSame('app:inner', $context->currentCommand());
+
+        $context->leaveCommand();
+        $this->assertSame('app:outer', $context->currentCommand());
+
+        $context->leaveCommand();
+        $this->assertNull($context->currentCommand());
+    }
+
+    public function test_leaving_a_command_on_an_empty_stack_is_harmless(): void
+    {
+        $context = new ActorContext;
+
+        $context->leaveCommand();
+
+        $this->assertNull($context->currentCommand());
+    }
 }

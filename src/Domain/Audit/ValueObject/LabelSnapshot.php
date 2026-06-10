@@ -6,8 +6,22 @@ namespace Yammi\AuditLog\Domain\Audit\ValueObject;
 
 final class LabelSnapshot
 {
+    private const MAX_LENGTH = 191;
+
+    /** @var array<string, string> */
+    private readonly array $labels;
+
     /** @param array<string, string> $labels */
-    public function __construct(private readonly array $labels = []) {}
+    public function __construct(array $labels = [])
+    {
+        $normalized = [];
+
+        foreach ($labels as $field => $label) {
+            $normalized[$field] = mb_substr($label, 0, self::MAX_LENGTH);
+        }
+
+        $this->labels = $normalized;
+    }
 
     public static function empty(): self
     {

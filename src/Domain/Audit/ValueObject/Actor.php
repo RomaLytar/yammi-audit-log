@@ -8,11 +8,31 @@ use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 
 final class Actor
 {
-    public function __construct(
-        public readonly ActorType $type,
-        public readonly ?string $identifier = null,
-        public readonly ?string $label = null,
-    ) {}
+    private const MAX_LENGTH = 191;
+
+    public readonly ActorType $type;
+
+    public readonly ?string $identifier;
+
+    public readonly ?string $label;
+
+    public function __construct(ActorType $type, ?string $identifier = null, ?string $label = null)
+    {
+        $this->type = $type;
+        $this->identifier = self::normalize($identifier);
+        $this->label = self::normalize($label);
+    }
+
+    private static function normalize(?string $value): ?string
+    {
+        if ($value === null) {
+            return null;
+        }
+
+        $value = trim($value);
+
+        return $value === '' ? null : mb_substr($value, 0, self::MAX_LENGTH);
+    }
 
     public static function user(string $identifier, ?string $label = null): self
     {

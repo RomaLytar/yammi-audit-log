@@ -6,13 +6,15 @@ namespace Yammi\AuditLog\Domain\Audit\ValueObject;
 
 final class Diff
 {
+    private const MAX_FIELDS = 250;
+
     /** @var array<string, FieldDiff> */
     private readonly array $fields;
 
     /** @param array<string, FieldDiff> $fields */
     private function __construct(array $fields)
     {
-        $this->fields = $fields;
+        $this->fields = array_slice($fields, 0, self::MAX_FIELDS, true);
     }
 
     public static function empty(): self

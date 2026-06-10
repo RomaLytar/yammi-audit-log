@@ -8,22 +8,46 @@ use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 
 final class FieldDiff
 {
+    private const MAX_VALUE_LENGTH = 65535;
+
+    public readonly string $field;
+
+    /** @var scalar|array<array-key, mixed>|null */
+    public readonly string|int|float|bool|array|null $old;
+
+    /** @var scalar|array<array-key, mixed>|null */
+    public readonly string|int|float|bool|array|null $new;
+
     /**
      * @param  scalar|array<array-key, mixed>|null  $old
      * @param  scalar|array<array-key, mixed>|null  $new
      */
-    public function __construct(
-        public readonly string $field,
-        public readonly string|int|float|bool|array|null $old,
-        public readonly string|int|float|bool|array|null $new,
-    ) {
+    public function __construct(string $field, string|int|float|bool|array|null $old, string|int|float|bool|array|null $new)
+    {
         if ($field === '') {
             throw InvalidAuditData::emptyValue('field name');
         }
+
+        $this->field = $field;
+        $this->old = $this->cap($old);
+        $this->new = $this->cap($new);
     }
 
     public function changed(): bool
     {
         return $this->old !== $this->new;
+    }
+
+    /**
+     * @param  scalar|array<array-key, mixed>|null  $value
+     * @return scalar|array<array-key, mixed>|null
+     */
+    private function cap(string|int|float|bool|array|null $value): string|int|float|bool|array|null
+    {
+        if (is_string($value) && mb_strlen($value) > self::MAX_VALUE_LENGTH) {
+            return mb_substr($value, 0, self::MAX_VALUE_LENGTH).'… (truncated)';
+        }
+
+        return $value;
     }
 }

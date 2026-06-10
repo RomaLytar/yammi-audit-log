@@ -39,8 +39,8 @@
                    onchange="this.form && this.form.requestSubmit()"
                    class="al-input {{ $filters->actor !== '' ? 'al-input--active' : '' }}">
         </div>
-        @include('audit-log::components.date-field', ['name' => 'from', 'label' => 'From', 'value' => $filters->from])
-        @include('audit-log::components.date-field', ['name' => 'to', 'label' => 'To', 'value' => $filters->to])
+        @include('audit-log::components.date-field', ['name' => 'from', 'label' => 'From', 'value' => $filters->from, 'max' => $filters->to])
+        @include('audit-log::components.date-field', ['name' => 'to', 'label' => 'To', 'value' => $filters->to, 'min' => $filters->from])
     </div>
 
     <noscript>

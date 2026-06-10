@@ -75,6 +75,31 @@ final class ListChangesActionTest extends TestCase
         $this->assertSame(1, $list->chainSize(null));
     }
 
+    public function test_a_reversed_date_range_is_normalised(): void
+    {
+        $repository = new InMemoryAuditRecordRepository;
+        $repository->save($this->recordOn('2026-01-02'));
+        $repository->save($this->recordOn('2026-03-01'));
+
+        // "from" later than "to" must behave as the range 2026-01-01 to 2026-01-10.
+        $list = (new ListChangesAction($repository))(new AuditFilterData(from: '2026-01-10', to: '2026-01-01'));
+
+        $this->assertSame(1, $list->total);
+    }
+
+    private function recordOn(string $date): AuditRecord
+    {
+        return new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 1),
+            event: ChangeType::Created,
+            diff: Diff::between([], ['status' => 'x']),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: new DateTimeImmutable($date.'T10:00:00+00:00'),
+        );
+    }
+
     private function record(string $type, ChangeType $event, Actor $actor, ?string $correlationId = null): AuditRecord
     {
         return new AuditRecord(

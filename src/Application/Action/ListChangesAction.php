@@ -24,13 +24,15 @@ final class ListChangesAction
 
     public function __invoke(AuditFilterData $filters): ChangeListData
     {
+        [$from, $to] = $this->dateRange($filters->from, $filters->to);
+
         $criteria = new AuditCriteria(
             auditableType: $filters->type !== '' ? $filters->type : null,
             event: ChangeType::tryFrom($filters->event),
             actorType: ActorType::tryFrom($filters->actorType),
             actorLabel: $filters->actor !== '' ? $filters->actor : null,
-            from: $this->date($filters->from),
-            to: $this->date($filters->to),
+            from: $from,
+            to: $to,
         );
 
         $paged = $this->repository->paginate($criteria, max(1, $filters->page), self::PER_PAGE);
@@ -59,6 +61,23 @@ final class ListChangesAction
             filters: $filters,
             correlationSizes: $this->repository->countByCorrelations(array_keys($correlationIds)),
         );
+    }
+
+    /**
+     * Normalise the range so the end is never earlier than the start.
+     *
+     * @return array{0: ?DateTimeImmutable, 1: ?DateTimeImmutable}
+     */
+    private function dateRange(string $from, string $to): array
+    {
+        $start = $this->date($from);
+        $end = $this->date($to);
+
+        if ($start !== null && $end !== null && $start > $end) {
+            return [$end, $start];
+        }
+
+        return [$start, $end];
     }
 
     private function date(string $value): ?DateTimeImmutable

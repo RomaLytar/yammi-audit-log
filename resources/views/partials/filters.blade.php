@@ -1,18 +1,18 @@
 @php
-    $active = trim(implode('', $filters)) !== '';
+    $filters = $list->filters;
 
     $typeOptions = ['' => 'All models'];
-    foreach ($types as $type) {
-        $typeOptions[$type] = class_basename($type);
+    foreach ($list->models as $model) {
+        $typeOptions[$model] = class_basename($model);
     }
 
     $eventOptions = ['' => 'All events'];
-    foreach ($events as $event) {
+    foreach ($list->events as $event) {
         $eventOptions[$event] = ucfirst($event);
     }
 
     $actorOptions = ['' => 'All actors'];
-    foreach ($actorTypes as $actorType) {
+    foreach ($list->actorTypes as $actorType) {
         $actorOptions[$actorType] = ucfirst($actorType);
     }
 @endphp
@@ -22,7 +22,7 @@
             <i data-lucide="sliders-horizontal" class="text-[14px]"></i> Filters
             <span class="text-[10px] text-muted-foreground/70">(applied automatically)</span>
         </span>
-        @if ($active)
+        @if ($filters->isActive())
             <a href="{{ route('audit-log.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-xs font-medium hover:bg-accent">
                 <i data-lucide="x" class="text-[13px]"></i> Clear
             </a>
@@ -30,17 +30,17 @@
     </div>
 
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
-        @include('audit-log::components.select', ['name' => 'type', 'label' => 'Model', 'options' => $typeOptions, 'value' => $filters['type'], 'placeholder' => 'All models'])
-        @include('audit-log::components.select', ['name' => 'event', 'label' => 'Event', 'options' => $eventOptions, 'value' => $filters['event'], 'placeholder' => 'All events'])
-        @include('audit-log::components.select', ['name' => 'actor_type', 'label' => 'Actor type', 'options' => $actorOptions, 'value' => $filters['actor_type'], 'placeholder' => 'All actors'])
+        @include('audit-log::components.select', ['name' => 'type', 'label' => 'Model', 'options' => $typeOptions, 'value' => $filters->type, 'placeholder' => 'All models'])
+        @include('audit-log::components.select', ['name' => 'event', 'label' => 'Event', 'options' => $eventOptions, 'value' => $filters->event, 'placeholder' => 'All events'])
+        @include('audit-log::components.select', ['name' => 'actor_type', 'label' => 'Actor type', 'options' => $actorOptions, 'value' => $filters->actorType, 'placeholder' => 'All actors'])
         <div>
             <label class="block text-[11px] font-medium text-muted-foreground mb-1">Actor name</label>
-            <input type="text" name="actor" value="{{ $filters['actor'] }}" placeholder="e.g. John Doe"
+            <input type="text" name="actor" value="{{ $filters->actor }}" placeholder="e.g. John Doe"
                    onchange="this.form && this.form.requestSubmit()"
-                   class="al-input {{ $filters['actor'] !== '' ? 'al-input--active' : '' }}">
+                   class="al-input {{ $filters->actor !== '' ? 'al-input--active' : '' }}">
         </div>
-        @include('audit-log::components.date-field', ['name' => 'from', 'label' => 'From', 'value' => $filters['from']])
-        @include('audit-log::components.date-field', ['name' => 'to', 'label' => 'To', 'value' => $filters['to']])
+        @include('audit-log::components.date-field', ['name' => 'from', 'label' => 'From', 'value' => $filters->from])
+        @include('audit-log::components.date-field', ['name' => 'to', 'label' => 'To', 'value' => $filters->to])
     </div>
 
     <noscript>

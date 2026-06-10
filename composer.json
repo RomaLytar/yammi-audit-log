@@ -1,0 +1,89 @@
+{
+    "name": "romalytar/yammi-audit-log-laravel",
+    "description": "Universal change history and audit log for Laravel. Tracks who changed what and when across Eloquent models, with rich actor attribution (user, job, command, scheduler), field-level diffs, human-readable relationship labels and a timeline dashboard.",
+    "type": "library",
+    "license": "MIT",
+    "keywords": [
+        "laravel",
+        "laravel-package",
+        "php",
+        "audit",
+        "audit-log",
+        "audit-trail",
+        "activity-log",
+        "change-tracking",
+        "history",
+        "versioning",
+        "eloquent",
+        "compliance",
+        "dashboard"
+    ],
+    "homepage": "https://github.com/RomaLytar/yammi-audit-Log",
+    "support": {
+        "issues": "https://github.com/RomaLytar/yammi-audit-Log/issues",
+        "source": "https://github.com/RomaLytar/yammi-audit-Log"
+    },
+    "authors": [
+        {
+            "name": "Roma Lytar",
+            "email": "romalytar@gmail.com"
+        }
+    ],
+    "require": {
+        "php": "^8.1",
+        "ext-json": "*",
+        "illuminate/contracts": "^9.0 || ^10.0 || ^11.0 || ^12.0 || ^13.0",
+        "illuminate/database": "^9.0 || ^10.0 || ^11.0 || ^12.0 || ^13.0",
+        "illuminate/routing": "^9.0 || ^10.0 || ^11.0 || ^12.0 || ^13.0",
+        "illuminate/support": "^9.0 || ^10.0 || ^11.0 || ^12.0 || ^13.0",
+        "illuminate/view": "^9.0 || ^10.0 || ^11.0 || ^12.0 || ^13.0"
+    },
+    "require-dev": {
+        "brianium/paratest": "^7.0",
+        "larastan/larastan": "^2.0",
+        "laravel/pint": "^1.0",
+        "orchestra/testbench": "^7.0 || ^8.0 || ^9.0",
+        "phpstan/phpstan": "^1.10",
+        "phpunit/phpunit": "^9.6 || ^10.0 || ^11.0"
+    },
+    "autoload": {
+        "psr-4": {
+            "Yammi\\AuditLog\\": "src/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Yammi\\AuditLog\\Tests\\": "tests/"
+        }
+    },
+    "extra": {
+        "laravel": {
+            "providers": [
+                "Yammi\\AuditLog\\AuditLogServiceProvider"
+            ]
+        }
+    },
+    "scripts": {
+        "test": "paratest --processes 8",
+        "test:coverage": "phpunit --coverage-text",
+        "lint": "pint --test",
+        "lint:fix": "pint",
+        "analyse": "phpstan analyse"
+    },
+    "config": {
+        "sort-packages": true,
+        "preferred-install": "dist",
+        "optimize-autoloader": true,
+        "policy": {
+            "advisories": {
+                "ignore-id": [
+                    "PKSA-mdq4-51ck-6kdq",
+                    "PKSA-8qx3-n5y5-vvnd",
+                    "PKSA-w7xr-vk7n-rstm"
+                ]
+            }
+        }
+    },
+    "minimum-stability": "stable",
+    "prefer-stable": true
+}

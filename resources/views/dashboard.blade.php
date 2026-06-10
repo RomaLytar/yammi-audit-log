@@ -59,7 +59,16 @@
                                     'label' => $record->actor_label ?? ucfirst((string) $record->actor_type),
                                 ])
                             </td>
-                            <td class="px-4 py-3 hidden md:table-cell text-xs text-muted-foreground">{{ $record->origin_label ?? '—' }}</td>
+                            <td class="px-4 py-3 hidden md:table-cell text-xs">
+                                @if ($record->origin_label)
+                                    <span class="inline-flex items-center gap-1 text-muted-foreground" title="Triggered by {{ $record->origin_label }}">
+                                        <i data-lucide="corner-down-right" class="text-[13px] text-brand"></i>
+                                        {{ $record->origin_label }}
+                                    </span>
+                                @else
+                                    <span class="text-muted-foreground">—</span>
+                                @endif
+                            </td>
                             <td class="px-4 py-3 hidden lg:table-cell text-xs text-muted-foreground tabular-nums">
                                 {{ count($changes) }} {{ \Illuminate\Support\Str::plural('field', count($changes)) }}
                             </td>
@@ -67,6 +76,19 @@
                         </tr>
                         <tr id="{{ $rowId }}" class="hidden">
                             <td colspan="6" class="px-5 py-4 bg-muted/30 animate-slide-down">
+                                @if ($record->origin_label)
+                                    <div class="mb-3 flex items-center gap-2 text-xs">
+                                        <span class="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 font-medium text-brand ring-1 ring-inset ring-brand/30">
+                                            <i data-lucide="git-commit-horizontal" class="text-[12px]"></i> Chain
+                                        </span>
+                                        <span class="text-muted-foreground">
+                                            <span class="font-medium text-foreground">{{ $record->origin_label }}</span>
+                                            <i data-lucide="arrow-right" class="inline text-[12px]"></i>
+                                            <span class="font-medium text-foreground">{{ $record->actor_label ?? ucfirst((string) $record->actor_type) }}</span>
+                                            triggered this change
+                                        </span>
+                                    </div>
+                                @endif
                                 @if (count($changes) === 0)
                                     <p class="text-xs text-muted-foreground">No field-level changes recorded.</p>
                                 @else

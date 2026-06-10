@@ -12,6 +12,7 @@ use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Routing\Router;
+use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\Clock;
@@ -24,6 +25,7 @@ use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
 use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
+use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
@@ -68,7 +70,7 @@ final class AuditLogServiceProvider extends ServiceProvider
                 $this->app->make(QueuedJobActorProvider::class),
                 $this->app->make(ConsoleActorProvider::class),
                 $this->app->make(AuthenticatedUserProvider::class),
-            ]);
+            ], $this->app->make(ActorContext::class));
         });
 
         $this->app->bind(ValueRedactor::class, function (): ValueRedactor {
@@ -152,9 +154,16 @@ final class AuditLogServiceProvider extends ServiceProvider
     private function trackActorContext(Dispatcher $events): void
     {
         $context = $this->app->make(ActorContext::class);
+        $serializer = $this->app->make(ActorSerializer::class);
 
-        $events->listen(JobProcessing::class, static function (JobProcessing $event) use ($context): void {
-            $context->enterJob($event->job->resolveName());
+        $events->listen(JobProcessing::class, function (JobProcessing $event) use ($context, $serializer): void {
+            $payload = $event->job->payload();
+
+            $origin = isset($payload['audit_origin']) && is_array($payload['audit_origin'])
+                ? $serializer->fromArray($payload['audit_origin'])
+                : $this->app->make(ActorResolver::class)->resolve();
+
+            $context->enterJob($event->job->resolveName(), $origin);
         });
 
         $events->listen([JobProcessed::class, JobFailed::class], static function () use ($context): void {
@@ -163,6 +172,16 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $events->listen(CommandStarting::class, static function (CommandStarting $event) use ($context): void {
             $context->enterCommand($event->command);
+        });
+
+        Queue::createPayloadUsing(function ($connection, $queue, $payload) use ($context, $serializer): array {
+            $origin = $context->currentOrigin() ?? $this->app->make(ActorResolver::class)->resolve();
+
+            if ($origin === null || $origin->isAnonymous()) {
+                return [];
+            }
+
+            return ['audit_origin' => $serializer->toArray($origin)];
         });
     }
 

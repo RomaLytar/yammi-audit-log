@@ -15,6 +15,7 @@ final class ActorResolverChain implements ActorResolver
      */
     public function __construct(
         private readonly array $providers,
+        private readonly ActorContext $context,
     ) {}
 
     public function resolve(): Actor
@@ -32,6 +33,12 @@ final class ActorResolverChain implements ActorResolver
 
     public function resolveOrigin(): ?Actor
     {
-        return null;
+        $origin = $this->context->currentOrigin();
+
+        if ($origin === null || $origin->isAnonymous()) {
+            return null;
+        }
+
+        return $origin;
     }
 }

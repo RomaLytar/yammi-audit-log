@@ -21,6 +21,7 @@ final class AuditRecord
         private readonly ?Actor $origin,
         private readonly LabelSnapshot $labels,
         private readonly DateTimeImmutable $occurredAt,
+        private readonly ?string $correlationId = null,
         private readonly ?int $id = null,
     ) {}
 
@@ -62,6 +63,11 @@ final class AuditRecord
     public function occurredAt(): DateTimeImmutable
     {
         return $this->occurredAt;
+    }
+
+    public function correlationId(): ?string
+    {
+        return $this->correlationId;
     }
 
     public function hasIdentifiedActor(): bool

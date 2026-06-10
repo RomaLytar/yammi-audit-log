@@ -16,6 +16,11 @@ return [
         ],
     ],
 
+    'actor' => [
+        // Auth guards checked when attributing a change to a user. Empty = default guard.
+        'guards' => [],
+    ],
+
     'redaction' => [
         'placeholder' => '[redacted]',
         'keys' => [

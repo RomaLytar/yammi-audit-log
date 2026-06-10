@@ -10,10 +10,10 @@
             </h1>
             <p class="text-sm text-muted-foreground mt-1">Who changed what, and when — across your models.</p>
         </div>
-        <span class="text-xs text-muted-foreground tabular-nums">{{ $list->total }} records</span>
+        <span class="text-xs text-muted-foreground tabular-nums">{{ $list->total() }} records</span>
     </div>
 
-    @if (count($list->models) > 0 || $list->filters->isActive())
+    @if ($list->hasFilterOptions() || $list->filters()->isActive())
         @include('audit-log::partials.filters', ['list' => $list])
     @endif
 

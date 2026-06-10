@@ -13,7 +13,7 @@
                 same record is saved twice (a double write). Worth tracking down.
             </p>
         </div>
-        <span class="text-xs text-muted-foreground tabular-nums">{{ $list->total }} records</span>
+        <span class="text-xs text-muted-foreground tabular-nums">{{ $list->total() }} records</span>
     </div>
 
     @include('audit-log::partials.change-list', [

@@ -130,7 +130,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         });
 
         $events->listen(CommandStarting::class, static function (CommandStarting $event) use ($context): void {
-            $context->enterCommand($event->command ?? 'artisan');
+            $context->enterCommand($event->command);
         });
     }
 

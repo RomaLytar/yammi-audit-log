@@ -1,6 +1,8 @@
 @php
     $label = $label ?? null;
     $value = $value ?? '';
+    $min = $min ?? '';
+    $max = $max ?? '';
 @endphp
 <div>
     @if ($label)
@@ -8,6 +10,8 @@
     @endif
     <div class="relative al-datefield">
         <input type="date" name="{{ $name }}" value="{{ $value }}"
+               @if ($min !== '') min="{{ $min }}" @endif
+               @if ($max !== '') max="{{ $max }}" @endif
                onchange="this.form && this.form.requestSubmit()"
                onclick="try { this.showPicker(); } catch (e) {}"
                class="al-input pr-9 {{ $value !== '' ? 'al-input--active' : '' }}">

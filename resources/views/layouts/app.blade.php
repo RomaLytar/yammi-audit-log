@@ -123,6 +123,11 @@
             padding: 0 0.6rem; font-size: 0.8125rem;
         }
         .al-input:focus { outline: none; box-shadow: 0 0 0 2px hsl(var(--ring) / 0.4); }
+        .al-input--active { border-color: hsl(var(--brand) / 0.4); background: hsl(var(--brand) / 0.05); font-weight: 500; }
+
+        .al-datefield input[type="date"] { color-scheme: light; }
+        .dark .al-datefield input[type="date"] { color-scheme: dark; }
+        .al-datefield input[type="date"]::-webkit-calendar-picker-indicator { opacity: 0; cursor: pointer; }
     </style>
 </head>
 <body class="bg-background text-foreground min-h-screen antialiased">
@@ -180,6 +185,59 @@
             var row = document.getElementById(id);
             if (row) { row.classList.toggle('hidden'); }
         }
+
+        function __alCloseSelects(except) {
+            document.querySelectorAll('[data-al-select]').forEach(function (sel) {
+                if (sel === except) { return; }
+                var dd = sel.querySelector('[data-al-select-dropdown]');
+                var caret = sel.querySelector('[data-al-select-caret]');
+                if (dd) { dd.classList.add('hidden'); }
+                if (caret) { caret.classList.remove('rotate-180'); }
+                var trigger = sel.querySelector('[data-al-select-trigger]');
+                if (trigger) { trigger.setAttribute('aria-expanded', 'false'); }
+            });
+        }
+
+        document.addEventListener('click', function (e) {
+            var trigger = e.target.closest('[data-al-select-trigger]');
+            if (trigger) {
+                var sel = trigger.closest('[data-al-select]');
+                var dd = sel.querySelector('[data-al-select-dropdown]');
+                var caret = sel.querySelector('[data-al-select-caret]');
+                var willOpen = dd.classList.contains('hidden');
+                __alCloseSelects(sel);
+                if (willOpen) {
+                    dd.classList.remove('hidden');
+                    caret.classList.add('rotate-180');
+                    trigger.setAttribute('aria-expanded', 'true');
+                    __alIcons();
+                } else {
+                    dd.classList.add('hidden');
+                    caret.classList.remove('rotate-180');
+                }
+                return;
+            }
+
+            var option = e.target.closest('[data-al-select-option]');
+            if (option) {
+                var host = option.closest('[data-al-select]');
+                var input = host.querySelector('[data-al-select-input]');
+                var labelEl = option.querySelector('[data-al-select-option-label]');
+                input.value = option.getAttribute('data-value') || '';
+                host.querySelector('[data-al-select-label]').textContent = labelEl ? labelEl.textContent.trim() : input.value;
+                __alCloseSelects(null);
+                var form = host.closest('form');
+                if (form) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
+                return;
+            }
+
+            if (!e.target.closest('[data-al-select]')) { __alCloseSelects(null); }
+        });
+
+        document.addEventListener('keydown', function (e) {
+            if (e.key === 'Escape') { __alCloseSelects(null); }
+        });
+
         __alIcons();
     </script>
     @stack('scripts')

@@ -46,4 +46,46 @@ final class ConfigValueRedactorTest extends TestCase
 
         $this->assertSame(['password' => '***'], $redactor->redact(['password' => 'plain']));
     }
+
+    public function test_it_redacts_secret_keys_nested_inside_array_values(): void
+    {
+        $redactor = new ConfigValueRedactor(['api_key', 'password']);
+
+        $out = $redactor->redact([
+            'settings' => [
+                'api_key' => 'sk-live-123',
+                'theme' => 'dark',
+                'smtp' => ['password' => 'plain', 'host' => 'mail.test'],
+            ],
+        ]);
+
+        $this->assertSame(
+            [
+                'settings' => [
+                    'api_key' => '[redacted]',
+                    'theme' => 'dark',
+                    'smtp' => ['password' => '[redacted]', 'host' => 'mail.test'],
+                ],
+            ],
+            $out,
+        );
+    }
+
+    public function test_a_secret_key_holding_an_array_is_replaced_entirely(): void
+    {
+        $redactor = new ConfigValueRedactor(['credentials']);
+
+        $out = $redactor->redact(['credentials' => ['user' => 'a', 'pass' => 'b']]);
+
+        $this->assertSame(['credentials' => '[redacted]'], $out);
+    }
+
+    public function test_lists_inside_values_keep_their_safe_entries(): void
+    {
+        $redactor = new ConfigValueRedactor(['token']);
+
+        $out = $redactor->redact(['meta' => [['token' => 'x', 'name' => 'a'], ['name' => 'b']]]);
+
+        $this->assertSame(['meta' => [['token' => '[redacted]', 'name' => 'a'], ['name' => 'b']]], $out);
+    }
 }

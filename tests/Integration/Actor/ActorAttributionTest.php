@@ -42,6 +42,24 @@ final class ActorAttributionTest extends TestCase
         $this->assertSame('Jane Doe', $actor->displayLabel());
     }
 
+    public function test_a_job_dispatched_by_a_user_keeps_the_user_as_origin(): void
+    {
+        $this->actingAs(new User(['id' => 9, 'name' => 'Jane Doe']));
+
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+
+        PublishPostJob::dispatchSync($post->getKey());
+
+        $timeline = $this->timelineFor($post);
+
+        $this->assertSame(ActorType::Job, $timeline[0]->actor()->type);
+        $this->assertStringContainsString('PublishPostJob', $timeline[0]->actor()->displayLabel());
+        $this->assertSame('Jane Doe', $timeline[0]->origin()?->displayLabel());
+
+        $this->assertSame(ActorType::User, $timeline[1]->actor()->type);
+        $this->assertNull($timeline[1]->origin());
+    }
+
     public function test_a_queued_job_is_attributed_as_the_actor(): void
     {
         $post = Post::create(['title' => 'Hello', 'status' => 'draft']);

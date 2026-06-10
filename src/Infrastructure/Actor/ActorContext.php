@@ -4,33 +4,43 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Actor;
 
+use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
+
 /**
  * Holds the currently executing job and command so actor providers can attribute
- * a change to the work that caused it. Jobs are kept on a stack to support a job
- * dispatching another job synchronously.
+ * a change to the work that caused it. Each job frame also carries the origin —
+ * the actor that triggered the job — so a user -> job -> change chain is kept.
+ * Jobs are stacked to support a job dispatching another job.
  */
 final class ActorContext
 {
-    /** @var list<string> */
-    private array $jobs = [];
+    /** @var list<array{job: string, origin: ?Actor}> */
+    private array $frames = [];
 
     private ?string $command = null;
 
-    public function enterJob(string $jobClass): void
+    public function enterJob(string $jobClass, ?Actor $origin = null): void
     {
-        $this->jobs[] = $jobClass;
+        $this->frames[] = ['job' => $jobClass, 'origin' => $origin];
     }
 
     public function leaveJob(): void
     {
-        array_pop($this->jobs);
+        array_pop($this->frames);
     }
 
     public function currentJob(): ?string
     {
-        $key = array_key_last($this->jobs);
+        $key = array_key_last($this->frames);
 
-        return $key === null ? null : $this->jobs[$key];
+        return $key === null ? null : $this->frames[$key]['job'];
+    }
+
+    public function currentOrigin(): ?Actor
+    {
+        $key = array_key_last($this->frames);
+
+        return $key === null ? null : $this->frames[$key]['origin'];
     }
 
     public function enterCommand(string $command): void

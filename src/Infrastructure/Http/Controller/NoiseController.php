@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
+use Yammi\AuditLog\Presentation\ViewModel\DashboardViewModel;
 
 final class NoiseController
 {
@@ -20,8 +21,10 @@ final class NoiseController
 
     public function __invoke(Request $request): View
     {
+        $list = ($this->listChanges)($this->filters->fromRequest($request), onlyNoise: true);
+
         return $this->view->make('audit-log::noise', [
-            'list' => ($this->listChanges)($this->filters->fromRequest($request), onlyNoise: true),
+            'list' => new DashboardViewModel($list),
         ]);
     }
 }

@@ -1,18 +1,18 @@
 @php
-    $filters = $list->filters;
+    $filters = $list->filters();
 
     $typeOptions = ['' => 'All models'];
-    foreach ($list->models as $model) {
+    foreach ($list->models() as $model) {
         $typeOptions[$model] = class_basename($model);
     }
 
     $eventOptions = ['' => 'All events'];
-    foreach ($list->events as $event) {
+    foreach ($list->events() as $event) {
         $eventOptions[$event] = ucfirst($event);
     }
 
     $actorOptions = ['' => 'All actors'];
-    foreach ($list->actorTypes as $actorType) {
+    foreach ($list->actorTypes() as $actorType) {
         $actorOptions[$actorType] = ucfirst($actorType);
     }
 @endphp

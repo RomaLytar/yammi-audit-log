@@ -1,0 +1,107 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Yammi\AuditLog\Presentation\ViewModel;
+
+use Illuminate\Support\Carbon;
+use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+
+/**
+ * Presents one change for the UI: pre-formatted strings, dates and diff rows, so
+ * the Blade templates stay dumb markup.
+ */
+final class TimelineEntryViewModel
+{
+    public function __construct(
+        private readonly TimelineEntryData $entry,
+        private readonly int $chainSize,
+    ) {}
+
+    public function model(): string
+    {
+        return $this->entry->model();
+    }
+
+    public function id(): string
+    {
+        return $this->entry->auditableId;
+    }
+
+    public function event(): string
+    {
+        return $this->entry->event;
+    }
+
+    public function actorType(): string
+    {
+        return $this->entry->actorType;
+    }
+
+    public function actorLabel(): string
+    {
+        return $this->entry->actorLabel;
+    }
+
+    public function originLabel(): ?string
+    {
+        return $this->entry->originLabel;
+    }
+
+    public function isNoise(): bool
+    {
+        return $this->entry->isNoise;
+    }
+
+    public function correlationId(): ?string
+    {
+        return $this->entry->correlationId;
+    }
+
+    public function chainSize(): int
+    {
+        return $this->chainSize;
+    }
+
+    public function hasChain(): bool
+    {
+        return $this->chainSize > 1;
+    }
+
+    public function occurredAt(string $format = 'Y-m-d H:i'): string
+    {
+        return Carbon::parse($this->entry->occurredAt)->format($format);
+    }
+
+    public function changeCount(): int
+    {
+        return count($this->entry->changes);
+    }
+
+    /**
+     * @return list<array{field: string, old: string, new: string}>
+     */
+    public function changes(): array
+    {
+        $rows = [];
+
+        foreach ($this->entry->changes as $field => $pair) {
+            $rows[] = [
+                'field' => (string) $field,
+                'old' => $this->present($pair['old'] ?? null),
+                'new' => $this->present($pair['new'] ?? null),
+            ];
+        }
+
+        return $rows;
+    }
+
+    private function present(mixed $value): string
+    {
+        if ($value === null) {
+            return '—';
+        }
+
+        return is_array($value) ? (string) json_encode($value) : (string) $value;
+    }
+}

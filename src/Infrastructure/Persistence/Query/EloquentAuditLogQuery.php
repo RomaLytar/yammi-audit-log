@@ -108,7 +108,7 @@ final class EloquentAuditLogQuery implements AuditLogQuery
         ], static fn (?string $value): bool => $value !== null));
 
         if ($criteria->actorLabel !== null) {
-            $query->where('actor_label', 'like', '%'.$criteria->actorLabel.'%');
+            $query->whereRaw("actor_label like ? escape '!'", ['%'.$this->escapeLike($criteria->actorLabel).'%']);
         }
 
         if ($criteria->onlyNoise !== null) {
@@ -118,6 +118,11 @@ final class EloquentAuditLogQuery implements AuditLogQuery
         foreach (array_filter(['>=' => $criteria->from, '<=' => $criteria->to]) as $operator => $date) {
             $query->whereDate('occurred_at', $operator, $date->format('Y-m-d'));
         }
+    }
+
+    private function escapeLike(string $value): string
+    {
+        return str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $value);
     }
 
     /**

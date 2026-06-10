@@ -22,6 +22,25 @@ final class ConfigValueRedactor implements ValueRedactor
         foreach ($values as $key => $value) {
             if ($this->isSecret($key)) {
                 $values[$key] = $this->placeholder;
+            } elseif (is_array($value)) {
+                $values[$key] = $this->redactNested($value);
+            }
+        }
+
+        return $values;
+    }
+
+    /**
+     * @param  array<array-key, mixed>  $values
+     * @return array<array-key, mixed>
+     */
+    private function redactNested(array $values): array
+    {
+        foreach ($values as $key => $value) {
+            if ($this->isSecret((string) $key)) {
+                $values[$key] = $this->placeholder;
+            } elseif (is_array($value)) {
+                $values[$key] = $this->redactNested($value);
             }
         }
 

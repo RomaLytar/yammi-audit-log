@@ -9,4 +9,6 @@ use Yammi\AuditLog\Infrastructure\Http\Controller\TraceController;
 
 Route::get('/', DashboardController::class)->name('audit-log.dashboard');
 Route::get('/noise', NoiseController::class)->name('audit-log.noise');
-Route::get('/trace/{correlation}', TraceController::class)->name('audit-log.trace');
+Route::get('/trace/{correlation}', TraceController::class)
+    ->whereUuid('correlation')
+    ->name('audit-log.trace');

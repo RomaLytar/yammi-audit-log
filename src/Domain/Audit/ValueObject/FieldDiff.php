@@ -45,9 +45,22 @@ final class FieldDiff
     private function cap(string|int|float|bool|array|null $value): string|int|float|bool|array|null
     {
         if (is_string($value) && mb_strlen($value) > self::MAX_VALUE_LENGTH) {
-            return mb_substr($value, 0, self::MAX_VALUE_LENGTH).'… (truncated)';
+            return $this->truncate($value);
+        }
+
+        if (is_array($value)) {
+            $encoded = json_encode($value);
+
+            if ($encoded !== false && strlen($encoded) > self::MAX_VALUE_LENGTH) {
+                return $this->truncate($encoded);
+            }
         }
 
         return $value;
+    }
+
+    private function truncate(string $value): string
+    {
+        return mb_substr($value, 0, self::MAX_VALUE_LENGTH).'… (truncated)';
     }
 }

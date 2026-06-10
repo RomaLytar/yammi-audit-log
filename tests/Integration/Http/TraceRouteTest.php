@@ -25,15 +25,17 @@ final class TraceRouteTest extends TestCase
         });
     }
 
+    private const CORRELATION = '0d4007cb-44a3-4af1-a807-5acc4ec5d3a1';
+
     public function test_it_renders_a_change_chain(): void
     {
         $correlation = $this->app->make(CorrelationContext::class);
-        $correlation->push('trace-abc');
+        $correlation->push(self::CORRELATION);
         $post = Post::create(['title' => 'Order', 'status' => 'draft']);
         PublishPostJob::dispatchSync($post->getKey());
         $correlation->pop();
 
-        $response = $this->get('audit-log/trace/trace-abc');
+        $response = $this->get('audit-log/trace/'.self::CORRELATION);
 
         $response->assertOk();
         $response->assertSee('Change chain');
@@ -47,6 +49,12 @@ final class TraceRouteTest extends TestCase
 
     public function test_an_unknown_correlation_returns_404(): void
     {
-        $this->get('audit-log/trace/does-not-exist')->assertNotFound();
+        $this->get('audit-log/trace/be7cd1b6-0e4c-4c45-ae63-4f5048ec4dcf')->assertNotFound();
+    }
+
+    public function test_a_malformed_correlation_is_rejected_by_the_route(): void
+    {
+        $this->get('audit-log/trace/not-a-uuid')->assertNotFound();
+        $this->get('audit-log/trace/1%20OR%201=1')->assertNotFound();
     }
 }

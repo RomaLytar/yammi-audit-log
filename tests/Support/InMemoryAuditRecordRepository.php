@@ -4,13 +4,14 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Tests\Support;
 
+use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 
-final class InMemoryAuditRecordRepository implements AuditRecordRepository
+final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordRepository
 {
     /** @var list<AuditRecord> */
     public array $saved = [];
@@ -44,7 +45,7 @@ final class InMemoryAuditRecordRepository implements AuditRecordRepository
         return new PagedRecords(array_values($slice), $total, $page, $perPage);
     }
 
-    public function findByCorrelation(string $correlationId): array
+    public function chain(string $correlationId): array
     {
         return array_values(array_filter(
             $this->saved,
@@ -52,7 +53,7 @@ final class InMemoryAuditRecordRepository implements AuditRecordRepository
         ));
     }
 
-    public function countByCorrelations(array $correlationIds): array
+    public function chainSizes(array $correlationIds): array
     {
         $counts = [];
 

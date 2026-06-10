@@ -4,19 +4,19 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Action;
 
+use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
-use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 
 final class BuildChainAction
 {
     public function __construct(
-        private readonly AuditRecordRepository $repository,
+        private readonly AuditLogQuery $query,
     ) {}
 
     public function __invoke(string $correlationId): ?ChainData
     {
-        $records = $this->repository->findByCorrelation($correlationId);
+        $records = $this->query->chain($correlationId);
 
         if ($records === []) {
             return null;

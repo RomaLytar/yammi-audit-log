@@ -13,7 +13,7 @@ use Yammi\AuditLog\Tests\Support\StripKeysRedactor;
 
 final class ComputeDiffStageTest extends TestCase
 {
-    public function test_it_redacts_secrets_before_diffing(): void
+    public function test_it_redacts_changed_secret_values_and_drops_unchanged_fields(): void
     {
         $stage = new ComputeDiffStage(new StripKeysRedactor(['password']));
 
@@ -32,7 +32,7 @@ final class ComputeDiffStageTest extends TestCase
         $this->assertFalse($context->diff->has('name'));
     }
 
-    public function test_unchanged_redacted_secret_does_not_appear_in_the_diff(): void
+    public function test_an_unchanged_secret_does_not_appear_in_the_diff(): void
     {
         $stage = new ComputeDiffStage(new StripKeysRedactor(['password']));
 
@@ -40,11 +40,29 @@ final class ComputeDiffStageTest extends TestCase
             auditableType: 'App\\Models\\User',
             auditableId: '1',
             event: ChangeType::Updated,
-            before: ['password' => 'a', 'status' => 'active'],
-            after: ['password' => 'b', 'status' => 'blocked'],
+            before: ['password' => 'same', 'status' => 'active'],
+            after: ['password' => 'same', 'status' => 'blocked'],
         )));
 
         $this->assertFalse($context->diff->has('password'));
         $this->assertTrue($context->diff->has('status'));
+        $this->assertSame('blocked', $context->diff->field('status')?->new);
+    }
+
+    public function test_a_changed_secret_is_kept_but_its_values_are_redacted(): void
+    {
+        $stage = new ComputeDiffStage(new StripKeysRedactor(['password']));
+
+        $context = $stage(RecordChangeContext::start(new ChangeData(
+            auditableType: 'App\\Models\\User',
+            auditableId: '1',
+            event: ChangeType::Updated,
+            before: ['password' => 'old-secret'],
+            after: ['password' => 'new-secret'],
+        )));
+
+        $this->assertTrue($context->diff->has('password'));
+        $this->assertSame('[redacted]', $context->diff->field('password')?->old);
+        $this->assertSame('[redacted]', $context->diff->field('password')?->new);
     }
 }

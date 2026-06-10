@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Application\Pipeline\Stage;
 use Yammi\AuditLog\Application\Contract\ValueRedactor;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeStage;
+use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\FieldDiff;
 
@@ -22,15 +23,23 @@ final class ComputeDiffStage implements RecordChangeStage
 
     public function __invoke(RecordChangeContext $context): RecordChangeContext
     {
-        $diff = $this->withoutIgnored(
-            Diff::between($context->change->before, $context->change->after),
-        );
+        $raw = Diff::between($context->change->before, $context->change->after);
+        $meaningful = $this->withoutIgnored($raw);
+
+        // An update whose only changes are ignored attributes (e.g. timestamps)
+        // changed nothing real — a no-op write, usually a double update. Keep it,
+        // but flagged as noise and showing the raw change so it stays diagnosable.
+        $isNoise = $context->change->event === ChangeType::Updated
+            && $meaningful->isEmpty()
+            && ! $raw->isEmpty();
+
+        $diff = $isNoise ? $raw : $meaningful;
 
         if ($diff->isEmpty()) {
-            return $context->withDiff($diff);
+            return $context->withDiff($diff)->withNoise(false);
         }
 
-        return $context->withDiff($this->redact($diff));
+        return $context->withDiff($this->redact($diff))->withNoise($isNoise);
     }
 
     private function withoutIgnored(Diff $diff): Diff

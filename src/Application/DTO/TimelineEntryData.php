@@ -25,6 +25,7 @@ final class TimelineEntryData
         public readonly array $labels,
         public readonly string $occurredAt,
         public readonly ?string $correlationId,
+        public readonly bool $isNoise = false,
     ) {}
 
     public static function fromRecord(AuditRecord $record): self
@@ -41,6 +42,7 @@ final class TimelineEntryData
             labels: $record->labels()->all(),
             occurredAt: $record->occurredAt()->format(DateTimeInterface::ATOM),
             correlationId: $record->correlationId(),
+            isNoise: $record->isNoise(),
         );
     }
 

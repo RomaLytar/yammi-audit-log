@@ -17,6 +17,7 @@ final class RecordChangeContext
         public readonly ?Actor $actor,
         public readonly ?Actor $origin,
         public readonly LabelSnapshot $labels,
+        public readonly bool $isNoise = false,
     ) {}
 
     public static function start(ChangeData $change): self
@@ -26,16 +27,21 @@ final class RecordChangeContext
 
     public function withDiff(Diff $diff): self
     {
-        return new self($this->change, $diff, $this->actor, $this->origin, $this->labels);
+        return new self($this->change, $diff, $this->actor, $this->origin, $this->labels, $this->isNoise);
+    }
+
+    public function withNoise(bool $isNoise): self
+    {
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $isNoise);
     }
 
     public function withActor(Actor $actor, ?Actor $origin): self
     {
-        return new self($this->change, $this->diff, $actor, $origin, $this->labels);
+        return new self($this->change, $this->diff, $actor, $origin, $this->labels, $this->isNoise);
     }
 
     public function withLabels(LabelSnapshot $labels): self
     {
-        return new self($this->change, $this->diff, $this->actor, $this->origin, $labels);
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $labels, $this->isNoise);
     }
 }

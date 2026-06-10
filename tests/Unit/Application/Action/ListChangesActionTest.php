@@ -75,6 +75,18 @@ final class ListChangesActionTest extends TestCase
         $this->assertSame(1, $list->chainSize(null));
     }
 
+    public function test_it_can_list_only_noise(): void
+    {
+        $repository = new InMemoryAuditRecordRepository;
+        $repository->save($this->record('App\\Models\\Order', ChangeType::Updated, Actor::system(), null, true));
+        $repository->save($this->record('App\\Models\\Order', ChangeType::Updated, Actor::system(), null, false));
+
+        $list = (new ListChangesAction($repository))(new AuditFilterData, onlyNoise: true);
+
+        $this->assertSame(1, $list->total);
+        $this->assertTrue($list->entries[0]->isNoise);
+    }
+
     public function test_a_reversed_date_range_is_normalised(): void
     {
         $repository = new InMemoryAuditRecordRepository;
@@ -100,7 +112,7 @@ final class ListChangesActionTest extends TestCase
         );
     }
 
-    private function record(string $type, ChangeType $event, Actor $actor, ?string $correlationId = null): AuditRecord
+    private function record(string $type, ChangeType $event, Actor $actor, ?string $correlationId = null, bool $isNoise = false): AuditRecord
     {
         return new AuditRecord(
             auditable: AuditableReference::to($type, 1),
@@ -111,6 +123,7 @@ final class ListChangesActionTest extends TestCase
             labels: LabelSnapshot::empty(),
             occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
             correlationId: $correlationId,
+            isNoise: $isNoise,
         );
     }
 }

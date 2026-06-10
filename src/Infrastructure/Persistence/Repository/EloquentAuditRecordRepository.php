@@ -88,6 +88,11 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
         return $counts;
     }
 
+    public function countNoise(): int
+    {
+        return AuditRecordModel::query()->where('is_noise', true)->count();
+    }
+
     public function distinctModels(): array
     {
         return $this->distinctColumn('auditable_type');
@@ -111,6 +116,10 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
 
         if ($criteria->actorLabel !== null) {
             $query->where('actor_label', 'like', '%'.$criteria->actorLabel.'%');
+        }
+
+        if ($criteria->onlyNoise !== null) {
+            $query->where('is_noise', $criteria->onlyNoise);
         }
 
         foreach (array_filter(['>=' => $criteria->from, '<=' => $criteria->to]) as $operator => $date) {

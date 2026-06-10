@@ -22,6 +22,7 @@ final class AuditRecord
         private readonly LabelSnapshot $labels,
         private readonly DateTimeImmutable $occurredAt,
         private readonly ?string $correlationId = null,
+        private readonly bool $isNoise = false,
         private readonly ?int $id = null,
     ) {}
 
@@ -68,6 +69,15 @@ final class AuditRecord
     public function correlationId(): ?string
     {
         return $this->correlationId;
+    }
+
+    /**
+     * A change that only touched ignored attributes (e.g. timestamps) — a no-op
+     * write, usually a sign of a double update that changed nothing real.
+     */
+    public function isNoise(): bool
+    {
+        return $this->isNoise;
     }
 
     public function hasIdentifiedActor(): bool

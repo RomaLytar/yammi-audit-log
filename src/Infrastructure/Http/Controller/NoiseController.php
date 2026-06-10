@@ -10,7 +10,7 @@ use Illuminate\Http\Request;
 use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 
-final class DashboardController
+final class NoiseController
 {
     public function __construct(
         private readonly ViewFactory $view,
@@ -20,8 +20,8 @@ final class DashboardController
 
     public function __invoke(Request $request): View
     {
-        return $this->view->make('audit-log::dashboard', [
-            'list' => ($this->listChanges)($this->filters->fromRequest($request)),
+        return $this->view->make('audit-log::noise', [
+            'list' => ($this->listChanges)($this->filters->fromRequest($request), onlyNoise: true),
         ]);
     }
 }

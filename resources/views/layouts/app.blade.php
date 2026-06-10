@@ -154,9 +154,17 @@
                 </a>
 
                 <div class="flex items-center gap-2">
+                    @php $onLog = request()->routeIs('audit-log.dashboard') || request()->routeIs('audit-log.trace'); @endphp
                     <a href="{{ route('audit-log.dashboard') }}"
-                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border border-brand/30 bg-brand/10 text-brand">
-                        <i data-lucide="list" class="text-[14px]"></i> Audit log
+                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ $onLog ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="list" class="text-[14px]"></i> Log
+                    </a>
+                    <a href="{{ route('audit-log.noise') }}"
+                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.noise') ? 'border-warning/40 bg-warning/10 text-warning' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="alert-triangle" class="text-[14px]"></i> Noise
+                        @if (($auditNoiseCount ?? 0) > 0)
+                            <span class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-warning/20 text-warning text-[10px] font-bold tabular-nums">{{ $auditNoiseCount }}</span>
+                        @endif
                     </a>
                     <button type="button" onclick="__alToggleTheme()" title="Toggle theme"
                             class="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">

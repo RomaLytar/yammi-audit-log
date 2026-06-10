@@ -67,6 +67,11 @@ final class InMemoryAuditRecordRepository implements AuditRecordRepository
         return $counts;
     }
 
+    public function countNoise(): int
+    {
+        return count(array_filter($this->saved, static fn (AuditRecord $record): bool => $record->isNoise()));
+    }
+
     public function distinctModels(): array
     {
         $models = [];
@@ -101,6 +106,7 @@ final class InMemoryAuditRecordRepository implements AuditRecordRepository
             && $this->same($criteria->event, $record->event())
             && $this->same($criteria->actorType, $record->actor()->type)
             && $this->contains($criteria->actorLabel, $record->actor()->displayLabel())
+            && ($criteria->onlyNoise === null || $record->isNoise() === $criteria->onlyNoise)
             && ($criteria->from === null || $record->occurredAt() >= $criteria->from)
             && ($criteria->to === null || $record->occurredAt() <= $criteria->to);
     }

@@ -33,6 +33,7 @@ final class AuditRecordMapper
             originLabel: $record->origin()?->label,
             labels: $record->labels()->all(),
             correlationId: $record->correlationId(),
+            isNoise: $record->isNoise(),
             occurredAt: $record->occurredAt()->format('Y-m-d H:i:s'),
         );
     }
@@ -68,6 +69,7 @@ final class AuditRecordMapper
             labels: $this->labels($model->getAttribute('labels')),
             occurredAt: new DateTimeImmutable($this->string($model->getAttribute('occurred_at'))),
             correlationId: $this->nullableString($model->getAttribute('correlation_id')),
+            isNoise: (bool) $model->getAttribute('is_noise'),
             id: (int) $model->getAttribute('id'),
         );
     }

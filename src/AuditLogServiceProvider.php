@@ -30,6 +30,7 @@ use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
 use Yammi\AuditLog\Infrastructure\Label\NullLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
+use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
 use Yammi\AuditLog\Infrastructure\Support\SystemClock;
 
@@ -46,6 +47,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->app->bind(AuditRecordRepository::class, EloquentAuditRecordRepository::class);
         $this->app->bind(Clock::class, SystemClock::class);
         $this->app->bind(LabelResolver::class, NullLabelResolver::class);
+        $this->app->singleton(AuditReader::class);
 
         $this->app->singleton(ActorContext::class);
 

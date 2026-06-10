@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
+use Yammi\AuditLog\Presentation\ViewModel\DashboardViewModel;
 
 final class DashboardController
 {
@@ -20,8 +21,10 @@ final class DashboardController
 
     public function __invoke(Request $request): View
     {
+        $list = ($this->listChanges)($this->filters->fromRequest($request));
+
         return $this->view->make('audit-log::dashboard', [
-            'list' => ($this->listChanges)($this->filters->fromRequest($request)),
+            'list' => new DashboardViewModel($list),
         ]);
     }
 }

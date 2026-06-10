@@ -6,20 +6,20 @@ namespace Yammi\AuditLog\Application\Action;
 
 use DateTimeImmutable;
 use Exception;
+use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Application\DTO\AuditFilterData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
-use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 
 final class ListChangesAction
 {
     private const PER_PAGE = 25;
 
     public function __construct(
-        private readonly AuditRecordRepository $repository,
+        private readonly AuditLogQuery $query,
     ) {}
 
     public function __invoke(AuditFilterData $filters, ?bool $onlyNoise = null): ChangeListData
@@ -36,7 +36,7 @@ final class ListChangesAction
             onlyNoise: $onlyNoise,
         );
 
-        $paged = $this->repository->paginate($criteria, max(1, $filters->page), self::PER_PAGE);
+        $paged = $this->query->paginate($criteria, max(1, $filters->page), self::PER_PAGE);
 
         $entries = [];
         $correlationIds = [];
@@ -56,11 +56,11 @@ final class ListChangesAction
             page: $paged->page,
             perPage: $paged->perPage,
             lastPage: $paged->lastPage(),
-            models: $this->repository->distinctModels(),
-            actorTypes: $this->repository->distinctActorTypes(),
+            models: $this->query->distinctModels(),
+            actorTypes: $this->query->distinctActorTypes(),
             events: array_map(static fn (ChangeType $type): string => $type->value, ChangeType::cases()),
             filters: $filters,
-            correlationSizes: $this->repository->countByCorrelations(array_keys($correlationIds)),
+            correlationSizes: $this->query->chainSizes(array_keys($correlationIds)),
         );
     }
 

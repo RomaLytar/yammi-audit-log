@@ -29,13 +29,18 @@ final class NoiseAndSoftDeleteTest extends TestCase
         });
     }
 
-    public function test_an_update_that_only_bumps_timestamps_is_not_recorded(): void
+    public function test_an_update_that_only_bumps_timestamps_is_recorded_as_noise(): void
     {
         $note = Note::create(['title' => 'A', 'status' => 'draft']);
 
         $note->touch();
 
-        $this->assertCount(1, $this->timelineFor($note));
+        $timeline = $this->timelineFor($note);
+
+        $this->assertCount(2, $timeline);
+        $this->assertSame(ChangeType::Updated, $timeline[0]->event());
+        $this->assertTrue($timeline[0]->isNoise());
+        $this->assertFalse($timeline[1]->isNoise());
     }
 
     public function test_a_real_update_is_recorded_without_the_timestamp_noise(): void

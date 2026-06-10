@@ -17,5 +17,6 @@ final class AuditCriteria
         public readonly ?string $actorLabel = null,
         public readonly ?DateTimeImmutable $from = null,
         public readonly ?DateTimeImmutable $to = null,
+        public readonly ?bool $onlyNoise = null,
     ) {}
 }

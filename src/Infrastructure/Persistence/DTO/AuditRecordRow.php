@@ -28,6 +28,7 @@ final class AuditRecordRow
         public readonly ?string $originLabel,
         public readonly array $labels,
         public readonly ?string $correlationId,
+        public readonly bool $isNoise,
         public readonly string $occurredAt,
     ) {}
 
@@ -49,6 +50,7 @@ final class AuditRecordRow
             'origin_label' => $this->originLabel,
             'labels' => $this->labels,
             'correlation_id' => $this->correlationId,
+            'is_noise' => $this->isNoise,
             'occurred_at' => $this->occurredAt,
             'created_at' => $this->occurredAt,
         ];

@@ -40,6 +40,7 @@ final class RecordChangeAction
             labels: $context->labels,
             occurredAt: $this->clock->now(),
             correlationId: $this->correlation->resolve(),
+            isNoise: $context->isNoise,
         );
 
         $this->repository->save($record);

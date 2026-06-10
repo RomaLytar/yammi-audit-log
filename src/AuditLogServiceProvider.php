@@ -10,6 +10,8 @@ use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
+use Illuminate\Contracts\View\Factory as ViewFactory;
+use Illuminate\Contracts\View\View;
 use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -18,6 +20,7 @@ use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Support\Str;
+use Throwable;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
@@ -140,6 +143,7 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         if ((bool) $config->get('audit-log.ui.enabled', true)) {
             $this->registerRoutes($config);
+            $this->registerNavComposer();
         }
 
         if (! (bool) $config->get('audit-log.enabled', true)) {
@@ -154,6 +158,20 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->trackActorContext($events);
         $this->registerCorrelationMiddleware();
+    }
+
+    private function registerNavComposer(): void
+    {
+        $this->app->make(ViewFactory::class)->composer(
+            'audit-log::layouts.app',
+            function (View $view): void {
+                try {
+                    $view->with('auditNoiseCount', $this->app->make(AuditRecordRepository::class)->countNoise());
+                } catch (Throwable) {
+                    $view->with('auditNoiseCount', 0);
+                }
+            },
+        );
     }
 
     private function registerCorrelationMiddleware(): void

@@ -40,4 +40,6 @@ interface AuditRecordRepository
      * @return list<string>
      */
     public function distinctActorTypes(): array;
+
+    public function countNoise(): int;
 }

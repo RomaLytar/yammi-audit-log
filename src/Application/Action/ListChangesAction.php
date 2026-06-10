@@ -22,7 +22,7 @@ final class ListChangesAction
         private readonly AuditRecordRepository $repository,
     ) {}
 
-    public function __invoke(AuditFilterData $filters): ChangeListData
+    public function __invoke(AuditFilterData $filters, ?bool $onlyNoise = null): ChangeListData
     {
         [$from, $to] = $this->dateRange($filters->from, $filters->to);
 
@@ -33,6 +33,7 @@ final class ListChangesAction
             actorLabel: $filters->actor !== '' ? $filters->actor : null,
             from: $from,
             to: $to,
+            onlyNoise: $onlyNoise,
         );
 
         $paged = $this->repository->paginate($criteria, max(1, $filters->page), self::PER_PAGE);

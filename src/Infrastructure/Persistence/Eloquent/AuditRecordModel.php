@@ -18,6 +18,7 @@ final class AuditRecordModel extends Model
     protected $casts = [
         'changes' => 'array',
         'labels' => 'array',
+        'is_noise' => 'boolean',
     ];
 
     public function getConnectionName(): ?string

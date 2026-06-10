@@ -65,7 +65,7 @@ final class ComputeDiffStageTest extends TestCase
         $this->assertFalse($context->diff->has('updated_at'));
     }
 
-    public function test_a_change_that_only_touches_ignored_attributes_is_empty(): void
+    public function test_a_change_that_only_touches_ignored_attributes_is_flagged_as_noise(): void
     {
         $stage = new ComputeDiffStage(new StripKeysRedactor([]), ['created_at', 'updated_at']);
 
@@ -77,6 +77,25 @@ final class ComputeDiffStageTest extends TestCase
             after: ['updated_at' => '2026-01-01 11:00:00'],
         )));
 
+        // Recorded, but flagged as noise and keeping the raw change for diagnosis.
+        $this->assertTrue($context->isNoise);
+        $this->assertFalse($context->diff->isEmpty());
+        $this->assertTrue($context->diff->has('updated_at'));
+    }
+
+    public function test_a_truly_empty_change_is_not_noise(): void
+    {
+        $stage = new ComputeDiffStage(new StripKeysRedactor([]), ['updated_at']);
+
+        $context = $stage(RecordChangeContext::start(new ChangeData(
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: ChangeType::Updated,
+            before: ['status' => 'paid'],
+            after: ['status' => 'paid'],
+        )));
+
+        $this->assertFalse($context->isNoise);
         $this->assertTrue($context->diff->isEmpty());
     }
 

@@ -26,13 +26,19 @@
                 $dot = $dots[$entry->event] ?? 'bg-muted-foreground';
             @endphp
             <li class="mb-5 ms-6">
-                <span class="absolute -start-[7px] mt-1.5 h-3.5 w-3.5 rounded-full ring-4 ring-background {{ $dot }}"></span>
-                <div class="rounded-xl border {{ $loop->first ? 'border-brand/40 bg-brand/5' : 'border-border bg-card' }} p-4 shadow-xs">
+                <span class="absolute -start-[7px] mt-1.5 h-3.5 w-3.5 rounded-full ring-4 ring-background {{ $entry->isNoise ? 'bg-warning' : $dot }}"></span>
+                <div class="rounded-xl border {{ $entry->isNoise ? 'border-warning/40 bg-warning/5' : ($loop->first ? 'border-brand/40 bg-brand/5' : 'border-border bg-card') }} p-4 shadow-xs">
                     <div class="flex items-center justify-between gap-3 flex-wrap">
                         <div class="flex items-center gap-2 min-w-0">
                             <span class="font-semibold">{{ $entry->model() }}</span>
                             <span class="text-[11px] font-mono text-muted-foreground">#{{ $entry->auditableId }}</span>
                             @include('audit-log::partials.event-badge', ['event' => $entry->event])
+                            @if ($entry->isNoise)
+                                <span class="inline-flex items-center gap-1 rounded-md bg-warning/10 px-1.5 py-0.5 text-[11px] font-medium text-warning ring-1 ring-inset ring-warning/30"
+                                      title="No real change — only ignored attributes (e.g. timestamps) changed. Often a double write.">
+                                    <i data-lucide="alert-triangle" class="text-[11px]"></i> no-op
+                                </span>
+                            @endif
                             @if ($loop->first)
                                 <span class="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand ring-1 ring-inset ring-brand/30">
                                     <i data-lucide="flag" class="text-[11px]"></i> Root

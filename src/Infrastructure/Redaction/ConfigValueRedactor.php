@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Infrastructure\Redaction;
 
 use Yammi\AuditLog\Application\Contract\ValueRedactor;
 
+/** @internal */
 final class ConfigValueRedactor implements ValueRedactor
 {
     /**

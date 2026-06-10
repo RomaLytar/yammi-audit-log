@@ -14,6 +14,7 @@ use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 
+/** @internal */
 final class RecordChangeAction
 {
     public function __construct(

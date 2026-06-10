@@ -10,6 +10,8 @@ use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 /**
  * Presents one change for the UI: pre-formatted strings, dates and diff rows, so
  * the Blade templates stay dumb markup.
+ *
+ * @internal
  */
 final class TimelineEntryViewModel
 {

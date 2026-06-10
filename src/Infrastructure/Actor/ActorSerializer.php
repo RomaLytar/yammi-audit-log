@@ -10,6 +10,8 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 /**
  * Serialises an actor into a job payload so the origin survives the queue
  * boundary and a worker can attribute a change back to who triggered the job.
+ *
+ * @internal
  */
 final class ActorSerializer
 {

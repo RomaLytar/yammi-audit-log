@@ -8,6 +8,8 @@ use Illuminate\Contracts\Events\Dispatcher;
 
 /**
  * Wires the global Eloquent listeners that feed model changes into the recorder.
+ *
+ * @internal
  */
 final class CaptureRegistrar
 {

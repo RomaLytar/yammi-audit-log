@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Presentation\ViewModel;
 
 use Yammi\AuditLog\Application\DTO\ChainData;
 
+/** @internal */
 final class TraceViewModel
 {
     /** @var list<TimelineEntryViewModel> */

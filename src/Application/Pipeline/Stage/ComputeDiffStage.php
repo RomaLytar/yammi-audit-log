@@ -11,6 +11,7 @@ use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\FieldDiff;
 
+/** @internal */
 final class ComputeDiffStage implements RecordChangeStage
 {
     /**

@@ -12,6 +12,8 @@ use Yammi\AuditLog\Infrastructure\Http\Middleware\StartAuditCorrelation;
 /**
  * Pushes the correlation middleware onto the HTTP kernel so every request starts
  * a fresh correlation for the changes it makes.
+ *
+ * @internal
  */
 final class CorrelationMiddlewareRegistrar
 {

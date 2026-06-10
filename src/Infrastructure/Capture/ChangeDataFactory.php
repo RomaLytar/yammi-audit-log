@@ -10,6 +10,7 @@ use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Application\DTO\ChangeData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 
+/** @internal */
 final class ChangeDataFactory
 {
     public function make(Model $model, ChangeType $event): ChangeData

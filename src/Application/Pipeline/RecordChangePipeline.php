@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Pipeline;
 
+/** @internal */
 final class RecordChangePipeline
 {
     /**

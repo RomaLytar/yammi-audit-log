@@ -21,6 +21,8 @@ use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
  * Maintains the actor and correlation context across jobs and commands, and
  * propagates origin and correlation into the queue payload so they survive the
  * queue boundary.
+ *
+ * @internal
  */
 final class ContextRegistrar
 {

@@ -36,6 +36,7 @@ final class AuditRecordMapper
             'origin_id' => $record->origin()?->identifier,
             'origin_label' => $record->origin()?->label,
             'labels' => $record->labels()->all(),
+            'correlation_id' => $record->correlationId(),
             'occurred_at' => $occurredAt,
             'created_at' => $occurredAt,
         ];
@@ -71,6 +72,7 @@ final class AuditRecordMapper
             origin: $origin,
             labels: $this->labels($model->getAttribute('labels')),
             occurredAt: new DateTimeImmutable($this->string($model->getAttribute('occurred_at'))),
+            correlationId: $this->nullableString($model->getAttribute('correlation_id')),
             id: (int) $model->getAttribute('id'),
         );
     }

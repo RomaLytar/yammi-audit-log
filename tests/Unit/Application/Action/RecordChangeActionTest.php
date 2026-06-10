@@ -17,6 +17,7 @@ use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Tests\Support\FixedActorResolver;
 use Yammi\AuditLog\Tests\Support\FixedClock;
+use Yammi\AuditLog\Tests\Support\FixedCorrelationResolver;
 use Yammi\AuditLog\Tests\Support\InMemoryAuditRecordRepository;
 use Yammi\AuditLog\Tests\Support\StripKeysRedactor;
 
@@ -56,6 +57,7 @@ final class RecordChangeActionTest extends TestCase
         $this->assertSame('John Doe', $record->origin()?->displayLabel());
         $this->assertSame('paid', $record->diff()->field('status')?->new);
         $this->assertSame($this->now, $record->occurredAt());
+        $this->assertSame('trace-test', $record->correlationId());
     }
 
     public function test_it_skips_an_update_that_changed_nothing(): void
@@ -117,6 +119,7 @@ final class RecordChangeActionTest extends TestCase
             new RecordChangePipeline($stages),
             $this->repository,
             new FixedClock($this->now),
+            new FixedCorrelationResolver('trace-test'),
         );
     }
 }

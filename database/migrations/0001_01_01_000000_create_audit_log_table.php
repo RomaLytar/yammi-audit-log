@@ -24,11 +24,13 @@ return new class extends Migration
             $table->string('origin_id')->nullable();
             $table->string('origin_label')->nullable();
             $table->json('labels');
+            $table->uuid('correlation_id')->nullable();
             $table->timestamp('occurred_at');
             $table->timestamp('created_at')->nullable();
 
             $table->index(['auditable_type', 'auditable_id']);
             $table->index(['actor_type', 'actor_id']);
+            $table->index('correlation_id');
             $table->index('occurred_at');
         });
     }

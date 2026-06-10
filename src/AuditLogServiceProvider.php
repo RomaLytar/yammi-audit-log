@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog;
 
+use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Http\Kernel as HttpKernelContract;
+use Illuminate\Foundation\Http\Kernel as HttpKernel;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Routing\Router;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Str;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\Clock;
+use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\LabelResolver;
 use Yammi\AuditLog\Application\Contract\ValueRedactor;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
@@ -31,6 +36,9 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
+use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
+use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Http\Middleware\StartAuditCorrelation;
 use Yammi\AuditLog\Infrastructure\Label\NullLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
@@ -57,6 +65,8 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->app->singleton(AuditReader::class);
 
         $this->app->singleton(ActorContext::class);
+        $this->app->singleton(CorrelationContext::class);
+        $this->app->bind(CorrelationResolver::class, ContextCorrelationResolver::class);
 
         $this->app->bind(AuthenticatedUserProvider::class, function (): AuthenticatedUserProvider {
             return new AuthenticatedUserProvider(
@@ -136,6 +146,18 @@ final class AuditLogServiceProvider extends ServiceProvider
         }
 
         $this->trackActorContext($events);
+        $this->registerCorrelationMiddleware();
+    }
+
+    private function registerCorrelationMiddleware(): void
+    {
+        $this->app->booted(function (): void {
+            $kernel = $this->app->make(HttpKernelContract::class);
+
+            if ($kernel instanceof HttpKernel) {
+                $kernel->pushMiddleware(StartAuditCorrelation::class);
+            }
+        });
     }
 
     private function registerRoutes(ConfigRepository $config): void
@@ -154,9 +176,10 @@ final class AuditLogServiceProvider extends ServiceProvider
     private function trackActorContext(Dispatcher $events): void
     {
         $context = $this->app->make(ActorContext::class);
+        $correlation = $this->app->make(CorrelationContext::class);
         $serializer = $this->app->make(ActorSerializer::class);
 
-        $events->listen(JobProcessing::class, function (JobProcessing $event) use ($context, $serializer): void {
+        $events->listen(JobProcessing::class, function (JobProcessing $event) use ($context, $correlation, $serializer): void {
             $payload = $event->job->payload();
 
             $origin = isset($payload['audit_origin']) && is_array($payload['audit_origin'])
@@ -164,24 +187,38 @@ final class AuditLogServiceProvider extends ServiceProvider
                 : $this->app->make(ActorResolver::class)->resolve();
 
             $context->enterJob($event->job->resolveName(), $origin);
+
+            $correlationId = isset($payload['audit_correlation']) && is_string($payload['audit_correlation'])
+                ? $payload['audit_correlation']
+                : ($correlation->current() ?? (string) Str::uuid());
+
+            $correlation->push($correlationId);
         });
 
-        $events->listen([JobProcessed::class, JobFailed::class], static function () use ($context): void {
+        $events->listen([JobProcessed::class, JobFailed::class], static function () use ($context, $correlation): void {
             $context->leaveJob();
+            $correlation->pop();
         });
 
-        $events->listen(CommandStarting::class, static function (CommandStarting $event) use ($context): void {
+        $events->listen(CommandStarting::class, static function (CommandStarting $event) use ($context, $correlation): void {
             $context->enterCommand($event->command);
+            $correlation->push((string) Str::uuid());
         });
 
-        Queue::createPayloadUsing(function ($connection, $queue, $payload) use ($context, $serializer): array {
+        $events->listen(CommandFinished::class, static function () use ($correlation): void {
+            $correlation->pop();
+        });
+
+        Queue::createPayloadUsing(function ($connection, $queue, $payload) use ($context, $correlation, $serializer): array {
+            $extra = ['audit_correlation' => $correlation->current() ?? (string) Str::uuid()];
+
             $origin = $context->currentOrigin() ?? $this->app->make(ActorResolver::class)->resolve();
 
-            if ($origin->isAnonymous()) {
-                return [];
+            if (! $origin->isAnonymous()) {
+                $extra['audit_origin'] = $serializer->toArray($origin);
             }
 
-            return ['audit_origin' => $serializer->toArray($origin)];
+            return $extra;
         });
     }
 

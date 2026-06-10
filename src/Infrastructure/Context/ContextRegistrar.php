@@ -1,0 +1,84 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Yammi\AuditLog\Infrastructure\Context;
+
+use Illuminate\Console\Events\CommandFinished;
+use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Queue\Events\JobFailed;
+use Illuminate\Queue\Events\JobProcessed;
+use Illuminate\Queue\Events\JobProcessing;
+use Illuminate\Support\Facades\Queue;
+use Illuminate\Support\Str;
+use Yammi\AuditLog\Application\Contract\ActorResolver;
+use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
+use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
+use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+
+/**
+ * Maintains the actor and correlation context across jobs and commands, and
+ * propagates origin and correlation into the queue payload so they survive the
+ * queue boundary.
+ */
+final class ContextRegistrar
+{
+    public function __construct(
+        private readonly Dispatcher $events,
+        private readonly ActorContext $actors,
+        private readonly CorrelationContext $correlation,
+        private readonly ActorSerializer $serializer,
+        private readonly ActorResolver $resolver,
+    ) {}
+
+    public function register(): void
+    {
+        $actors = $this->actors;
+        $correlation = $this->correlation;
+        $serializer = $this->serializer;
+        $resolver = $this->resolver;
+
+        $this->events->listen(JobProcessing::class, static function (JobProcessing $event) use ($actors, $correlation, $serializer, $resolver): void {
+            $payload = $event->job->payload();
+
+            $origin = isset($payload['audit_origin']) && is_array($payload['audit_origin'])
+                ? $serializer->fromArray($payload['audit_origin'])
+                : $resolver->resolve();
+
+            $actors->enterJob($event->job->resolveName(), $origin);
+
+            $correlationId = isset($payload['audit_correlation']) && is_string($payload['audit_correlation'])
+                ? $payload['audit_correlation']
+                : ($correlation->current() ?? (string) Str::uuid());
+
+            $correlation->push($correlationId);
+        });
+
+        $this->events->listen([JobProcessed::class, JobFailed::class], static function () use ($actors, $correlation): void {
+            $actors->leaveJob();
+            $correlation->pop();
+        });
+
+        $this->events->listen(CommandStarting::class, static function (CommandStarting $event) use ($actors, $correlation): void {
+            $actors->enterCommand($event->command);
+            $correlation->push((string) Str::uuid());
+        });
+
+        $this->events->listen(CommandFinished::class, static function () use ($correlation): void {
+            $correlation->pop();
+        });
+
+        Queue::createPayloadUsing(static function ($connection, $queue, $payload) use ($correlation, $serializer, $resolver): array {
+            $extra = ['audit_correlation' => $correlation->current() ?? (string) Str::uuid()];
+
+            $origin = $resolver->resolve();
+
+            if (! $origin->isAnonymous()) {
+                $extra['audit_origin'] = $serializer->toArray($origin);
+            }
+
+            return $extra;
+        });
+    }
+}

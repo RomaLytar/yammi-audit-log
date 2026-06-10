@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Persistence\Repository;
 
+use DateTimeImmutable;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
@@ -38,5 +39,12 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
         }
 
         return $records;
+    }
+
+    public function deleteOlderThan(DateTimeImmutable $cutoff): int
+    {
+        return AuditRecordModel::query()
+            ->where('occurred_at', '<', $cutoff->format('Y-m-d H:i:s'))
+            ->delete();
     }
 }

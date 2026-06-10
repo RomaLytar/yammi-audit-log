@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Tests\Support;
 
+use DateTimeImmutable;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
@@ -29,6 +30,18 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
         ));
 
         return array_slice(array_reverse($matches), 0, $limit);
+    }
+
+    public function deleteOlderThan(DateTimeImmutable $cutoff): int
+    {
+        $before = count($this->saved);
+
+        $this->saved = array_values(array_filter(
+            $this->saved,
+            static fn (AuditRecord $record): bool => $record->occurredAt() >= $cutoff,
+        ));
+
+        return $before - count($this->saved);
     }
 
     public function paginate(AuditCriteria $criteria, int $page = 1, int $perPage = 25): PagedRecords

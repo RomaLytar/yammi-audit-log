@@ -190,11 +190,22 @@ final class AuditLogServiceProvider extends ServiceProvider
     private function registerRoutes(ConfigRepository $config): void
     {
         $path = $config->get('audit-log.ui.path', 'audit-log');
-        $middleware = $config->get('audit-log.ui.middleware', ['web']);
+        $configured = $config->get('audit-log.ui.middleware', ['web']);
+        $middleware = is_array($configured) ? array_values($configured) : ['web'];
+
+        $throttle = $config->get('audit-log.ui.throttle');
+        if (is_string($throttle) && $throttle !== '') {
+            $middleware[] = 'throttle:'.$throttle;
+        }
+
+        $gate = $config->get('audit-log.ui.gate');
+        if (is_string($gate) && $gate !== '') {
+            $middleware[] = 'can:'.$gate;
+        }
 
         $this->app->make(Router::class)->group([
             'prefix' => is_string($path) ? $path : 'audit-log',
-            'middleware' => is_array($middleware) ? $middleware : ['web'],
+            'middleware' => $middleware,
         ], function (): void {
             $this->loadRoutesFrom(self::ROUTES_PATH);
         });

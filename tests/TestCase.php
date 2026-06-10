@@ -23,5 +23,6 @@ abstract class TestCase extends Orchestra
             'prefix' => '',
         ]);
         $app['config']->set('audit-log.ui.middleware', []);
+        $app['config']->set('audit-log.ui.throttle', '');
     }
 }

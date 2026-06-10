@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Tests\Integration\Http;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Yammi\AuditLog\Tests\Support\Models\Note;
 use Yammi\AuditLog\Tests\TestCase;
@@ -28,7 +29,7 @@ final class NoiseRouteTest extends TestCase
     public function test_the_dashboard_marks_a_noisy_write(): void
     {
         $note = Note::create(['title' => 'A', 'status' => 'draft']);
-        $note->touch();
+        $note->forceFill(['updated_at' => Carbon::parse('2030-01-01 00:00:00')])->save();
 
         $this->get('audit-log')->assertOk()->assertSee('no-op');
     }
@@ -36,7 +37,7 @@ final class NoiseRouteTest extends TestCase
     public function test_the_noise_page_lists_noisy_writes(): void
     {
         $note = Note::create(['title' => 'A', 'status' => 'draft']);
-        $note->touch();
+        $note->forceFill(['updated_at' => Carbon::parse('2030-01-01 00:00:00')])->save();
         $note->update(['status' => 'published']);
 
         $response = $this->get('audit-log/noise');

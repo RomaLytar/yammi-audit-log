@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Tests\Integration\Capture;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Carbon;
 use Illuminate\Support\Facades\Schema;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
@@ -33,7 +34,7 @@ final class NoiseAndSoftDeleteTest extends TestCase
     {
         $note = Note::create(['title' => 'A', 'status' => 'draft']);
 
-        $note->touch();
+        $note->forceFill(['updated_at' => Carbon::parse('2030-01-01 00:00:00')])->save();
 
         $timeline = $this->timelineFor($note);
 

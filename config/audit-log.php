@@ -56,8 +56,12 @@ return [
     'ui' => [
         'enabled' => (bool) env('AUDIT_LOG_UI_ENABLED', true),
         'path' => env('AUDIT_LOG_UI_PATH', 'audit-log'),
-        // The dashboard is gated to authenticated users by default. Override to
-        // add a stricter gate (e.g. an 'can:viewAuditLog' middleware).
+        // The dashboard is gated to authenticated users by default.
         'middleware' => ['web', 'auth'],
+        // Optional Gate ability checked before the dashboard (host-defined). When
+        // set, a `can:<ability>` middleware is added. null = no extra gate.
+        'gate' => env('AUDIT_LOG_UI_GATE'),
+        // Rate limit for the UI routes, as "requests,minutes". Empty = no limit.
+        'throttle' => env('AUDIT_LOG_UI_THROTTLE', '60,1'),
     ],
 ];

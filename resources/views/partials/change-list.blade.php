@@ -38,7 +38,7 @@
                         $rowId = 'al-row-'.$loop->index;
                         $chainSize = $list->chainSize($entry->correlationId);
                     @endphp
-                    <tr class="hover:bg-accent/40 cursor-pointer {{ $entry->isNoise ? 'bg-warning/5' : '' }}" onclick="__alToggleRow('{{ $rowId }}')">
+                    <tr class="cursor-pointer transition-colors {{ $entry->isNoise ? 'bg-warning/5 hover:bg-warning/10' : ($loop->odd ? 'bg-muted/30 hover:bg-accent/50' : 'bg-card hover:bg-accent/40') }}" onclick="__alToggleRow('{{ $rowId }}')">
                         <td class="px-4 py-3">
                             <div class="flex items-center gap-2 min-w-0">
                                 <i data-lucide="chevron-right" class="text-[14px] text-muted-foreground"></i>

@@ -65,9 +65,57 @@ final class EloquentAuditLogQueryTest extends TestCase
         $this->assertSame('warn! bot', $paged->records[0]->actor()->label);
     }
 
+    public function test_the_from_filter_includes_the_whole_starting_day(): void
+    {
+        $this->saveRecordAt(new DateTimeImmutable('2025-12-31T23:59:59+00:00'));
+        $this->saveRecordAt(new DateTimeImmutable('2026-01-01T00:00:00+00:00'));
+        $this->saveRecordAt(new DateTimeImmutable('2026-01-01T15:30:00+00:00'));
+
+        $paged = $this->query()->paginate(new AuditCriteria(from: new DateTimeImmutable('2026-01-01')));
+
+        $this->assertSame(2, $paged->total);
+    }
+
+    public function test_the_to_filter_includes_the_whole_ending_day(): void
+    {
+        $this->saveRecordAt(new DateTimeImmutable('2026-01-01T23:59:59+00:00'));
+        $this->saveRecordAt(new DateTimeImmutable('2026-01-02T00:00:00+00:00'));
+
+        $paged = $this->query()->paginate(new AuditCriteria(to: new DateTimeImmutable('2026-01-01')));
+
+        $this->assertSame(1, $paged->total);
+    }
+
+    public function test_from_and_to_bound_a_single_day(): void
+    {
+        $this->saveRecordAt(new DateTimeImmutable('2025-12-31T12:00:00+00:00'));
+        $this->saveRecordAt(new DateTimeImmutable('2026-01-01T12:00:00+00:00'));
+        $this->saveRecordAt(new DateTimeImmutable('2026-01-02T12:00:00+00:00'));
+
+        $paged = $this->query()->paginate(new AuditCriteria(
+            from: new DateTimeImmutable('2026-01-01'),
+            to: new DateTimeImmutable('2026-01-01'),
+        ));
+
+        $this->assertSame(1, $paged->total);
+    }
+
     private function query(): AuditLogQuery
     {
         return $this->app->make(AuditLogQuery::class);
+    }
+
+    private function saveRecordAt(DateTimeImmutable $occurredAt): void
+    {
+        $this->app->make(AuditRecordRepository::class)->save(new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 1),
+            event: ChangeType::Updated,
+            diff: Diff::between(['status' => 'a'], ['status' => 'b']),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: $occurredAt,
+        ));
     }
 
     private function saveRecordWithActorLabel(string $label): void

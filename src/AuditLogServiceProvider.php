@@ -234,10 +234,12 @@ final class AuditLogServiceProvider extends ServiceProvider
             $correlation->pop();
         });
 
-        Queue::createPayloadUsing(function ($connection, $queue, $payload) use ($context, $correlation, $serializer): array {
+        Queue::createPayloadUsing(function ($connection, $queue, $payload) use ($correlation, $serializer): array {
             $extra = ['audit_correlation' => $correlation->current() ?? (string) Str::uuid()];
 
-            $origin = $context->currentOrigin() ?? $this->app->make(ActorResolver::class)->resolve();
+            // The actor dispatching the job is the job's immediate parent, so a
+            // nested job records who actually spawned it (job -> job -> job).
+            $origin = $this->app->make(ActorResolver::class)->resolve();
 
             if (! $origin->isAnonymous()) {
                 $extra['audit_origin'] = $serializer->toArray($origin);

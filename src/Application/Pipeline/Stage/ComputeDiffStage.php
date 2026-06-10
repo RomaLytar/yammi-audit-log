@@ -12,19 +12,42 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\FieldDiff;
 
 final class ComputeDiffStage implements RecordChangeStage
 {
+    /**
+     * @param  list<string>  $ignoredAttributes
+     */
     public function __construct(
         private readonly ValueRedactor $redactor,
+        private readonly array $ignoredAttributes = [],
     ) {}
 
     public function __invoke(RecordChangeContext $context): RecordChangeContext
     {
-        $diff = Diff::between($context->change->before, $context->change->after);
+        $diff = $this->withoutIgnored(
+            Diff::between($context->change->before, $context->change->after),
+        );
 
         if ($diff->isEmpty()) {
             return $context->withDiff($diff);
         }
 
         return $context->withDiff($this->redact($diff));
+    }
+
+    private function withoutIgnored(Diff $diff): Diff
+    {
+        if ($this->ignoredAttributes === []) {
+            return $diff;
+        }
+
+        $fields = [];
+
+        foreach ($diff->fields() as $name => $field) {
+            if (! in_array($name, $this->ignoredAttributes, true)) {
+                $fields[] = $field;
+            }
+        }
+
+        return $fields === [] ? Diff::empty() : Diff::fromFields($fields);
     }
 
     private function redact(Diff $diff): Diff

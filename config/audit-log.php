@@ -14,6 +14,14 @@ return [
         'exclude' => [
             // Fully-qualified model classes that must never be audited.
         ],
+
+        // Attributes dropped from every diff. When an update touches only these,
+        // it is treated as a no-op and not recorded (e.g. a save that only bumped
+        // the timestamps because of a double write).
+        'ignore_attributes' => [
+            'created_at',
+            'updated_at',
+        ],
     ],
 
     'actor' => [

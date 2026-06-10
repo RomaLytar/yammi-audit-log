@@ -52,10 +52,28 @@
                         @endif
                     </div>
                     @if (count($entry->changes) > 0)
-                        <div class="mt-2 flex flex-wrap gap-1.5">
-                            @foreach ($entry->changes as $field => $pair)
-                                <span class="inline-flex items-center rounded bg-muted/60 px-1.5 py-0.5 text-[11px] font-mono text-muted-foreground">{{ $field }}</span>
-                            @endforeach
+                        <div class="mt-3 overflow-hidden rounded-lg border border-border">
+                            <table class="w-full text-xs font-mono">
+                                <thead>
+                                    <tr class="bg-muted/50 text-[10px] uppercase tracking-wider text-muted-foreground text-left">
+                                        <th class="px-3 py-1.5">Field</th>
+                                        <th class="px-3 py-1.5">Old</th>
+                                        <th class="px-3 py-1.5">New</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-border">
+                                    @foreach ($entry->changes as $field => $pair)
+                                        @php
+                                            $fmt = fn ($v) => $v === null ? '—' : (is_array($v) ? json_encode($v) : (string) $v);
+                                        @endphp
+                                        <tr>
+                                            <td class="px-3 py-1.5 font-medium text-foreground">{{ $field }}</td>
+                                            <td class="px-3 py-1.5 text-destructive break-all">{{ $fmt($pair['old'] ?? null) }}</td>
+                                            <td class="px-3 py-1.5 text-success break-all">{{ $fmt($pair['new'] ?? null) }}</td>
+                                        </tr>
+                                    @endforeach
+                                </tbody>
+                            </table>
                         </div>
                     @endif
                 </div>

@@ -164,9 +164,8 @@ final class AuditLogServiceProvider extends ServiceProvider
             return;
         }
 
-        $this->app->booted(function () use ($config): void {
-            $this->app->make(Schedule::class)
-                ->command(PruneAuditLogCommand::class)
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($config): void {
+            $schedule->command(PruneAuditLogCommand::class)
                 ->cron((string) $config->get('audit-log.retention.schedule.cron', '0 3 * * *'))
                 ->name('audit-log:prune')
                 ->withoutOverlapping();

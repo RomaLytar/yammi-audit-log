@@ -177,7 +177,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         Queue::createPayloadUsing(function ($connection, $queue, $payload) use ($context, $serializer): array {
             $origin = $context->currentOrigin() ?? $this->app->make(ActorResolver::class)->resolve();
 
-            if ($origin === null || $origin->isAnonymous()) {
+            if ($origin->isAnonymous()) {
                 return [];
             }
 

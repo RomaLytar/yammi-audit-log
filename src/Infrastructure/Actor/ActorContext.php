@@ -11,6 +11,8 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
  * a change to the work that caused it. Each job frame also carries the origin —
  * the actor that triggered the job — so a user -> job -> change chain is kept.
  * Jobs are stacked to support a job dispatching another job.
+ *
+ * @internal
  */
 final class ActorContext
 {

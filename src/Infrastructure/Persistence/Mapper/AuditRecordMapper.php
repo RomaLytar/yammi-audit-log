@@ -16,6 +16,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 use Yammi\AuditLog\Infrastructure\Persistence\DTO\AuditRecordRow;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
+/** @internal */
 final class AuditRecordMapper
 {
     public function toRow(AuditRecord $record): AuditRecordRow

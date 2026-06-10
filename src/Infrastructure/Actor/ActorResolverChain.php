@@ -8,6 +8,7 @@ use Yammi\AuditLog\Application\Contract\ActorProvider;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 
+/** @internal */
 final class ActorResolverChain implements ActorResolver
 {
     /**

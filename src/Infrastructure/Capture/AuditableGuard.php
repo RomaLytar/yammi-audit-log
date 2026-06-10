@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Capture;
 use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
+/** @internal */
 final class AuditableGuard
 {
     /**

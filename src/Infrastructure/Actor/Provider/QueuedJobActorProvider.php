@@ -8,6 +8,7 @@ use Yammi\AuditLog\Application\Contract\ActorProvider;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
 
+/** @internal */
 final class QueuedJobActorProvider implements ActorProvider
 {
     public function __construct(

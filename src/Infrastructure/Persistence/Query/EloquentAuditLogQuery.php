@@ -11,6 +11,7 @@ use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 
+/** @internal */
 final class EloquentAuditLogQuery implements AuditLogQuery
 {
     public function __construct(

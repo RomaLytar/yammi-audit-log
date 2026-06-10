@@ -9,6 +9,7 @@ use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 
+/** @internal */
 final class BuildTimelineAction
 {
     public function __construct(

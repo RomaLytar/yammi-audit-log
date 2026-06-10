@@ -8,6 +8,8 @@ use Illuminate\Database\Eloquent\Model;
 
 /**
  * @property int $id
+ *
+ * @internal
  */
 final class AuditRecordModel extends Model
 {

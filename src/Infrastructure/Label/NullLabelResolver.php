@@ -8,6 +8,7 @@ use Yammi\AuditLog\Application\Contract\LabelResolver;
 use Yammi\AuditLog\Application\DTO\ChangeData;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 
+/** @internal */
 final class NullLabelResolver implements LabelResolver
 {
     public function labelsFor(ChangeData $change): LabelSnapshot

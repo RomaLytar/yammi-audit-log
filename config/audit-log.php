@@ -44,7 +44,13 @@ return [
     ],
 
     'retention' => [
+        // 0 = keep forever. Audit data is PII, so set a window in production.
         'days' => (int) env('AUDIT_LOG_RETENTION_DAYS', 0),
+
+        'schedule' => [
+            'enabled' => (bool) env('AUDIT_LOG_RETENTION_SCHEDULE', true),
+            'cron' => env('AUDIT_LOG_RETENTION_CRON', '0 3 * * *'),
+        ],
     ],
 
     'ui' => [

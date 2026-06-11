@@ -11,6 +11,9 @@ final class SettingDefinitionData
 {
     /**
      * @param  bool|int|string|list<string>  $default
+     * @param  array<string, string>|null  $options  value => label presets; the
+     *                                               current value is offered as
+     *                                               a custom entry when absent
      */
     public function __construct(
         public readonly string $group,
@@ -23,6 +26,7 @@ final class SettingDefinitionData
         public readonly ?int $min = null,
         public readonly ?int $max = null,
         public readonly ?string $suffix = null,
+        public readonly ?array $options = null,
     ) {}
 
     /**

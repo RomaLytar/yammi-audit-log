@@ -26,7 +26,7 @@ final class DatabaseTransferController
         );
 
         return redirect()
-            ->route('audit-log.settings')
+            ->route('audit-log.settings.database')
             ->with(
                 $result->ok ? 'audit_log_status' : 'audit_log_error',
                 $result->message,

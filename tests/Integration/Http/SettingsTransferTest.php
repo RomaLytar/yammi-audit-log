@@ -50,15 +50,29 @@ final class SettingsTransferTest extends TestCase
             'to' => 'audit_target',
         ]);
 
-        $response->assertRedirect(route('audit-log.settings'));
+        $response->assertRedirect(route('audit-log.settings.database'));
         $response->assertSessionHas('audit_log_status');
 
         $this->assertSame(1, DB::connection('audit_target')->table('audit_log')->count());
     }
 
+    public function test_the_database_page_shows_both_connection_cards(): void
+    {
+        $this->app['config']->set('audit-log.database.connection', 'audit_target');
+
+        $response = $this->get('audit-log/settings/database');
+
+        $response->assertOk();
+        $response->assertSee('Application default');
+        $response->assertSee('Dedicated audit DB');
+        $response->assertSee('audit_target');
+        $response->assertSee('in use');
+        $response->assertSee('Transfer data');
+    }
+
     public function test_a_transfer_to_the_same_connection_is_rejected(): void
     {
-        $this->from('audit-log/settings')
+        $this->from('audit-log/settings/database')
             ->post('audit-log/settings/database/transfer', ['from' => 'testing', 'to' => 'testing'])
             ->assertSessionHasErrors('to');
     }

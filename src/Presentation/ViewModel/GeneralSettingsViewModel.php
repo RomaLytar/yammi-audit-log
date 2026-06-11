@@ -6,10 +6,9 @@ namespace Yammi\AuditLog\Presentation\ViewModel;
 
 use Yammi\AuditLog\Application\DTO\ResolvedSettingData;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
-use Yammi\AuditLog\Infrastructure\Transfer\ConnectionStatusData;
 
 /** @internal */
-final class SettingsViewModel
+final class GeneralSettingsViewModel
 {
     private const GROUP_TITLES = [
         SettingRegistry::GROUP_GENERAL => ['General', 'database-zap'],
@@ -21,13 +20,9 @@ final class SettingsViewModel
 
     /**
      * @param  array<string, list<ResolvedSettingData>>  $settings
-     * @param  list<string>  $connectionNames
      */
     public function __construct(
         public readonly array $settings,
-        public readonly ConnectionStatusData $defaultConnection,
-        public readonly ?ConnectionStatusData $dedicatedConnection,
-        public readonly array $connectionNames,
     ) {}
 
     /**
@@ -44,15 +39,5 @@ final class SettingsViewModel
         }
 
         return $sections;
-    }
-
-    public function hasDedicatedConnection(): bool
-    {
-        return $this->dedicatedConnection !== null;
-    }
-
-    public function suggestedTransferTarget(): string
-    {
-        return $this->dedicatedConnection?->name ?? '';
     }
 }

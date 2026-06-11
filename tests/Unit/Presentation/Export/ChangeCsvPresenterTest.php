@@ -24,6 +24,30 @@ final class ChangeCsvPresenterTest extends TestCase
         $this->assertSame('{"status":{"old":"a","new":"b"}}', $row[11]);
     }
 
+    public function test_formula_prefixes_are_neutralised_against_csv_injection(): void
+    {
+        $entry = new TimelineEntryData(
+            id: 1,
+            auditableType: '=HYPERLINK("http://evil")',
+            auditableId: '+1',
+            event: 'updated',
+            actorType: 'user',
+            actorLabel: '@cmd',
+            originLabel: '-2+3',
+            changes: [],
+            labels: [],
+            occurredAt: '2026-01-01T10:00:00+00:00',
+            correlationId: null,
+        );
+
+        $row = (new ChangeCsvPresenter)->row($entry);
+
+        $this->assertSame("'=HYPERLINK(\"http://evil\")", $row[3]);
+        $this->assertSame("'+1", $row[4]);
+        $this->assertSame("'@cmd", $row[7]);
+        $this->assertSame("'-2+3", $row[8]);
+    }
+
     public function test_json_rows_keep_structured_changes(): void
     {
         $row = (new ChangeCsvPresenter)->jsonRow($this->entry());

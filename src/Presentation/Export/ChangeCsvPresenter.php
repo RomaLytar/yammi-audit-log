@@ -35,7 +35,7 @@ final class ChangeCsvPresenter
      */
     public function row(TimelineEntryData $entry): array
     {
-        return [
+        return array_map($this->guardFormula(...), [
             (string) $entry->id,
             $entry->occurredAt,
             $entry->model(),
@@ -48,7 +48,20 @@ final class ChangeCsvPresenter
             $entry->correlationId ?? '',
             $entry->isNoise ? '1' : '0',
             (string) json_encode($entry->changes),
-        ];
+        ]);
+    }
+
+    /**
+     * Audit values are attacker-controlled; a leading formula character would
+     * execute when the CSV is opened in a spreadsheet.
+     */
+    private function guardFormula(string $value): string
+    {
+        if ($value !== '' && in_array($value[0], ['=', '+', '-', '@', "\t", "\r"], true)) {
+            return "'".$value;
+        }
+
+        return $value;
     }
 
     /**

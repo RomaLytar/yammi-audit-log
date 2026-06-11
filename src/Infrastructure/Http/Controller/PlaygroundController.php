@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Playground\MethodCatalog;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
@@ -20,6 +21,7 @@ final class PlaygroundController
         private readonly ViewFactory $view,
         private readonly MethodCatalog $catalog,
         private readonly PlaygroundExecutor $executor,
+        private readonly LoggerInterface $logger,
     ) {}
 
     public function index(): View
@@ -49,7 +51,9 @@ final class PlaygroundController
         } catch (InvalidAuditData $exception) {
             return new JsonResponse(['ok' => false, 'error' => $exception->getMessage()], 422);
         } catch (Throwable $exception) {
-            return new JsonResponse(['ok' => false, 'error' => $exception->getMessage()], 500);
+            $this->logger->error('Playground execution failed: '.$exception->getMessage(), ['exception' => $exception]);
+
+            return new JsonResponse(['ok' => false, 'error' => 'Execution failed — see the application log.'], 500);
         }
     }
 }

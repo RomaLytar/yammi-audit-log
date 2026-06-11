@@ -104,6 +104,17 @@ return [
         ],
     ],
 
+    'write' => [
+        // When enabled, the audit insert is dispatched to the queue instead of
+        // running inside the host's request. The actor, origin, correlation and
+        // redacted diff are still resolved synchronously at the moment of the
+        // change — only the database write is deferred.
+        'async' => (bool) env('AUDIT_LOG_WRITE_ASYNC', false),
+
+        // Queue name for the deferred insert. null = the default queue.
+        'queue' => env('AUDIT_LOG_WRITE_QUEUE'),
+    ],
+
     'retention' => [
         // Records older than this many days are pruned daily. Values are
         // clamped to 7..9999; 0 = keep forever (audit data is PII — avoid).

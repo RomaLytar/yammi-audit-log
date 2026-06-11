@@ -18,6 +18,13 @@ interface AuditLogQuery
     public function paginate(AuditCriteria $criteria, int $page = 1, int $perPage = 25): PagedRecords;
 
     /**
+     * Newest first, capped at $limit.
+     *
+     * @return list<AuditRecord>
+     */
+    public function all(AuditCriteria $criteria, int $limit): array;
+
+    /**
      * @return list<AuditRecord>
      */
     public function chain(string $correlationId): array;

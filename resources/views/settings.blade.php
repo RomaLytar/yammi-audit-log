@@ -7,7 +7,10 @@
         <h1 class="text-xl font-semibold tracking-tight flex items-center gap-2">
             <i data-lucide="settings" class="text-brand text-[20px]"></i> Settings
         </h1>
-        <p class="text-sm text-muted-foreground mt-1">Package behavior — data retention and the audit database.</p>
+        <p class="text-sm text-muted-foreground mt-1">Package behavior — capture, retention, redaction and the audit database.</p>
+        <a href="{{ route('audit-log.playground') }}" class="inline-flex items-center gap-1.5 mt-2 rounded-md border border-brand/30 bg-brand/10 px-3 h-8 text-xs font-medium text-brand hover:bg-brand/15">
+            <i data-lucide="terminal" class="text-[13px]"></i> Facade playground — the public API with live examples
+        </a>
     </div>
 
     @if (session('audit_log_status'))

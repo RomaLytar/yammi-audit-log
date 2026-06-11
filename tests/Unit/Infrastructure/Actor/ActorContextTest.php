@@ -76,4 +76,20 @@ final class ActorContextTest extends TestCase
 
         $this->assertNull($context->currentCommand());
     }
+
+    public function test_scheduled_tasks_are_tracked_as_a_stack(): void
+    {
+        $context = new ActorContext;
+
+        $this->assertNull($context->currentScheduledTask());
+
+        $context->enterScheduledTask('audit-log:prune');
+        $this->assertSame('audit-log:prune', $context->currentScheduledTask());
+
+        $context->leaveScheduledTask();
+        $this->assertNull($context->currentScheduledTask());
+
+        $context->leaveScheduledTask();
+        $this->assertNull($context->currentScheduledTask());
+    }
 }

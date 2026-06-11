@@ -6,6 +6,10 @@ namespace Yammi\AuditLog\Infrastructure\Context;
 
 use Illuminate\Console\Events\CommandFinished;
 use Illuminate\Console\Events\CommandStarting;
+use Illuminate\Console\Events\ScheduledTaskFailed;
+use Illuminate\Console\Events\ScheduledTaskFinished;
+use Illuminate\Console\Events\ScheduledTaskStarting;
+use Illuminate\Console\Scheduling\Event as ScheduledEvent;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Queue\Events\JobFailed;
 use Illuminate\Queue\Events\JobProcessed;
@@ -80,6 +84,14 @@ final class ContextRegistrar
             $correlation->pop();
         });
 
+        $this->events->listen(ScheduledTaskStarting::class, static function (ScheduledTaskStarting $event) use ($actors): void {
+            $actors->enterScheduledTask(self::scheduledTaskName($event->task));
+        });
+
+        $this->events->listen([ScheduledTaskFinished::class, ScheduledTaskFailed::class], static function () use ($actors): void {
+            $actors->leaveScheduledTask();
+        });
+
         Queue::createPayloadUsing(static function ($connection, $queue, $payload) use ($correlation, $serializer, $resolver): array {
             $extra = ['audit_correlation' => $correlation->current() ?? (string) Str::uuid()];
 
@@ -100,5 +112,24 @@ final class ContextRegistrar
     private static function commandName(mixed $command): ?string
     {
         return is_string($command) && $command !== '' ? $command : null;
+    }
+
+    private static function scheduledTaskName(ScheduledEvent $task): string
+    {
+        $description = $task->description;
+
+        if (is_string($description) && $description !== '') {
+            return $description;
+        }
+
+        $command = $task->command;
+
+        if (is_string($command) && $command !== '') {
+            $artisanCommand = preg_replace("/^.*['\"]?artisan['\"]?\s+/", '', $command);
+
+            return is_string($artisanCommand) && $artisanCommand !== '' ? $artisanCommand : $command;
+        }
+
+        return 'scheduled task';
     }
 }

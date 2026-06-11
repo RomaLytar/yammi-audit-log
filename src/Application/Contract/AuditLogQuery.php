@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Contract;
 
+use DateTimeImmutable;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
@@ -40,6 +41,10 @@ interface AuditLogQuery
     public function distinctActorTypes(): array;
 
     public function countNoise(): int;
+
+    public function countAll(): int;
+
+    public function countSince(DateTimeImmutable $cutoff): int;
 
     /**
      * @param  list<string>  $correlationIds

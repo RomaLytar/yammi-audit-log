@@ -14,6 +14,7 @@ use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
+use Yammi\AuditLog\Application\Action\RecordChangeAction;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\AuditDataTransferrer;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
@@ -26,10 +27,15 @@ use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveActorStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
+use Yammi\AuditLog\Application\Playground\MethodCatalog;
+use Yammi\AuditLog\Application\Service\CriteriaFactory;
+use Yammi\AuditLog\Application\Service\FilterParser;
+use Yammi\AuditLog\Application\Service\SettingRegistry;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
 use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
 use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
+use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
@@ -37,6 +43,8 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
+use Yammi\AuditLog\Infrastructure\Capture\ChangeDataFactory;
+use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
 use Yammi\AuditLog\Infrastructure\Console\ToggleUiCommand;
 use Yammi\AuditLog\Infrastructure\Console\TransferAuditDataCommand;
@@ -44,6 +52,7 @@ use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
+use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
@@ -72,7 +81,7 @@ final class AuditLogServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(self::CONFIG_PATH, 'audit-log');
 
-        $this->app->bind(AuditRecordRepository::class, function (): AuditRecordRepository {
+        $this->app->singleton(AuditRecordRepository::class, function (): AuditRecordRepository {
             $config = $this->config();
             $inner = $this->app->make(EloquentAuditRecordRepository::class);
 
@@ -89,11 +98,11 @@ final class AuditLogServiceProvider extends ServiceProvider
                 is_string($queue) && $queue !== '' ? $queue : null,
             );
         });
-        $this->app->bind(AuditLogQuery::class, EloquentAuditLogQuery::class);
-        $this->app->bind(AuditStatsQuery::class, EloquentAuditStatsQuery::class);
-        $this->app->bind(Clock::class, SystemClock::class);
+        $this->app->singleton(AuditLogQuery::class, EloquentAuditLogQuery::class);
+        $this->app->singleton(AuditStatsQuery::class, EloquentAuditStatsQuery::class);
+        $this->app->singleton(Clock::class, SystemClock::class);
 
-        $this->app->bind(LabelResolver::class, function (): LabelResolver {
+        $this->app->singleton(LabelResolver::class, function (): LabelResolver {
             return new ConventionLabelResolver(
                 $this->classMap($this->config()->get('audit-log.labels.map', [])),
             );
@@ -103,16 +112,31 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->app->singleton(ActorContext::class);
         $this->app->singleton(CorrelationContext::class);
-        $this->app->bind(CorrelationResolver::class, ContextCorrelationResolver::class);
+        $this->app->singleton(CorrelationResolver::class, ContextCorrelationResolver::class);
 
-        $this->app->bind(AuthenticatedUserProvider::class, function (): AuthenticatedUserProvider {
+        foreach ([
+            EloquentChangeRecorder::class,
+            RecordChangeAction::class,
+            ChangeDataFactory::class,
+            AuditRecordMapper::class,
+            ActorSerializer::class,
+            CriteriaFactory::class,
+            FilterParser::class,
+            FilterFactory::class,
+            SettingRegistry::class,
+            MethodCatalog::class,
+        ] as $stateless) {
+            $this->app->singleton($stateless);
+        }
+
+        $this->app->singleton(AuthenticatedUserProvider::class, function (): AuthenticatedUserProvider {
             return new AuthenticatedUserProvider(
                 $this->app->make(AuthFactory::class),
                 $this->stringList($this->config()->get('audit-log.actor.guards', [])),
             );
         });
 
-        $this->app->bind(ActorResolver::class, function (): ActorResolver {
+        $this->app->singleton(ActorResolver::class, function (): ActorResolver {
             return new ActorResolverChain([
                 $this->app->make(QueuedJobActorProvider::class),
                 $this->app->make(SchedulerActorProvider::class),
@@ -121,7 +145,7 @@ final class AuditLogServiceProvider extends ServiceProvider
             ], $this->app->make(ActorContext::class));
         });
 
-        $this->app->bind(ValueRedactor::class, function (): ValueRedactor {
+        $this->app->singleton(ValueRedactor::class, function (): ValueRedactor {
             $config = $this->config();
 
             return new ConfigValueRedactor(
@@ -130,16 +154,16 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(AuditDataTransferrer::class, function (): AuditDataTransferrer {
+        $this->app->singleton(AuditDataTransferrer::class, function (): AuditDataTransferrer {
             return new EloquentAuditDataTransferrer(
                 $this->app->make(ConnectionResolverInterface::class),
                 $this->auditTable(),
             );
         });
 
-        $this->app->bind(GeneralSettingRepository::class, EloquentGeneralSettingRepository::class);
+        $this->app->singleton(GeneralSettingRepository::class, EloquentGeneralSettingRepository::class);
 
-        $this->app->bind(ConnectionStatusInspector::class, function (): ConnectionStatusInspector {
+        $this->app->singleton(ConnectionStatusInspector::class, function (): ConnectionStatusInspector {
             return new ConnectionStatusInspector(
                 $this->app->make(ConnectionResolverInterface::class),
                 $this->config(),
@@ -147,20 +171,20 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
-        $this->app->bind(AuditableGuard::class, function (): AuditableGuard {
+        $this->app->singleton(AuditableGuard::class, function (): AuditableGuard {
             return new AuditableGuard(
                 $this->stringList($this->config()->get('audit-log.capture.exclude', [])),
             );
         });
 
-        $this->app->bind(ComputeDiffStage::class, function (): ComputeDiffStage {
+        $this->app->singleton(ComputeDiffStage::class, function (): ComputeDiffStage {
             return new ComputeDiffStage(
                 $this->app->make(ValueRedactor::class),
                 $this->stringList($this->config()->get('audit-log.capture.ignore_attributes', [])),
             );
         });
 
-        $this->app->bind(RecordChangePipeline::class, function (): RecordChangePipeline {
+        $this->app->singleton(RecordChangePipeline::class, function (): RecordChangePipeline {
             return new RecordChangePipeline([
                 $this->app->make(ComputeDiffStage::class),
                 $this->app->make(ResolveActorStage::class),

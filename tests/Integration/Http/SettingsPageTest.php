@@ -31,6 +31,11 @@ final class SettingsPageTest extends TestCase
         $response->assertSee('Settings');
         $response->assertSee('Data retention (days)');
         $response->assertSee('value="180"', false);
+        $response->assertSee('Redaction');
+        $response->assertSee('Secret key patterns');
+        $response->assertSee('Capture changes');
+        $response->assertSee('Async writes');
+        $response->assertSee('JobsMonitor URL');
         $response->assertSee('Audit database');
         $response->assertSee('Application default');
     }

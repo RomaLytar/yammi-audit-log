@@ -33,4 +33,19 @@ final class SettingTypeTest extends TestCase
         $this->assertSame('hello', SettingType::String->cast('hello'));
         $this->assertSame('hello', SettingType::String->serialize('hello'));
     }
+
+    public function test_csv_list_cast_trims_and_drops_empties(): void
+    {
+        $this->assertSame(
+            ['password', 'token', 'api_key'],
+            SettingType::CsvList->cast(' password,token , ,api_key,'),
+        );
+        $this->assertSame([], SettingType::CsvList->cast(''));
+    }
+
+    public function test_csv_list_serialize_joins_with_commas(): void
+    {
+        $this->assertSame('password, token', SettingType::CsvList->serialize(['password', 'token']));
+        $this->assertSame('', SettingType::CsvList->serialize([]));
+    }
 }

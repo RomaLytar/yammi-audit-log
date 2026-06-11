@@ -22,25 +22,64 @@ final class SettingRegistryTest extends TestCase
         $this->assertSame(9999, $definition->max);
     }
 
-    public function test_the_prune_schedule_toggle_is_registered(): void
+    public function test_every_runtime_safe_config_is_registered(): void
     {
-        $definition = (new SettingRegistry)->find('prune_schedule_enabled');
+        $registry = new SettingRegistry;
 
-        $this->assertNotNull($definition);
-        $this->assertSame('audit-log.retention.schedule.enabled', $definition->configPath);
-        $this->assertSame(SettingType::Boolean, $definition->type);
-        $this->assertTrue($definition->default);
+        $expected = [
+            'enabled' => 'audit-log.enabled',
+            'retention_days' => 'audit-log.retention.days',
+            'prune_schedule_enabled' => 'audit-log.retention.schedule.enabled',
+            'prune_cron' => 'audit-log.retention.schedule.cron',
+            'write_async' => 'audit-log.write.async',
+            'write_queue' => 'audit-log.write.queue',
+            'ignore_attributes' => 'audit-log.capture.ignore_attributes',
+            'redaction_keys' => 'audit-log.redaction.keys',
+            'redaction_placeholder' => 'audit-log.redaction.placeholder',
+            'ui_throttle' => 'audit-log.ui.throttle',
+            'jobs_monitor_url' => 'audit-log.integrations.jobs_monitor.url',
+        ];
+
+        $actual = [];
+
+        foreach ($registry->all() as $definition) {
+            $actual[$definition->key] = $definition->configPath;
+        }
+
+        $this->assertSame($expected, $actual);
+    }
+
+    public function test_bootstrap_critical_configs_stay_out_of_the_registry(): void
+    {
+        $registry = new SettingRegistry;
+
+        foreach ($registry->all() as $definition) {
+            $this->assertStringNotContainsString('database.connection', $definition->configPath);
+            $this->assertStringNotContainsString('ui.path', $definition->configPath);
+            $this->assertStringNotContainsString('ui.middleware', $definition->configPath);
+            $this->assertStringNotContainsString('ui.gate', $definition->configPath);
+        }
+    }
+
+    public function test_grouped_buckets_definitions_by_group(): void
+    {
+        $grouped = (new SettingRegistry)->grouped();
+
+        $this->assertSame(
+            [
+                SettingRegistry::GROUP_GENERAL,
+                SettingRegistry::GROUP_WRITE,
+                SettingRegistry::GROUP_CAPTURE,
+                SettingRegistry::GROUP_REDACTION,
+                SettingRegistry::GROUP_UI,
+            ],
+            array_keys($grouped),
+        );
+        $this->assertCount(4, $grouped[SettingRegistry::GROUP_GENERAL]);
     }
 
     public function test_an_unknown_key_is_not_found(): void
     {
         $this->assertNull((new SettingRegistry)->find('nope'));
-    }
-
-    public function test_every_definition_belongs_to_the_general_group(): void
-    {
-        foreach ((new SettingRegistry)->all() as $definition) {
-            $this->assertSame(SettingRegistry::GROUP_GENERAL, $definition->group);
-        }
     }
 }

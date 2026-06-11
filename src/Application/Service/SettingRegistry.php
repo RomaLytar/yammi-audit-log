@@ -10,7 +10,10 @@ use Yammi\AuditLog\Domain\Settings\Enum\SettingType;
 
 /**
  * The catalogue of operator-editable settings: where each one lives in config,
- * its type, bounds and UI copy. Stored values overlay config at boot.
+ * its type, bounds and UI copy. Stored values overlay config at boot, so the
+ * precedence is: saved setting > published config/env > package default.
+ * Bootstrap-critical values (database connection, route path, middleware,
+ * gate) stay config-only on purpose — a typo there can lock the dashboard out.
  *
  * @internal
  */
@@ -18,12 +21,29 @@ final class SettingRegistry
 {
     public const GROUP_GENERAL = 'general';
 
+    public const GROUP_WRITE = 'write';
+
+    public const GROUP_CAPTURE = 'capture';
+
+    public const GROUP_REDACTION = 'redaction';
+
+    public const GROUP_UI = 'ui';
+
     /**
      * @return list<SettingDefinitionData>
      */
     public function all(): array
     {
         return [
+            new SettingDefinitionData(
+                group: self::GROUP_GENERAL,
+                key: 'enabled',
+                configPath: 'audit-log.enabled',
+                type: SettingType::Boolean,
+                default: true,
+                label: 'Capture changes',
+                description: 'Master switch for recording Eloquent changes. Turning it off stops new records; existing history stays.',
+            ),
             new SettingDefinitionData(
                 group: self::GROUP_GENERAL,
                 key: 'retention_days',
@@ -43,9 +63,95 @@ final class SettingRegistry
                 type: SettingType::Boolean,
                 default: true,
                 label: 'Automatic daily pruning',
-                description: 'Runs audit-log:prune every day on the configured cron. Disable only if you prune from your own scheduler.',
+                description: 'Runs audit-log:prune every day on the cron below. Disable only if you prune from your own scheduler.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_GENERAL,
+                key: 'prune_cron',
+                configPath: 'audit-log.retention.schedule.cron',
+                type: SettingType::String,
+                default: '0 3 * * *',
+                label: 'Prune schedule (cron)',
+                description: 'When the daily prune runs. Applies from the next deploy/restart, because schedules are registered at boot.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_WRITE,
+                key: 'write_async',
+                configPath: 'audit-log.write.async',
+                type: SettingType::Boolean,
+                default: false,
+                label: 'Async writes',
+                description: 'Defer the audit insert to the queue. The actor, origin, correlation and redacted diff are still resolved at the moment of the change.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_WRITE,
+                key: 'write_queue',
+                configPath: 'audit-log.write.queue',
+                type: SettingType::String,
+                default: '',
+                label: 'Async queue name',
+                description: 'Queue for the deferred insert. Empty = the default queue.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_CAPTURE,
+                key: 'ignore_attributes',
+                configPath: 'audit-log.capture.ignore_attributes',
+                type: SettingType::CsvList,
+                default: ['created_at', 'updated_at'],
+                label: 'Ignored attributes',
+                description: 'Comma-separated attributes dropped from every diff. An update touching only these is flagged as noise.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_REDACTION,
+                key: 'redaction_keys',
+                configPath: 'audit-log.redaction.keys',
+                type: SettingType::CsvList,
+                default: ['password', 'remember_token', 'token', 'secret', 'authorization', 'api_key', 'credit_card', 'ssn'],
+                label: 'Secret key patterns',
+                description: 'Comma-separated, case-insensitive substrings. Any field whose name contains one of these is stored redacted — including inside nested JSON values.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_REDACTION,
+                key: 'redaction_placeholder',
+                configPath: 'audit-log.redaction.placeholder',
+                type: SettingType::String,
+                default: '[redacted]',
+                label: 'Redaction placeholder',
+                description: 'The text stored instead of a secret value.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_UI,
+                key: 'ui_throttle',
+                configPath: 'audit-log.ui.throttle',
+                type: SettingType::String,
+                default: '60,1',
+                label: 'Rate limit',
+                description: 'Requests,minutes for the dashboard routes (e.g. 60,1). Empty disables the limit. Applies from the next deploy/restart.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_UI,
+                key: 'jobs_monitor_url',
+                configPath: 'audit-log.integrations.jobs_monitor.url',
+                type: SettingType::String,
+                default: '',
+                label: 'JobsMonitor URL',
+                description: 'Base URL or path of the Yammi JobsMonitor dashboard. When set, job actors link straight to the monitor. Empty = no links.',
             ),
         ];
+    }
+
+    /**
+     * @return array<string, list<SettingDefinitionData>>
+     */
+    public function grouped(): array
+    {
+        $grouped = [];
+
+        foreach ($this->all() as $definition) {
+            $grouped[$definition->group][] = $definition;
+        }
+
+        return $grouped;
     }
 
     public function find(string $key): ?SettingDefinitionData

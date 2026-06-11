@@ -20,12 +20,12 @@ final class SettingsUpdateTest extends TestCase
         $app['config']->set('audit-log.ui.middleware', ['web']);
     }
 
-    public function test_saving_persists_the_setting_and_updates_config(): void
+    public function test_saving_persists_the_settings_and_updates_config(): void
     {
-        $response = $this->post('audit-log/settings', [
+        $response = $this->post('audit-log/settings', $this->payload([
             'retention_days' => 90,
             'prune_schedule_enabled' => '0',
-        ]);
+        ]));
 
         $response->assertRedirect(route('audit-log.settings'));
         $response->assertSessionHas('audit_log_status');
@@ -35,9 +35,33 @@ final class SettingsUpdateTest extends TestCase
         $this->assertFalse($this->app['config']->get('audit-log.retention.schedule.enabled'));
     }
 
+    public function test_csv_settings_become_arrays_in_config(): void
+    {
+        $this->post('audit-log/settings', $this->payload([
+            'redaction_keys' => 'password, token, iban',
+            'ignore_attributes' => 'created_at',
+        ]))->assertSessionHas('audit_log_status');
+
+        $this->assertSame(['password', 'token', 'iban'], $this->app['config']->get('audit-log.redaction.keys'));
+        $this->assertSame(['created_at'], $this->app['config']->get('audit-log.capture.ignore_attributes'));
+    }
+
+    public function test_string_settings_overlay_config(): void
+    {
+        $this->post('audit-log/settings', $this->payload([
+            'jobs_monitor_url' => '/jobs-monitor',
+            'write_async' => '1',
+            'write_queue' => 'audit',
+        ]))->assertSessionHas('audit_log_status');
+
+        $this->assertSame('/jobs-monitor', $this->app['config']->get('audit-log.integrations.jobs_monitor.url'));
+        $this->assertTrue($this->app['config']->get('audit-log.write.async'));
+        $this->assertSame('audit', $this->app['config']->get('audit-log.write.queue'));
+    }
+
     public function test_the_saved_value_survives_for_the_next_request(): void
     {
-        $this->post('audit-log/settings', ['retention_days' => 365]);
+        $this->post('audit-log/settings', $this->payload(['retention_days' => 365]));
 
         $this->get('audit-log/settings')->assertSee('value="365"', false);
     }
@@ -45,24 +69,53 @@ final class SettingsUpdateTest extends TestCase
     public function test_out_of_bounds_values_are_rejected(): void
     {
         $this->from('audit-log/settings')
-            ->post('audit-log/settings', ['retention_days' => 5])
+            ->post('audit-log/settings', $this->payload(['retention_days' => 5]))
             ->assertSessionHasErrors('retention_days');
 
         $this->from('audit-log/settings')
-            ->post('audit-log/settings', ['retention_days' => 10000])
+            ->post('audit-log/settings', $this->payload(['retention_days' => 10000]))
             ->assertSessionHasErrors('retention_days');
+
+        $this->from('audit-log/settings')
+            ->post('audit-log/settings', $this->payload(['ui_throttle' => 'not-a-throttle']))
+            ->assertSessionHasErrors('ui_throttle');
+
+        $this->from('audit-log/settings')
+            ->post('audit-log/settings', $this->payload(['prune_cron' => 'rm -rf /']))
+            ->assertSessionHasErrors('prune_cron');
 
         $this->assertSame(0, SettingModel::query()->count());
     }
 
     public function test_reset_clears_the_stored_settings(): void
     {
-        $this->post('audit-log/settings', ['retention_days' => 90]);
-        $this->assertSame(2, SettingModel::query()->count());
+        $this->post('audit-log/settings', $this->payload(['retention_days' => 90]));
+        $this->assertGreaterThan(0, SettingModel::query()->count());
 
         $this->post('audit-log/settings/reset')
             ->assertRedirect(route('audit-log.settings'));
 
         $this->assertSame(0, SettingModel::query()->count());
+    }
+
+    /**
+     * @param  array<string, int|string>  $overrides
+     * @return array<string, int|string>
+     */
+    private function payload(array $overrides = []): array
+    {
+        return array_merge([
+            'enabled' => '1',
+            'retention_days' => 180,
+            'prune_schedule_enabled' => '1',
+            'prune_cron' => '0 3 * * *',
+            'write_async' => '0',
+            'write_queue' => '',
+            'ignore_attributes' => 'created_at, updated_at',
+            'redaction_keys' => 'password, token',
+            'redaction_placeholder' => '[redacted]',
+            'ui_throttle' => '60,1',
+            'jobs_monitor_url' => '',
+        ], $overrides);
     }
 }

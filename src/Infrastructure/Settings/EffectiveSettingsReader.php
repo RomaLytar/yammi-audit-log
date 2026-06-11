@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Infrastructure\Settings;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Yammi\AuditLog\Application\DTO\ResolvedSettingData;
+use Yammi\AuditLog\Application\DTO\SettingDefinitionData;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
 
 /**
@@ -22,21 +23,34 @@ final class EffectiveSettingsReader
     ) {}
 
     /**
-     * @return list<ResolvedSettingData>
+     * @return array<string, list<ResolvedSettingData>>
      */
-    public function all(): array
+    public function grouped(): array
     {
-        $resolved = [];
+        $grouped = [];
 
         foreach ($this->registry->all() as $definition) {
-            $value = $this->config->get($definition->configPath, $definition->default);
-
-            $resolved[] = new ResolvedSettingData(
-                $definition,
-                is_scalar($value) ? $definition->type->cast((string) $value) : $definition->default,
-            );
+            $grouped[$definition->group][] = new ResolvedSettingData($definition, $this->effectiveValue($definition));
         }
 
-        return $resolved;
+        return $grouped;
+    }
+
+    /**
+     * @return bool|int|string|list<string>
+     */
+    private function effectiveValue(SettingDefinitionData $definition): bool|int|string|array
+    {
+        $value = $this->config->get($definition->configPath, $definition->default);
+
+        if (is_array($value)) {
+            return array_values(array_filter($value, is_string(...)));
+        }
+
+        if (is_scalar($value)) {
+            return $definition->type->cast((string) $value);
+        }
+
+        return $definition->default;
     }
 }

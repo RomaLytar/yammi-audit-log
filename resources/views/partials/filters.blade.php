@@ -29,6 +29,15 @@
         @endif
     </div>
 
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 mb-3">
+        <div class="sm:col-span-2 lg:col-span-6">
+            <label class="block text-[11px] font-medium text-muted-foreground mb-1">Search changes</label>
+            <input type="text" name="q" value="{{ $filters->search }}" placeholder="Find by old/new value or record id…"
+                   onchange="this.form && this.form.requestSubmit()"
+                   class="al-input {{ $filters->search !== '' ? 'al-input--active' : '' }}">
+        </div>
+    </div>
+
     <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3">
         @include('audit-log::components.select', ['name' => 'type', 'label' => 'Model', 'options' => $typeOptions, 'value' => $filters->type, 'placeholder' => 'All models'])
         @include('audit-log::components.select', ['name' => 'event', 'label' => 'Event', 'options' => $eventOptions, 'value' => $filters->event, 'placeholder' => 'All events'])

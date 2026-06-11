@@ -115,6 +115,16 @@ final class EloquentAuditLogQuery implements AuditLogQuery
             $query->where('is_noise', $criteria->onlyNoise);
         }
 
+        if ($criteria->search !== null) {
+            $term = '%'.$this->escapeLike($criteria->search).'%';
+            $changesAsText = $this->changesAsText($query);
+
+            $query->where(function (Builder $nested) use ($term, $changesAsText, $criteria): void {
+                $nested->whereRaw("{$changesAsText} like ? escape '!'", [$term])
+                    ->orWhere('auditable_id', $criteria->search);
+            });
+        }
+
         if ($criteria->from !== null) {
             $query->where('occurred_at', '>=', $criteria->from->setTime(0, 0)->format('Y-m-d H:i:s'));
         }
@@ -127,6 +137,20 @@ final class EloquentAuditLogQuery implements AuditLogQuery
     private function escapeLike(string $value): string
     {
         return str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $value);
+    }
+
+    /**
+     * The changes column is JSON; LIKE needs a text expression per driver.
+     *
+     * @param  Builder<AuditRecordModel>  $query
+     */
+    private function changesAsText(Builder $query): string
+    {
+        return match ($query->getConnection()->getDriverName()) {
+            'pgsql' => 'changes::text',
+            'mysql', 'mariadb' => 'cast(changes as char)',
+            default => 'cast(changes as text)',
+        };
     }
 
     /**

@@ -81,7 +81,7 @@ final class TimelineEntryViewModel
     }
 
     /**
-     * @return list<array{field: string, old: string, new: string}>
+     * @return list<array{field: string, old: string, new: string, oldLabel: ?string, newLabel: ?string}>
      */
     public function changes(): array
     {
@@ -92,6 +92,8 @@ final class TimelineEntryViewModel
                 'field' => (string) $field,
                 'old' => $this->present($pair['old'] ?? null),
                 'new' => $this->present($pair['new'] ?? null),
+                'oldLabel' => $this->entry->labels[$field.'.old'] ?? null,
+                'newLabel' => $this->entry->labels[$field.'.new'] ?? null,
             ];
         }
 

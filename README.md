@@ -12,6 +12,7 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 - Multi-level actor attribution (user / job / command / scheduler / system) with an immediate-parent origin, so a nested `job → job → job` chain shows who spawned each step.
 - Correlation id per unit of work (request, command or job and the jobs it dispatches), drawn as a cross-model change chain.
 - Field-level diffs with secret redaction; timestamp-only "no-op" writes are recorded but flagged as noise.
+- Human-readable FK labels snapshotted at event time ("John Doe → Jane Smith" next to `user_id: 5 → 7`), surviving later edits or deletion of the referenced row — map columns in `audit-log.labels.map`, optionally expose `getAuditLabel()` on the model.
 - Dashboard with filters (model, event, actor, date), a noise page, and a chain/trace view.
 - Automatic retention pruning, on by default (180 days, configurable 7–9999; audit data is PII), plus a configurable Gate and rate limit on the UI.
 

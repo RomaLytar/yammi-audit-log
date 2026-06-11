@@ -10,6 +10,7 @@ use Illuminate\Support\Facades\Schema;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Facade\AuditLog;
 use Yammi\AuditLog\Tests\Support\Jobs\PublishPostJob;
+use Yammi\AuditLog\Tests\Support\Models\Note;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 use Yammi\AuditLog\Tests\TestCase;
 
@@ -23,6 +24,14 @@ final class FacadeReadTest extends TestCase
             $table->id();
             $table->string('title');
             $table->string('status');
+        });
+
+        Schema::create('notes', function (Blueprint $table): void {
+            $table->id();
+            $table->string('title');
+            $table->string('status');
+            $table->timestamps();
+            $table->softDeletes();
         });
     }
 
@@ -53,8 +62,8 @@ final class FacadeReadTest extends TestCase
 
     public function test_noise_returns_only_flagged_writes(): void
     {
-        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
-        $post->forceFill(['updated_at' => $post->freshTimestamp()->addMinute()])->save();
+        $note = Note::create(['title' => 'Hello', 'status' => 'draft']);
+        $note->forceFill(['updated_at' => $note->freshTimestamp()->addMinute()])->save();
 
         $noise = AuditLog::noise();
 
@@ -86,7 +95,8 @@ final class FacadeReadTest extends TestCase
         $stats = AuditLog::stats();
 
         $this->assertSame(2, $stats->total);
-        $this->assertSame(['created' => 1, 'updated' => 1], $stats->byEvent);
+        $this->assertSame(1, $stats->byEvent['created']);
+        $this->assertSame(1, $stats->byEvent['updated']);
         $this->assertNotNull($stats->projectedRows);
 
         $this->assertSame(1, AuditLog::stats(['event' => 'created'])->total);

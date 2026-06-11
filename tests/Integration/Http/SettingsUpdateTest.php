@@ -22,12 +22,12 @@ final class SettingsUpdateTest extends TestCase
 
     public function test_saving_persists_the_settings_and_updates_config(): void
     {
-        $response = $this->post('audit-log/settings', $this->payload([
+        $response = $this->post('audit-log/settings/general', $this->payload([
             'retention_days' => 90,
             'prune_schedule_enabled' => '0',
         ]));
 
-        $response->assertRedirect(route('audit-log.settings'));
+        $response->assertRedirect(route('audit-log.settings.general'));
         $response->assertSessionHas('audit_log_status');
 
         $this->assertSame('90', SettingModel::query()->where('key', 'retention_days')->value('value'));
@@ -37,7 +37,7 @@ final class SettingsUpdateTest extends TestCase
 
     public function test_csv_settings_become_arrays_in_config(): void
     {
-        $this->post('audit-log/settings', $this->payload([
+        $this->post('audit-log/settings/general', $this->payload([
             'redaction_keys' => 'password, token, iban',
             'ignore_attributes' => 'created_at',
         ]))->assertSessionHas('audit_log_status');
@@ -48,7 +48,7 @@ final class SettingsUpdateTest extends TestCase
 
     public function test_string_settings_overlay_config(): void
     {
-        $this->post('audit-log/settings', $this->payload([
+        $this->post('audit-log/settings/general', $this->payload([
             'jobs_monitor_url' => '/jobs-monitor',
             'write_async' => '1',
             'write_queue' => 'audit',
@@ -61,27 +61,27 @@ final class SettingsUpdateTest extends TestCase
 
     public function test_the_saved_value_survives_for_the_next_request(): void
     {
-        $this->post('audit-log/settings', $this->payload(['retention_days' => 365]));
+        $this->post('audit-log/settings/general', $this->payload(['retention_days' => 365]));
 
-        $this->get('audit-log/settings')->assertSee('value="365"', false);
+        $this->get('audit-log/settings/general')->assertSee('value="365"', false);
     }
 
     public function test_out_of_bounds_values_are_rejected(): void
     {
-        $this->from('audit-log/settings')
-            ->post('audit-log/settings', $this->payload(['retention_days' => 5]))
+        $this->from('audit-log/settings/general')
+            ->post('audit-log/settings/general', $this->payload(['retention_days' => 5]))
             ->assertSessionHasErrors('retention_days');
 
-        $this->from('audit-log/settings')
-            ->post('audit-log/settings', $this->payload(['retention_days' => 10000]))
+        $this->from('audit-log/settings/general')
+            ->post('audit-log/settings/general', $this->payload(['retention_days' => 10000]))
             ->assertSessionHasErrors('retention_days');
 
-        $this->from('audit-log/settings')
-            ->post('audit-log/settings', $this->payload(['ui_throttle' => 'not-a-throttle']))
+        $this->from('audit-log/settings/general')
+            ->post('audit-log/settings/general', $this->payload(['ui_throttle' => 'not-a-throttle']))
             ->assertSessionHasErrors('ui_throttle');
 
-        $this->from('audit-log/settings')
-            ->post('audit-log/settings', $this->payload(['prune_cron' => 'rm -rf /']))
+        $this->from('audit-log/settings/general')
+            ->post('audit-log/settings/general', $this->payload(['prune_cron' => 'rm -rf /']))
             ->assertSessionHasErrors('prune_cron');
 
         $this->assertSame(0, SettingModel::query()->count());
@@ -89,11 +89,11 @@ final class SettingsUpdateTest extends TestCase
 
     public function test_reset_clears_the_stored_settings(): void
     {
-        $this->post('audit-log/settings', $this->payload(['retention_days' => 90]));
+        $this->post('audit-log/settings/general', $this->payload(['retention_days' => 90]));
         $this->assertGreaterThan(0, SettingModel::query()->count());
 
-        $this->post('audit-log/settings/reset')
-            ->assertRedirect(route('audit-log.settings'));
+        $this->post('audit-log/settings/general/reset')
+            ->assertRedirect(route('audit-log.settings.general'));
 
         $this->assertSame(0, SettingModel::query()->count());
     }

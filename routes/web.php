@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
 use Yammi\AuditLog\Infrastructure\Http\Controller\DashboardController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\DatabaseSettingsController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\DatabaseTransferController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\ExportController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\NoiseController;
@@ -20,8 +21,10 @@ Route::get('/trace/{correlation}', TraceController::class)
     ->whereUuid('correlation')
     ->name('audit-log.trace');
 Route::get('/settings', [SettingsController::class, 'index'])->name('audit-log.settings');
-Route::post('/settings', [SettingsController::class, 'update'])->name('audit-log.settings.update');
-Route::post('/settings/reset', [SettingsController::class, 'reset'])->name('audit-log.settings.reset');
+Route::get('/settings/general', [SettingsController::class, 'general'])->name('audit-log.settings.general');
+Route::post('/settings/general', [SettingsController::class, 'update'])->name('audit-log.settings.update');
+Route::post('/settings/general/reset', [SettingsController::class, 'reset'])->name('audit-log.settings.reset');
+Route::get('/settings/database', DatabaseSettingsController::class)->name('audit-log.settings.database');
 Route::post('/settings/database/transfer', DatabaseTransferController::class)->name('audit-log.settings.transfer');
 Route::get('/settings/playground', [PlaygroundController::class, 'index'])->name('audit-log.playground');
 Route::post('/settings/playground/execute', [PlaygroundController::class, 'execute'])->name('audit-log.playground.execute');

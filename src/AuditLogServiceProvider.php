@@ -39,7 +39,7 @@ use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
-use Yammi\AuditLog\Infrastructure\Label\NullLabelResolver;
+use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Transfer\EloquentAuditDataTransferrer;
@@ -67,7 +67,12 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->app->bind(AuditRecordRepository::class, EloquentAuditRecordRepository::class);
         $this->app->bind(AuditLogQuery::class, EloquentAuditLogQuery::class);
         $this->app->bind(Clock::class, SystemClock::class);
-        $this->app->bind(LabelResolver::class, NullLabelResolver::class);
+
+        $this->app->bind(LabelResolver::class, function (): LabelResolver {
+            return new ConventionLabelResolver(
+                $this->classMap($this->config()->get('audit-log.labels.map', [])),
+            );
+        });
         $this->app->singleton(AuditReader::class);
 
         $this->app->singleton(ActorContext::class);
@@ -245,6 +250,26 @@ final class AuditLogServiceProvider extends ServiceProvider
         $table = $this->config()->get('audit-log.database.table', 'audit_log');
 
         return is_string($table) ? $table : 'audit_log';
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function classMap(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($value as $field => $class) {
+            if (is_string($field) && $field !== '' && is_string($class) && $class !== '') {
+                $out[$field] = $class;
+            }
+        }
+
+        return $out;
     }
 
     /**

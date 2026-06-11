@@ -127,8 +127,18 @@
                                             @foreach ($entry->changes() as $change)
                                                 <tr>
                                                     <td class="px-3 py-1.5 font-medium text-foreground">{{ $change['field'] }}</td>
-                                                    <td class="px-3 py-1.5 text-destructive break-all">{{ $change['old'] }}</td>
-                                                    <td class="px-3 py-1.5 text-success break-all">{{ $change['new'] }}</td>
+                                                    <td class="px-3 py-1.5 text-destructive break-all">
+                                                        {{ $change['old'] }}
+                                                        @if ($change['oldLabel'] !== null)
+                                                            <span class="text-muted-foreground font-sans">({{ $change['oldLabel'] }})</span>
+                                                        @endif
+                                                    </td>
+                                                    <td class="px-3 py-1.5 text-success break-all">
+                                                        {{ $change['new'] }}
+                                                        @if ($change['newLabel'] !== null)
+                                                            <span class="text-muted-foreground font-sans">({{ $change['newLabel'] }})</span>
+                                                        @endif
+                                                    </td>
                                                 </tr>
                                             @endforeach
                                         </tbody>

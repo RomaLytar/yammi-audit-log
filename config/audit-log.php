@@ -79,6 +79,17 @@ return [
         'guards' => [],
     ],
 
+    'labels' => [
+        // Map foreign-key columns to the Eloquent model they reference. When a
+        // mapped column appears in a diff, a human-readable label is snapshotted
+        // at event time ("John Doe", not a live join), so it survives later
+        // changes or deletion of the referenced row. Models may define
+        // getAuditLabel(); otherwise name/title/email attributes are used.
+        'map' => [
+            // 'user_id' => App\Models\User::class,
+        ],
+    ],
+
     'redaction' => [
         'placeholder' => '[redacted]',
         'keys' => [

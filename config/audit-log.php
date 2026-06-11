@@ -136,7 +136,10 @@ return [
     ],
 
     'ui' => [
-        'enabled' => (bool) env('AUDIT_LOG_UI_ENABLED', true),
+        // Off by default: embed the data via the AuditLog facade, or turn the
+        // bundled dashboard on with `php artisan audit-log:ui enable` (stored in
+        // the settings table) or AUDIT_LOG_UI_ENABLED=true.
+        'enabled' => (bool) env('AUDIT_LOG_UI_ENABLED', false),
         'path' => env('AUDIT_LOG_UI_PATH', 'audit-log'),
         // The dashboard is gated to authenticated users by default.
         'middleware' => ['web', 'auth'],

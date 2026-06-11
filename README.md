@@ -20,11 +20,26 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 
 Treat these as stable; everything marked `@internal` is an implementation detail and may change.
 
-- **Facade** — `Yammi\AuditLog\Infrastructure\Facade\AuditLog`: `AuditLog::for($model)` returns a `TimelineData`.
+- **Facade** — `Yammi\AuditLog\Infrastructure\Facade\AuditLog`: `AuditLog::for($model)` returns a `TimelineData`; `AuditLog::record(...)` records a manual change.
 - **DTOs** — `Yammi\AuditLog\Application\DTO\TimelineData` and `TimelineEntryData`.
 - **Config** — `config/audit-log.php` (publish with `--tag=audit-log-config`).
 - **Extension contracts** (bind your own implementation): `Application\Contract\ActorProvider`, `ActorResolver`, `ValueRedactor`, `LabelResolver`, `Clock`, `CorrelationResolver`, `AuditLogQuery`, and `Domain\Audit\Repository\AuditRecordRepository`.
 - **Domain value objects/enums** for custom resolvers: `Actor`, `ActorType`, `ChangeType`, `Diff`, `AuditableReference`, `LabelSnapshot`.
+
+## Recording changes Eloquent cannot see
+
+Mass `->update()` / `->delete()` on a query builder, raw SQL and pivot `sync()` do not fire Eloquent model events, so they are **not captured automatically**. Record them explicitly — the manual path goes through the exact same pipeline (secret redaction, actor attribution, FK labels, correlation):
+
+```php
+use Yammi\AuditLog\Infrastructure\Facade\AuditLog;
+
+AuditLog::record(Order::class, $order->id, 'updated',
+    before: ['status' => 'pending'],
+    after: ['status' => 'cancelled'],
+);
+```
+
+The first argument also accepts a model instance (`AuditLog::record($order, null, 'updated', ...)`). A no-op update (identical before/after) records nothing and returns `null`.
 
 ## Dedicated database connection
 

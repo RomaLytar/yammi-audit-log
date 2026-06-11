@@ -5,6 +5,56 @@ declare(strict_types=1);
 return [
     'enabled' => (bool) env('AUDIT_LOG_ENABLED', true),
 
+    /*
+    |--------------------------------------------------------------------------
+    | Dedicated database connection (optional)
+    |--------------------------------------------------------------------------
+    |
+    | By default audit records are stored in your application's default
+    | database, in the table named below. To isolate them in a separate
+    | database, follow the three steps; leave connection null to skip.
+    |
+    | STEP 1 — add a connection block to config/database.php.
+    |          Pick any key name you like (e.g. "audit", "audit_log").
+    |
+    |   'connections' => [
+    |       // ... your existing connections ...
+    |
+    |       'audit' => [
+    |           'driver'    => 'mysql',
+    |           'host'      => env('AUDIT_LOG_DB_HOST', '127.0.0.1'),
+    |           'port'      => env('AUDIT_LOG_DB_PORT', '3306'),
+    |           'database'  => env('AUDIT_LOG_DB_DATABASE', 'audit_db'),
+    |           'username'  => env('AUDIT_LOG_DB_USERNAME', 'root'),
+    |           'password'  => env('AUDIT_LOG_DB_PASSWORD', ''),
+    |           'charset'   => 'utf8mb4',
+    |           'collation' => 'utf8mb4_unicode_ci',
+    |           'prefix'    => '',
+    |           'strict'    => true,
+    |           'engine'    => null,
+    |       ],
+    |   ],
+    |
+    | STEP 2 — add the matching env variables to .env:
+    |
+    |   AUDIT_LOG_DB_CONNECTION=audit        ← must match the key from Step 1
+    |   AUDIT_LOG_DB_HOST=127.0.0.1
+    |   AUDIT_LOG_DB_DATABASE=audit_db
+    |   AUDIT_LOG_DB_USERNAME=root
+    |   AUDIT_LOG_DB_PASSWORD=secret
+    |
+    | STEP 3 — create the database, run the package migration on it and move
+    |          any existing audit rows in one go:
+    |
+    |   php artisan audit-log:transfer-data
+    |
+    | To go back to the default database, remove AUDIT_LOG_DB_CONNECTION from
+    | .env and run the command in reverse:
+    |
+    |   php artisan audit-log:transfer-data --from=audit --to=mysql --delete-source
+    |
+    */
+
     'database' => [
         'connection' => env('AUDIT_LOG_DB_CONNECTION'),
         'table' => env('AUDIT_LOG_TABLE', 'audit_log'),

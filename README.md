@@ -25,6 +25,16 @@ Treat these as stable; everything marked `@internal` is an implementation detail
 - **Extension contracts** (bind your own implementation): `Application\Contract\ActorProvider`, `ActorResolver`, `ValueRedactor`, `LabelResolver`, `Clock`, `CorrelationResolver`, `AuditLogQuery`, and `Domain\Audit\Repository\AuditRecordRepository`.
 - **Domain value objects/enums** for custom resolvers: `Actor`, `ActorType`, `ChangeType`, `Diff`, `AuditableReference`, `LabelSnapshot`.
 
+## Dedicated database connection
+
+By default audit records live in your app's default database (`audit_log` table, name configurable via `AUDIT_LOG_TABLE`). To isolate them in their own database: add a connection to `config/database.php`, set `AUDIT_LOG_DB_CONNECTION=<that key>` in `.env`, then run
+
+```bash
+php artisan audit-log:transfer-data
+```
+
+The command creates the database when possible, runs the package migration on the new connection and moves existing rows in chunks. Going back is the same command in reverse: `audit-log:transfer-data --from=<dedicated> --to=<default> --delete-source`. The step-by-step guide lives in `config/audit-log.php`.
+
 ## Requirements
 
 - PHP `^8.1`

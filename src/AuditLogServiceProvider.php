@@ -31,6 +31,7 @@ use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
+use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
@@ -91,6 +92,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->app->bind(ActorResolver::class, function (): ActorResolver {
             return new ActorResolverChain([
                 $this->app->make(QueuedJobActorProvider::class),
+                $this->app->make(SchedulerActorProvider::class),
                 $this->app->make(ConsoleActorProvider::class),
                 $this->app->make(AuthenticatedUserProvider::class),
             ], $this->app->make(ActorContext::class));

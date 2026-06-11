@@ -23,6 +23,9 @@ final class ActorContext
     /** @var list<string> */
     private array $commands = [];
 
+    /** @var list<string> */
+    private array $scheduledTasks = [];
+
     public function enterJob(string $jobClass, ?Actor $origin = null): void
     {
         $this->frames[] = ['job' => $jobClass, 'origin' => $origin];
@@ -62,5 +65,22 @@ final class ActorContext
         $key = array_key_last($this->commands);
 
         return $key === null ? null : $this->commands[$key];
+    }
+
+    public function enterScheduledTask(string $name): void
+    {
+        $this->scheduledTasks[] = $name;
+    }
+
+    public function leaveScheduledTask(): void
+    {
+        array_pop($this->scheduledTasks);
+    }
+
+    public function currentScheduledTask(): ?string
+    {
+        $key = array_key_last($this->scheduledTasks);
+
+        return $key === null ? null : $this->scheduledTasks[$key];
     }
 }

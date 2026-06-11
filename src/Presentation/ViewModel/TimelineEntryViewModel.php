@@ -18,7 +18,17 @@ final class TimelineEntryViewModel
     public function __construct(
         private readonly TimelineEntryData $entry,
         private readonly int $chainSize,
+        private readonly ?string $jobsMonitorUrl = null,
     ) {}
+
+    public function jobsMonitorLink(): ?string
+    {
+        if ($this->jobsMonitorUrl === null || $this->entry->actorType !== 'job') {
+            return null;
+        }
+
+        return rtrim($this->jobsMonitorUrl, '/').'?search='.rawurlencode($this->entry->actorLabel);
+    }
 
     public function model(): string
     {

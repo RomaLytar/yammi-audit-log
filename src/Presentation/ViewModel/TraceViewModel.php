@@ -14,11 +14,12 @@ final class TraceViewModel
 
     public function __construct(
         private readonly ChainData $chain,
+        ?string $jobsMonitorUrl = null,
     ) {
         $entries = [];
 
         foreach ($chain->entries as $entry) {
-            $entries[] = new TimelineEntryViewModel($entry, 0);
+            $entries[] = new TimelineEntryViewModel($entry, 0, $jobsMonitorUrl);
         }
 
         $this->entries = $entries;

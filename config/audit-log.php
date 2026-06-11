@@ -126,6 +126,15 @@ return [
         ],
     ],
 
+    'integrations' => [
+        'jobs_monitor' => [
+            // Base URL (or path) of the Yammi JobsMonitor dashboard. When set,
+            // job actors in the audit UI link to the monitor filtered by the
+            // job class, e.g. '/jobs-monitor'. null = no links.
+            'url' => env('AUDIT_LOG_JOBS_MONITOR_URL'),
+        ],
+    ],
+
     'ui' => [
         'enabled' => (bool) env('AUDIT_LOG_UI_ENABLED', true),
         'path' => env('AUDIT_LOG_UI_PATH', 'audit-log'),

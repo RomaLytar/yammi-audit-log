@@ -31,6 +31,7 @@ use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
+use Yammi\AuditLog\Infrastructure\AuditLogManager;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
@@ -74,6 +75,7 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
         $this->app->singleton(AuditReader::class);
+        $this->app->singleton(AuditLogManager::class);
 
         $this->app->singleton(ActorContext::class);
         $this->app->singleton(CorrelationContext::class);

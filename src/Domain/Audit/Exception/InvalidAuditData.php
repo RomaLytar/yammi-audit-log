@@ -12,4 +12,9 @@ final class InvalidAuditData extends DomainException
     {
         return new self("Audit data is invalid: {$what} must not be empty.");
     }
+
+    public static function unknownEvent(string $event): self
+    {
+        return new self("Audit data is invalid: \"{$event}\" is not a known change type.");
+    }
 }

@@ -39,6 +39,29 @@ final class PruneCommandTest extends TestCase
         $this->assertSame(1, AuditRecordModel::query()->count());
     }
 
+    public function test_the_days_option_overrides_the_configured_retention(): void
+    {
+        $repository = $this->app->make(AuditRecordRepository::class);
+        $repository->save($this->record((new DateTimeImmutable)->modify('-50 days')));
+        $repository->save($this->record(new DateTimeImmutable));
+
+        $this->artisan('audit-log:prune', ['--days' => 60])->assertSuccessful();
+        $this->assertSame(2, AuditRecordModel::query()->count());
+
+        $this->artisan('audit-log:prune', ['--days' => 10])->assertSuccessful();
+        $this->assertSame(1, AuditRecordModel::query()->count());
+    }
+
+    public function test_a_zero_days_override_prunes_nothing(): void
+    {
+        $repository = $this->app->make(AuditRecordRepository::class);
+        $repository->save($this->record(new DateTimeImmutable('2020-01-01T10:00:00+00:00')));
+
+        $this->artisan('audit-log:prune', ['--days' => 0])->assertSuccessful();
+
+        $this->assertSame(1, AuditRecordModel::query()->count());
+    }
+
     private function record(DateTimeImmutable $occurredAt): AuditRecord
     {
         return new AuditRecord(

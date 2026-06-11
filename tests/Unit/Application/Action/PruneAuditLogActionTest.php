@@ -49,6 +49,47 @@ final class PruneAuditLogActionTest extends TestCase
         $this->assertCount(1, $repository->saved);
     }
 
+    public function test_a_window_below_the_minimum_prunes_as_seven_days(): void
+    {
+        $repository = new InMemoryAuditRecordRepository;
+        $repository->save($this->recordOn('2026-05-29'));
+        $repository->save($this->recordOn('2026-05-20'));
+
+        $action = new PruneAuditLogAction(
+            $repository,
+            new FixedClock(new DateTimeImmutable('2026-06-01T00:00:00+00:00')),
+        );
+
+        $this->assertSame(1, $action(1));
+        $this->assertCount(1, $repository->saved);
+        $this->assertSame('2026-05-29', $repository->saved[0]->occurredAt()->format('Y-m-d'));
+    }
+
+    public function test_a_window_above_the_maximum_prunes_as_9999_days(): void
+    {
+        $repository = new InMemoryAuditRecordRepository;
+        $repository->save($this->recordOn('1998-01-01'));
+        $repository->save($this->recordOn('2000-01-01'));
+
+        $action = new PruneAuditLogAction(
+            $repository,
+            new FixedClock(new DateTimeImmutable('2026-06-01T00:00:00+00:00')),
+        );
+
+        $this->assertSame(1, $action(20000));
+        $this->assertCount(1, $repository->saved);
+        $this->assertSame('2000-01-01', $repository->saved[0]->occurredAt()->format('Y-m-d'));
+    }
+
+    public function test_the_clamp_bounds_are_exposed(): void
+    {
+        $this->assertSame(7, PruneAuditLogAction::clampDays(1));
+        $this->assertSame(7, PruneAuditLogAction::clampDays(7));
+        $this->assertSame(180, PruneAuditLogAction::clampDays(180));
+        $this->assertSame(9999, PruneAuditLogAction::clampDays(9999));
+        $this->assertSame(9999, PruneAuditLogAction::clampDays(10000));
+    }
+
     private function recordOn(string $date): AuditRecord
     {
         return new AuditRecord(

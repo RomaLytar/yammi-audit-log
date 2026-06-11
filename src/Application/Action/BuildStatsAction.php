@@ -20,7 +20,7 @@ final class BuildStatsAction
 {
     private const WINDOW_DAYS = 30;
 
-    private const ACTIVITY_DAYS = 14;
+    private const ACTIVITY_DAYS = 30;
 
     private const MODEL_LIMIT = 10;
 

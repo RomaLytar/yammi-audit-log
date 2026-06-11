@@ -72,10 +72,10 @@ final class BuildStatsActionTest extends TestCase
 
         $stats = ($this->action)(new AuditFilterData, 180);
 
-        $this->assertCount(14, $stats->byDay);
+        $this->assertCount(30, $stats->byDay);
         $this->assertSame(2, $stats->byDay['2026-05-31']);
         $this->assertSame(0, $stats->byDay['2026-05-30']);
-        $this->assertSame('2026-05-19', array_key_first($stats->byDay));
+        $this->assertSame('2026-05-03', array_key_first($stats->byDay));
     }
 
     public function test_disabled_retention_has_no_projection(): void

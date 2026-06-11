@@ -96,23 +96,25 @@ final class StatsViewModel
     }
 
     /**
-     * @return list<array{day: string, count: int, percent: int}>
+     * Contribution-style cells: intensity 0 (no activity) to 4 (peak day).
+     *
+     * @return list<array{day: string, count: int, level: int}>
      */
-    public function dailyBars(): array
+    public function heatmapCells(): array
     {
         $max = max([1, ...array_values($this->stats->byDay)]);
 
-        $bars = [];
+        $cells = [];
 
         foreach ($this->stats->byDay as $day => $count) {
-            $bars[] = [
+            $cells[] = [
                 'day' => $day,
                 'count' => $count,
-                'percent' => (int) round($count / $max * 100),
+                'level' => $count === 0 ? 0 : max(1, (int) ceil($count / $max * 4)),
             ];
         }
 
-        return $bars;
+        return $cells;
     }
 
     /**

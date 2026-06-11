@@ -64,7 +64,7 @@
                                    value="{{ old($setting->definition->key, $setting->value) }}"
                                    @if ($setting->definition->min !== null) min="{{ $setting->definition->min }}" @endif
                                    @if ($setting->definition->max !== null) max="{{ $setting->definition->max }}" @endif
-                                   class="w-28 h-8 rounded-md border border-border bg-background px-2 text-xs tabular-nums focus:outline-none focus:ring-1 focus:ring-ring">
+                                   class="w-40 h-9 rounded-md border border-input bg-card px-3 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring">
                             @if ($setting->definition->suffix !== null)
                                 <span class="text-xs text-muted-foreground">{{ $setting->definition->suffix }}</span>
                             @endif
@@ -122,23 +122,33 @@
             @endforeach
         </div>
 
+        @php
+            $connectionOptions = [];
+            foreach ($vm->connectionNames as $name) {
+                $connectionOptions[$name] = $name;
+            }
+        @endphp
         <form method="POST" action="{{ route('audit-log.settings.transfer') }}" class="flex flex-wrap items-end gap-3">
             @csrf
-            <div>
-                <label for="transfer-from" class="block text-xs font-semibold mb-1">From</label>
-                <select name="from" id="transfer-from" class="h-8 rounded-md border border-border bg-background px-2 text-xs">
-                    @foreach ($vm->connectionNames as $name)
-                        <option value="{{ $name }}" {{ $name === $vm->defaultConnection->name ? 'selected' : '' }}>{{ $name }}</option>
-                    @endforeach
-                </select>
+            <div class="w-56">
+                @include('audit-log::components.select', [
+                    'name' => 'from',
+                    'label' => 'From',
+                    'options' => $connectionOptions,
+                    'value' => $vm->defaultConnection->name,
+                    'placeholder' => 'Source connection',
+                    'autoSubmit' => false,
+                ])
             </div>
-            <div>
-                <label for="transfer-to" class="block text-xs font-semibold mb-1">To</label>
-                <select name="to" id="transfer-to" class="h-8 rounded-md border border-border bg-background px-2 text-xs">
-                    @foreach ($vm->connectionNames as $name)
-                        <option value="{{ $name }}" {{ $name === $vm->suggestedTransferTarget() ? 'selected' : '' }}>{{ $name }}</option>
-                    @endforeach
-                </select>
+            <div class="w-56">
+                @include('audit-log::components.select', [
+                    'name' => 'to',
+                    'label' => 'To',
+                    'options' => $connectionOptions,
+                    'value' => $vm->suggestedTransferTarget(),
+                    'placeholder' => 'Target connection',
+                    'autoSubmit' => false,
+                ])
             </div>
             <label class="inline-flex items-center gap-2 h-8 cursor-pointer select-none">
                 <input type="checkbox" name="delete_source" value="1" class="h-4 w-4 rounded border-border accent-current">

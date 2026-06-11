@@ -239,7 +239,7 @@
                 host.querySelector('[data-al-select-label]').textContent = labelEl ? labelEl.textContent.trim() : input.value;
                 __alCloseSelects(null);
                 var form = host.closest('form');
-                if (form) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
+                if (form && !host.hasAttribute('data-al-select-nosubmit')) { form.requestSubmit ? form.requestSubmit() : form.submit(); }
                 return;
             }
 

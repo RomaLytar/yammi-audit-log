@@ -136,6 +136,15 @@ final class SettingRegistry
             ),
             new SettingDefinitionData(
                 group: self::GROUP_UI,
+                key: 'ui_enabled',
+                configPath: 'audit-log.ui.enabled',
+                type: SettingType::Boolean,
+                default: false,
+                label: 'Bundled dashboard',
+                description: 'Serves the audit UI under the configured path. Off by default — hosts embedding the data via the facade never expose it. Toggle from the console with audit-log:ui enable|disable; applies from the next request.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_UI,
                 key: 'ui_throttle',
                 configPath: 'audit-log.ui.throttle',
                 type: SettingType::String,

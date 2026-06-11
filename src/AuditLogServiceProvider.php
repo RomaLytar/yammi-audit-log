@@ -17,6 +17,7 @@ use Throwable;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
 use Yammi\AuditLog\Application\Contract\AuditDataTransferrer;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
+use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\LabelResolver;
@@ -45,6 +46,7 @@ use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
+use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditStatsQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\QueuedAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Transfer\EloquentAuditDataTransferrer;
@@ -87,6 +89,7 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
         $this->app->bind(AuditLogQuery::class, EloquentAuditLogQuery::class);
+        $this->app->bind(AuditStatsQuery::class, EloquentAuditStatsQuery::class);
         $this->app->bind(Clock::class, SystemClock::class);
 
         $this->app->bind(LabelResolver::class, function (): LabelResolver {

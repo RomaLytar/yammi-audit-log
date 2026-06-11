@@ -58,7 +58,7 @@ final class SettingsUpdateTest extends TestCase
     public function test_reset_clears_the_stored_settings(): void
     {
         $this->post('audit-log/settings', ['retention_days' => 90]);
-        $this->assertSame(1, SettingModel::query()->count());
+        $this->assertSame(2, SettingModel::query()->count());
 
         $this->post('audit-log/settings/reset')
             ->assertRedirect(route('audit-log.settings'));

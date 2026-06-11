@@ -53,6 +53,34 @@ final class TimelineEntryViewModelTest extends TestCase
         );
     }
 
+    public function test_a_job_actor_links_to_the_configured_jobs_monitor(): void
+    {
+        $entry = new TimelineEntryData(
+            id: 1,
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: 'updated',
+            actorType: 'job',
+            actorLabel: 'App\\Jobs\\ProcessOrder',
+            originLabel: null,
+            changes: [],
+            labels: [],
+            occurredAt: '2026-01-01T10:00:00+00:00',
+            correlationId: null,
+        );
+
+        $viewModel = new TimelineEntryViewModel($entry, 1, '/jobs-monitor/');
+
+        $this->assertSame('/jobs-monitor?search=App%5CJobs%5CProcessOrder', $viewModel->jobsMonitorLink());
+    }
+
+    public function test_non_job_actors_and_missing_config_have_no_monitor_link(): void
+    {
+        $userEntry = $this->viewModel(chainSize: 1);
+
+        $this->assertNull($userEntry->jobsMonitorLink());
+    }
+
     public function test_change_rows_carry_snapshotted_labels(): void
     {
         $entry = new TimelineEntryData(

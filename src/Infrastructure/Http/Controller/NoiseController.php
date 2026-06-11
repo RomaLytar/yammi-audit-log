@@ -9,6 +9,7 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
+use Yammi\AuditLog\Infrastructure\Integration\JobsMonitorBridge;
 use Yammi\AuditLog\Presentation\ViewModel\DashboardViewModel;
 
 /** @internal */
@@ -18,6 +19,7 @@ final class NoiseController
         private readonly ViewFactory $view,
         private readonly ListChangesAction $listChanges,
         private readonly FilterFactory $filters,
+        private readonly JobsMonitorBridge $jobsMonitor,
     ) {}
 
     public function __invoke(Request $request): View
@@ -25,7 +27,7 @@ final class NoiseController
         $list = ($this->listChanges)($this->filters->fromRequest($request), onlyNoise: true);
 
         return $this->view->make('audit-log::noise', [
-            'list' => new DashboardViewModel($list),
+            'list' => new DashboardViewModel($list, $this->jobsMonitor->url()),
         ]);
     }
 }

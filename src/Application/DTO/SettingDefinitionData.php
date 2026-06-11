@@ -9,12 +9,15 @@ use Yammi\AuditLog\Domain\Settings\Enum\SettingType;
 /** @internal */
 final class SettingDefinitionData
 {
+    /**
+     * @param  bool|int|string|list<string>  $default
+     */
     public function __construct(
         public readonly string $group,
         public readonly string $key,
         public readonly string $configPath,
         public readonly SettingType $type,
-        public readonly bool|int|string $default,
+        public readonly bool|int|string|array $default,
         public readonly string $label,
         public readonly string $description,
         public readonly ?int $min = null,
@@ -22,7 +25,11 @@ final class SettingDefinitionData
         public readonly ?string $suffix = null,
     ) {}
 
-    public function clamp(bool|int|string $value): bool|int|string
+    /**
+     * @param  bool|int|string|array<array-key, mixed>  $value
+     * @return bool|int|string|array<array-key, mixed>
+     */
+    public function clamp(bool|int|string|array $value): bool|int|string|array
     {
         if (! is_int($value)) {
             return $value;

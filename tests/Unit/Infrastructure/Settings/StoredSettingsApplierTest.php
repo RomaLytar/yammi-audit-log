@@ -39,6 +39,18 @@ final class StoredSettingsApplierTest extends TestCase
         $this->assertSame(9999, $config->get('audit-log.retention.days'));
     }
 
+    public function test_csv_settings_overlay_config_as_arrays(): void
+    {
+        $repository = new InMemoryGeneralSettingRepository;
+        $repository->stored = ['redaction' => ['redaction_keys' => 'password, iban']];
+
+        $config = new ConfigRepository(['audit-log' => ['redaction' => ['keys' => ['password']]]]);
+
+        (new StoredSettingsApplier(new SettingRegistry, $repository, $config))->apply();
+
+        $this->assertSame(['password', 'iban'], $config->get('audit-log.redaction.keys'));
+    }
+
     public function test_config_is_untouched_without_stored_values(): void
     {
         $config = new ConfigRepository(['audit-log' => ['retention' => ['days' => 180]]]);

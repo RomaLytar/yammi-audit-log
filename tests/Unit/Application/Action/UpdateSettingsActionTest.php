@@ -39,6 +39,13 @@ final class UpdateSettingsActionTest extends TestCase
         $this->assertSame('9999', $this->repository->stored['general']['retention_days']);
     }
 
+    public function test_csv_values_are_normalised_before_storage(): void
+    {
+        ($this->update)(['redaction_keys' => ' password,token , iban ']);
+
+        $this->assertSame('password, token, iban', $this->repository->stored['redaction']['redaction_keys']);
+    }
+
     public function test_unknown_keys_are_ignored(): void
     {
         ($this->update)(['hack' => 'x']);

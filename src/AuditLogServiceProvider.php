@@ -9,10 +9,12 @@ use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
+use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
+use Yammi\AuditLog\Application\Contract\AuditDataTransferrer;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
@@ -31,6 +33,7 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
+use Yammi\AuditLog\Infrastructure\Console\TransferAuditDataCommand;
 use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
@@ -38,6 +41,7 @@ use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Label\NullLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
+use Yammi\AuditLog\Infrastructure\Persistence\Transfer\EloquentAuditDataTransferrer;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
 use Yammi\AuditLog\Infrastructure\Support\SystemClock;
@@ -90,6 +94,15 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->bind(AuditDataTransferrer::class, function (): AuditDataTransferrer {
+            $table = $this->config()->get('audit-log.database.table', 'audit_log');
+
+            return new EloquentAuditDataTransferrer(
+                $this->app->make(ConnectionResolverInterface::class),
+                is_string($table) ? $table : 'audit_log',
+            );
+        });
+
         $this->app->bind(AuditableGuard::class, function (): AuditableGuard {
             return new AuditableGuard(
                 $this->stringList($this->config()->get('audit-log.capture.exclude', [])),
@@ -118,6 +131,8 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->loadViewsFrom(self::VIEWS_PATH, 'audit-log');
 
         if ($this->app->runningInConsole()) {
+            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class]);
+
             $this->publishes(
                 [self::CONFIG_PATH => config_path('audit-log.php')],
                 'audit-log-config',
@@ -154,10 +169,6 @@ final class AuditLogServiceProvider extends ServiceProvider
 
     private function registerRetention(ConfigRepository $config): void
     {
-        if ($this->app->runningInConsole()) {
-            $this->commands([PruneAuditLogCommand::class]);
-        }
-
         $days = (int) $config->get('audit-log.retention.days', 0);
 
         if ($days <= 0 || ! (bool) $config->get('audit-log.retention.schedule.enabled', true)) {

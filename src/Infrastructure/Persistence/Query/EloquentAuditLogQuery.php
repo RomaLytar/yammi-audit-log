@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Persistence\Query;
 
+use DateTimeImmutable;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
@@ -88,6 +89,18 @@ final class EloquentAuditLogQuery implements AuditLogQuery
     public function countNoise(): int
     {
         return AuditRecordModel::query()->where('is_noise', true)->count();
+    }
+
+    public function countAll(): int
+    {
+        return AuditRecordModel::query()->count();
+    }
+
+    public function countSince(DateTimeImmutable $cutoff): int
+    {
+        return AuditRecordModel::query()
+            ->where('occurred_at', '>=', $cutoff->format('Y-m-d H:i:s'))
+            ->count();
     }
 
     public function chainSizes(array $correlationIds): array

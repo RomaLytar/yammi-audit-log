@@ -13,7 +13,7 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 - Correlation id per unit of work (request, command or job and the jobs it dispatches), drawn as a cross-model change chain.
 - Field-level diffs with secret redaction; timestamp-only "no-op" writes are recorded but flagged as noise.
 - Human-readable FK labels snapshotted at event time ("John Doe → Jane Smith" next to `user_id: 5 → 7`), surviving later edits or deletion of the referenced row — map columns in `audit-log.labels.map`, optionally expose `getAuditLabel()` on the model.
-- Dashboard with filters (model, event, actor, date), full-text search across change values, a noise page, and a chain/trace view.
+- Optional dashboard (off by default — enable with `php artisan audit-log:ui enable`): filters (model, event, actor, date), full-text search across change values, a noise page, statistics and a chain/trace view. Everything it shows is also available as facade data for your own admin.
 - CSV/JSON export of the current filter result (first 10000 rows) for compliance hand-offs.
 - Automatic retention pruning, on by default (180 days, configurable 7–9999; audit data is PII), plus a configurable Gate and rate limit on the UI.
 - Optional async writes (`AUDIT_LOG_WRITE_ASYNC=true`): the insert is queued while actor, correlation and redaction stay resolved at the moment of the change.

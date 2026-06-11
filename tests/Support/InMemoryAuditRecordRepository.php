@@ -58,6 +58,16 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
         return new PagedRecords(array_values($slice), $total, $page, $perPage);
     }
 
+    public function all(AuditCriteria $criteria, int $limit): array
+    {
+        $matched = array_values(array_filter(
+            $this->saved,
+            fn (AuditRecord $record): bool => $this->matches($record, $criteria),
+        ));
+
+        return array_slice(array_reverse($matched), 0, $limit);
+    }
+
     public function chain(string $correlationId): array
     {
         return array_values(array_filter(

@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\Service\CriteriaFactory;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
@@ -30,7 +31,7 @@ final class ListChangesActionTest extends TestCase
 
     public function test_it_lists_every_change_with_filter_options(): void
     {
-        $list = (new ListChangesAction($this->repository))(new AuditFilterData);
+        $list = (new ListChangesAction($this->repository, new CriteriaFactory))(new AuditFilterData);
 
         $this->assertSame(3, $list->total);
         $this->assertCount(3, $list->entries);
@@ -41,7 +42,7 @@ final class ListChangesActionTest extends TestCase
 
     public function test_it_filters_by_event(): void
     {
-        $list = (new ListChangesAction($this->repository))(new AuditFilterData(event: 'updated'));
+        $list = (new ListChangesAction($this->repository, new CriteriaFactory))(new AuditFilterData(event: 'updated'));
 
         $this->assertSame(1, $list->total);
         $this->assertSame('updated', $list->entries[0]->event);
@@ -49,7 +50,7 @@ final class ListChangesActionTest extends TestCase
 
     public function test_it_filters_by_actor_type(): void
     {
-        $list = (new ListChangesAction($this->repository))(new AuditFilterData(actorType: 'job'));
+        $list = (new ListChangesAction($this->repository, new CriteriaFactory))(new AuditFilterData(actorType: 'job'));
 
         $this->assertSame(1, $list->total);
         $this->assertSame('job', $list->entries[0]->actorType);
@@ -57,7 +58,7 @@ final class ListChangesActionTest extends TestCase
 
     public function test_an_invalid_event_filter_is_ignored(): void
     {
-        $list = (new ListChangesAction($this->repository))(new AuditFilterData(event: 'not-an-event'));
+        $list = (new ListChangesAction($this->repository, new CriteriaFactory))(new AuditFilterData(event: 'not-an-event'));
 
         $this->assertSame(3, $list->total);
     }
@@ -69,7 +70,7 @@ final class ListChangesActionTest extends TestCase
         $repository->save($this->record('App\\Models\\Invoice', ChangeType::Created, Actor::system(), 'chain-1'));
         $repository->save($this->record('App\\Models\\Product', ChangeType::Created, Actor::system()));
 
-        $list = (new ListChangesAction($repository))(new AuditFilterData);
+        $list = (new ListChangesAction($repository, new CriteriaFactory))(new AuditFilterData);
 
         $this->assertSame(2, $list->chainSize('chain-1'));
         $this->assertSame(1, $list->chainSize(null));
@@ -81,7 +82,7 @@ final class ListChangesActionTest extends TestCase
         $repository->save($this->record('App\\Models\\Order', ChangeType::Updated, Actor::system(), null, true));
         $repository->save($this->record('App\\Models\\Order', ChangeType::Updated, Actor::system(), null, false));
 
-        $list = (new ListChangesAction($repository))(new AuditFilterData, onlyNoise: true);
+        $list = (new ListChangesAction($repository, new CriteriaFactory))(new AuditFilterData, onlyNoise: true);
 
         $this->assertSame(1, $list->total);
         $this->assertTrue($list->entries[0]->isNoise);
@@ -94,7 +95,7 @@ final class ListChangesActionTest extends TestCase
         $repository->save($this->recordOn('2026-03-01'));
 
         // "from" later than "to" must behave as the range 2026-01-01 to 2026-01-10.
-        $list = (new ListChangesAction($repository))(new AuditFilterData(from: '2026-01-10', to: '2026-01-01'));
+        $list = (new ListChangesAction($repository, new CriteriaFactory))(new AuditFilterData(from: '2026-01-10', to: '2026-01-01'));
 
         $this->assertSame(1, $list->total);
     }

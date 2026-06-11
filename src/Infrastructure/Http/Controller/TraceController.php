@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Http\Controller;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Yammi\AuditLog\Application\Action\BuildChainAction;
+use Yammi\AuditLog\Infrastructure\Integration\JobsMonitorBridge;
 use Yammi\AuditLog\Presentation\ViewModel\TraceViewModel;
 
 /** @internal */
@@ -15,6 +16,7 @@ final class TraceController
     public function __construct(
         private readonly ViewFactory $view,
         private readonly BuildChainAction $buildChain,
+        private readonly JobsMonitorBridge $jobsMonitor,
     ) {}
 
     public function __invoke(string $correlation): View
@@ -25,6 +27,8 @@ final class TraceController
             abort(404);
         }
 
-        return $this->view->make('audit-log::trace', ['chain' => new TraceViewModel($chain)]);
+        return $this->view->make('audit-log::trace', [
+            'chain' => new TraceViewModel($chain, $this->jobsMonitor->url()),
+        ]);
     }
 }

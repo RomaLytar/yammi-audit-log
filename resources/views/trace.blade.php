@@ -54,6 +54,12 @@
                                 <i data-lucide="corner-down-right" class="text-[12px] text-brand"></i> from {{ $entry->originLabel() }}
                             </span>
                         @endif
+                        @if ($entry->jobsMonitorLink())
+                            <a href="{{ $entry->jobsMonitorLink() }}" target="_blank" rel="noopener"
+                               class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
+                                <i data-lucide="activity" class="text-[12px]"></i> Open in JobsMonitor
+                            </a>
+                        @endif
                     </div>
                     @if ($entry->changeCount() > 0)
                         <div class="mt-3 overflow-hidden rounded-lg border border-border">

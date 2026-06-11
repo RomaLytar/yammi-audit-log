@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Persistence\Query;
 
+use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
@@ -146,7 +147,10 @@ final class EloquentAuditLogQuery implements AuditLogQuery
      */
     private function changesAsText(Builder $query): string
     {
-        return match ($query->getConnection()->getDriverName()) {
+        $connection = $query->getConnection();
+        $driver = $connection instanceof Connection ? $connection->getDriverName() : '';
+
+        return match ($driver) {
             'pgsql' => 'changes::text',
             'mysql', 'mariadb' => 'cast(changes as char)',
             default => 'cast(changes as text)',

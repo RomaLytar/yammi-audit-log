@@ -25,6 +25,7 @@ use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveActorStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
+use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
 use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
 use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
@@ -44,7 +45,10 @@ use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepo
 use Yammi\AuditLog\Infrastructure\Persistence\Transfer\EloquentAuditDataTransferrer;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
+use Yammi\AuditLog\Infrastructure\Settings\Persistence\Repository\EloquentGeneralSettingRepository;
+use Yammi\AuditLog\Infrastructure\Settings\StoredSettingsApplier;
 use Yammi\AuditLog\Infrastructure\Support\SystemClock;
+use Yammi\AuditLog\Infrastructure\Transfer\ConnectionStatusInspector;
 
 final class AuditLogServiceProvider extends ServiceProvider
 {
@@ -95,11 +99,19 @@ final class AuditLogServiceProvider extends ServiceProvider
         });
 
         $this->app->bind(AuditDataTransferrer::class, function (): AuditDataTransferrer {
-            $table = $this->config()->get('audit-log.database.table', 'audit_log');
-
             return new EloquentAuditDataTransferrer(
                 $this->app->make(ConnectionResolverInterface::class),
-                is_string($table) ? $table : 'audit_log',
+                $this->auditTable(),
+            );
+        });
+
+        $this->app->bind(GeneralSettingRepository::class, EloquentGeneralSettingRepository::class);
+
+        $this->app->bind(ConnectionStatusInspector::class, function (): ConnectionStatusInspector {
+            return new ConnectionStatusInspector(
+                $this->app->make(ConnectionResolverInterface::class),
+                $this->config(),
+                $this->auditTable(),
             );
         });
 
@@ -150,6 +162,8 @@ final class AuditLogServiceProvider extends ServiceProvider
         }
 
         $config = $this->config();
+
+        $this->app->make(StoredSettingsApplier::class)->apply();
 
         if ((bool) $config->get('audit-log.ui.enabled', true)) {
             $this->registerRoutes($config);
@@ -224,6 +238,13 @@ final class AuditLogServiceProvider extends ServiceProvider
     private function config(): ConfigRepository
     {
         return $this->app->make(ConfigRepository::class);
+    }
+
+    private function auditTable(): string
+    {
+        $table = $this->config()->get('audit-log.database.table', 'audit_log');
+
+        return is_string($table) ? $table : 'audit_log';
     }
 
     /**

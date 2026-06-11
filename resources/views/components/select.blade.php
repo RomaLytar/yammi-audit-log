@@ -3,6 +3,7 @@
     $placeholder = $placeholder ?? 'All';
     $value = (string) ($value ?? '');
     $options = $options ?? [];
+    $autoSubmit = $autoSubmit ?? true;
     $triggerLabel = $options[$value] ?? $placeholder;
     $isActive = $value !== '';
     $id = 'al-sel-'.bin2hex(random_bytes(4));
@@ -11,7 +12,7 @@
     @if ($label)
         <label class="block text-[11px] font-medium text-muted-foreground mb-1">{{ $label }}</label>
     @endif
-    <div class="relative" data-al-select data-al-select-id="{{ $id }}">
+    <div class="relative" data-al-select data-al-select-id="{{ $id }}" {{ $autoSubmit ? '' : 'data-al-select-nosubmit' }}>
         <input type="hidden" name="{{ $name }}" value="{{ $value }}" data-al-select-input>
         <button type="button"
                 class="w-full inline-flex items-center justify-between gap-2 h-9 rounded-md border bg-card text-sm px-3 transition-colors focus:outline-none focus:ring-2 focus:ring-ring

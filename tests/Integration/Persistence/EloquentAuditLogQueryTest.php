@@ -100,9 +100,55 @@ final class EloquentAuditLogQueryTest extends TestCase
         $this->assertSame(1, $paged->total);
     }
 
+    public function test_search_matches_old_and_new_values_in_the_diff(): void
+    {
+        $this->saveRecordWithDiff(['status' => 'pending'], ['status' => 'cancelled']);
+        $this->saveRecordWithDiff(['status' => 'draft'], ['status' => 'published']);
+
+        $this->assertSame(1, $this->query()->paginate(new AuditCriteria(search: 'cancelled'))->total);
+        $this->assertSame(1, $this->query()->paginate(new AuditCriteria(search: 'pending'))->total);
+        $this->assertSame(0, $this->query()->paginate(new AuditCriteria(search: 'refunded'))->total);
+    }
+
+    public function test_search_matches_the_auditable_id(): void
+    {
+        $this->saveRecordWithDiff(['status' => 'a'], ['status' => 'b'], auditableId: 777);
+        $this->saveRecordWithDiff(['status' => 'a'], ['status' => 'b'], auditableId: 778);
+
+        $paged = $this->query()->paginate(new AuditCriteria(search: '777'));
+
+        $this->assertSame(1, $paged->total);
+        $this->assertSame('777', $paged->records[0]->auditable()->id);
+    }
+
+    public function test_search_treats_wildcards_literally(): void
+    {
+        $this->saveRecordWithDiff(['code' => 'A-100%'], ['code' => 'B']);
+        $this->saveRecordWithDiff(['code' => 'A-100x'], ['code' => 'B']);
+
+        $this->assertSame(1, $this->query()->paginate(new AuditCriteria(search: '100%'))->total);
+    }
+
     private function query(): AuditLogQuery
     {
         return $this->app->make(AuditLogQuery::class);
+    }
+
+    /**
+     * @param  array<string, scalar|null>  $before
+     * @param  array<string, scalar|null>  $after
+     */
+    private function saveRecordWithDiff(array $before, array $after, int $auditableId = 1): void
+    {
+        $this->app->make(AuditRecordRepository::class)->save(new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', $auditableId),
+            event: ChangeType::Updated,
+            diff: Diff::between($before, $after),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
+        ));
     }
 
     private function saveRecordAt(DateTimeImmutable $occurredAt): void

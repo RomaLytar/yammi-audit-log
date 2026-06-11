@@ -31,6 +31,7 @@ final class FilterFactory
             from: $this->date($request->query('from')),
             to: $this->date($request->query('to')),
             page: $this->page($request->query('page')),
+            search: $this->text($request->query('q')),
         );
     }
 

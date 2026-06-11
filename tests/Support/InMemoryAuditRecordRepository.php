@@ -122,7 +122,18 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
             && $this->contains($criteria->actorLabel, $record->actor()->displayLabel())
             && ($criteria->onlyNoise === null || $record->isNoise() === $criteria->onlyNoise)
             && ($criteria->from === null || $record->occurredAt() >= $criteria->from)
-            && ($criteria->to === null || $record->occurredAt() <= $criteria->to);
+            && ($criteria->to === null || $record->occurredAt() <= $criteria->to)
+            && $this->matchesSearch($record, $criteria->search);
+    }
+
+    private function matchesSearch(AuditRecord $record, ?string $search): bool
+    {
+        if ($search === null) {
+            return true;
+        }
+
+        return $record->auditable()->id === $search
+            || $this->contains($search, (string) json_encode($record->diff()->toArray()));
     }
 
     private function same(mixed $expected, mixed $actual): bool

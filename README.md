@@ -23,8 +23,14 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 
 Treat these as stable; everything marked `@internal` is an implementation detail and may change.
 
-- **Facade** — `Yammi\AuditLog\Infrastructure\Facade\AuditLog`: `AuditLog::for($model)` returns a `TimelineData`; `AuditLog::record(...)` records a manual change.
-- **DTOs** — `Yammi\AuditLog\Application\DTO\TimelineData` and `TimelineEntryData`.
+- **Facade** — `Yammi\AuditLog\Infrastructure\Facade\AuditLog`. Everything the bundled dashboard shows is available as data, so you can embed the audit log in your own admin:
+  - `AuditLog::for($model)` — one record's timeline (`TimelineData`);
+  - `AuditLog::changes(['model' => ..., 'event' => ..., 'actor_type' => ..., 'actor' => ..., 'from' => ..., 'to' => ..., 'search' => ..., 'page' => ...])` — the filtered, paginated dashboard list (`ChangeListData`);
+  - `AuditLog::noise([...])` — only the flagged no-op writes;
+  - `AuditLog::chain($correlationId)` — the cross-model change chain (`ChainData|null`);
+  - `AuditLog::stats([...])` — volume, breakdowns and daily activity (`StatsData`);
+  - `AuditLog::record(...)` — record a change Eloquent events cannot see.
+- **DTOs** — `TimelineData`, `TimelineEntryData`, `ChangeListData`, `ChainData`, `StatsData` (all plain `public readonly` objects).
 - **Config** — `config/audit-log.php` (publish with `--tag=audit-log-config`).
 - **Extension contracts** (bind your own implementation): `Application\Contract\ActorProvider`, `ActorResolver`, `ValueRedactor`, `LabelResolver`, `Clock`, `CorrelationResolver`, `AuditLogQuery`, and `Domain\Audit\Repository\AuditRecordRepository`.
 - **Domain value objects/enums** for custom resolvers: `Actor`, `ActorType`, `ChangeType`, `Diff`, `AuditableReference`, `LabelSnapshot`.

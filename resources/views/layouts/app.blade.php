@@ -166,6 +166,10 @@
                             <span class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-warning/20 text-warning text-[10px] font-bold tabular-nums">{{ $auditNoiseCount }}</span>
                         @endif
                     </a>
+                    <a href="{{ route('audit-log.settings') }}"
+                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.settings') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="settings" class="text-[14px]"></i> Settings
+                    </a>
                     <button type="button" onclick="__alToggleTheme()" title="Toggle theme"
                             class="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                         <i data-lucide="sun-moon" class="text-[15px]"></i>

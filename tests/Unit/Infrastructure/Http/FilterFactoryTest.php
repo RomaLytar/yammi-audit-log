@@ -45,4 +45,21 @@ final class FilterFactoryTest extends TestCase
         $this->assertSame('job', $filters->actorType);
         $this->assertSame(3, $filters->page);
     }
+
+    public function test_the_search_term_is_parsed_and_capped(): void
+    {
+        $request = Request::create('/audit-log', 'GET', ['q' => str_repeat('x', 300)]);
+
+        $filters = (new FilterFactory)->fromRequest($request);
+
+        $this->assertSame(255, mb_strlen($filters->search));
+        $this->assertTrue($filters->isActive());
+    }
+
+    public function test_a_non_string_search_is_dropped(): void
+    {
+        $request = Request::create('/audit-log', 'GET', ['q' => ['array']]);
+
+        $this->assertSame('', (new FilterFactory)->fromRequest($request)->search);
+    }
 }

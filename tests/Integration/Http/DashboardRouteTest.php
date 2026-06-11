@@ -53,6 +53,15 @@ final class DashboardRouteTest extends TestCase
         $this->get('audit-log?event=deleted')->assertOk()->assertSee('No changes match these filters');
     }
 
+    public function test_it_searches_change_content(): void
+    {
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+        $post->update(['status' => 'published']);
+
+        $this->get('audit-log?q=published')->assertOk()->assertSee('1 records');
+        $this->get('audit-log?q=refunded')->assertOk()->assertSee('No changes match these filters');
+    }
+
     public function test_it_filters_by_actor_type(): void
     {
         Post::create(['title' => 'Hello', 'status' => 'draft']);

@@ -22,6 +22,7 @@ final class AuditFilterDataTest extends TestCase
         $this->assertTrue((new AuditFilterData(actor: 'Jane'))->isActive());
         $this->assertTrue((new AuditFilterData(from: '2026-01-01'))->isActive());
         $this->assertTrue((new AuditFilterData(to: '2026-01-01'))->isActive());
+        $this->assertTrue((new AuditFilterData(search: 'refund'))->isActive());
     }
 
     public function test_the_page_alone_does_not_make_it_active(): void

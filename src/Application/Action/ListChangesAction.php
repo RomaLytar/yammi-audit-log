@@ -35,6 +35,7 @@ final class ListChangesAction
             from: $from,
             to: $to,
             onlyNoise: $onlyNoise,
+            search: $filters->search !== '' ? $filters->search : null,
         );
 
         $paged = $this->query->paginate($criteria, max(1, $filters->page), self::PER_PAGE);

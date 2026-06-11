@@ -46,11 +46,33 @@ final class TimelineEntryViewModelTest extends TestCase
 
         $this->assertSame(
             [
-                ['field' => 'status', 'old' => 'a', 'new' => 'b'],
-                ['field' => 'meta', 'old' => '—', 'new' => '{"x":1}'],
+                ['field' => 'status', 'old' => 'a', 'new' => 'b', 'oldLabel' => null, 'newLabel' => null],
+                ['field' => 'meta', 'old' => '—', 'new' => '{"x":1}', 'oldLabel' => null, 'newLabel' => null],
             ],
             $rows,
         );
+    }
+
+    public function test_change_rows_carry_snapshotted_labels(): void
+    {
+        $entry = new TimelineEntryData(
+            id: 1,
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: 'updated',
+            actorType: 'user',
+            actorLabel: 'Jane',
+            originLabel: null,
+            changes: ['user_id' => ['old' => 5, 'new' => 7]],
+            labels: ['user_id.old' => 'John Doe', 'user_id.new' => 'Jane Smith'],
+            occurredAt: '2026-01-01T10:00:00+00:00',
+            correlationId: null,
+        );
+
+        $rows = (new TimelineEntryViewModel($entry, 1))->changes();
+
+        $this->assertSame('John Doe', $rows[0]['oldLabel']);
+        $this->assertSame('Jane Smith', $rows[0]['newLabel']);
     }
 
     private function viewModel(int $chainSize): TimelineEntryViewModel

@@ -39,16 +39,36 @@
 
     <div class="rounded-xl border border-border bg-card p-5 shadow-xs mb-6">
         <h2 class="text-sm font-semibold flex items-center gap-2 mb-4">
-            <i data-lucide="calendar-days" class="text-brand text-[15px]"></i> Daily activity (last 14 days)
+            <i data-lucide="calendar-days" class="text-brand text-[15px]"></i> Daily activity (last 30 days)
         </h2>
-        <div class="flex items-end gap-1.5 h-28">
-            @foreach ($stats->dailyBars() as $bar)
-                <div class="flex-1 flex flex-col items-center gap-1 min-w-0" title="{{ $bar['day'] }}: {{ $bar['count'] }}">
-                    <span class="text-[10px] text-muted-foreground tabular-nums">{{ $bar['count'] }}</span>
-                    <div class="w-full rounded-t bg-brand/70" style="height: {{ max(2, $bar['percent']) }}%"></div>
-                    <span class="text-[9px] text-muted-foreground whitespace-nowrap">{{ substr($bar['day'], 5) }}</span>
+        @php
+            $levelClasses = [
+                0 => 'bg-muted',
+                1 => 'bg-brand/25',
+                2 => 'bg-brand/45',
+                3 => 'bg-brand/70',
+                4 => 'bg-brand',
+            ];
+        @endphp
+        <div class="flex flex-wrap gap-1.5">
+            @foreach ($stats->heatmapCells() as $cell)
+                <div class="group relative">
+                    <div class="h-5 w-5 rounded-[4px] {{ $levelClasses[$cell['level']] }} ring-1 ring-inset ring-border/40 transition-transform group-hover:scale-110"></div>
+                    <div class="pointer-events-none absolute bottom-full left-1/2 -translate-x-1/2 mb-1.5 hidden group-hover:block z-20">
+                        <div class="rounded-md bg-popover text-popover-foreground border border-border shadow-lg px-2.5 py-1.5 text-[11px] whitespace-nowrap">
+                            <span class="font-semibold tabular-nums">{{ $cell['count'] }}</span> {{ \Illuminate\Support\Str::plural('change', $cell['count']) }}
+                            <span class="text-muted-foreground">on {{ $cell['day'] }}</span>
+                        </div>
+                    </div>
                 </div>
             @endforeach
+        </div>
+        <div class="mt-3 flex items-center gap-1.5 text-[10px] text-muted-foreground">
+            Less
+            @foreach ($levelClasses as $cls)
+                <span class="h-3 w-3 rounded-[3px] {{ $cls }} ring-1 ring-inset ring-border/40"></span>
+            @endforeach
+            More
         </div>
     </div>
 

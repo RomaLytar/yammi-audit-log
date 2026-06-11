@@ -40,6 +40,24 @@ final class EloquentAuditLogQuery implements AuditLogQuery
         return new PagedRecords($records, $total, $page, $perPage);
     }
 
+    public function all(AuditCriteria $criteria, int $limit): array
+    {
+        $query = AuditRecordModel::query()
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->limit($limit);
+
+        $this->applyCriteria($query, $criteria);
+
+        $records = [];
+
+        foreach ($query->get() as $model) {
+            $records[] = $this->mapper->toDomain($model);
+        }
+
+        return $records;
+    }
+
     public function chain(string $correlationId): array
     {
         $models = AuditRecordModel::query()

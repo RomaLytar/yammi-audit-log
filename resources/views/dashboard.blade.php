@@ -10,7 +10,19 @@
             </h1>
             <p class="text-sm text-muted-foreground mt-1">Who changed what, and when — across your models.</p>
         </div>
-        <span class="text-xs text-muted-foreground tabular-nums">{{ $list->total() }} records</span>
+        <div class="flex items-center gap-2">
+            <a href="{{ route('audit-log.export', array_merge(request()->query(), ['format' => 'csv'])) }}"
+               class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent"
+               title="Export the current filter result (first 10000 rows) as CSV">
+                <i data-lucide="download" class="text-[13px]"></i> CSV
+            </a>
+            <a href="{{ route('audit-log.export', array_merge(request()->query(), ['format' => 'json'])) }}"
+               class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent"
+               title="Export the current filter result (first 10000 rows) as JSON">
+                <i data-lucide="download" class="text-[13px]"></i> JSON
+            </a>
+            <span class="text-xs text-muted-foreground tabular-nums">{{ $list->total() }} records</span>
+        </div>
     </div>
 
     @if ($list->hasFilterOptions() || $list->filters()->isActive())

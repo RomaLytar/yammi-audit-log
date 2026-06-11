@@ -6,6 +6,9 @@ namespace Yammi\AuditLog\Infrastructure\Facade;
 
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
+use Yammi\AuditLog\Application\DTO\ChainData;
+use Yammi\AuditLog\Application\DTO\ChangeListData;
+use Yammi\AuditLog\Application\DTO\StatsData;
 use Yammi\AuditLog\Application\DTO\TimelineData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
@@ -13,6 +16,10 @@ use Yammi\AuditLog\Infrastructure\AuditLogManager;
 
 /**
  * @method static TimelineData for(Model|string $auditable, int|string|null $id = null, int $limit = 50)
+ * @method static ChangeListData changes(array $filters = [])
+ * @method static ChangeListData noise(array $filters = [])
+ * @method static ChainData|null chain(string $correlationId)
+ * @method static StatsData stats(array $filters = [])
  * @method static TimelineEntryData|null record(Model|string $auditable, int|string|null $id, ChangeType|string $event, array $before = [], array $after = [])
  *
  * @see AuditLogManager

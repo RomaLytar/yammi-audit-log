@@ -13,7 +13,7 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 - Correlation id per unit of work (request, command or job and the jobs it dispatches), drawn as a cross-model change chain.
 - Field-level diffs with secret redaction; timestamp-only "no-op" writes are recorded but flagged as noise.
 - Dashboard with filters (model, event, actor, date), a noise page, and a chain/trace view.
-- Retention pruning (PII), a configurable Gate and rate limit on the UI.
+- Automatic retention pruning, on by default (180 days, configurable 7–9999; audit data is PII), plus a configurable Gate and rate limit on the UI.
 
 ## Public API
 

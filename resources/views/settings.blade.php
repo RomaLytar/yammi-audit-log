@@ -32,58 +32,68 @@
         </div>
     @endif
 
-    <div class="rounded-xl border border-border bg-card p-5 shadow-xs mb-6">
-        <div class="mb-4">
-            <h2 class="text-sm font-semibold flex items-center gap-2">
-                <i data-lucide="database-zap" class="text-brand text-[15px]"></i> Data retention
-            </h2>
-            <p class="text-xs text-muted-foreground mt-1">Saved values are stored in the audit database and override the published config.</p>
-        </div>
+    <form method="POST" action="{{ route('audit-log.settings.update') }}">
+        @csrf
 
-        <form method="POST" action="{{ route('audit-log.settings.update') }}" class="space-y-5">
-            @csrf
-
-            @foreach ($vm->settings as $setting)
-                <div class="flex items-start justify-between gap-6">
-                    <div class="max-w-xl">
-                        <label for="setting-{{ $setting->definition->key }}" class="text-xs font-semibold">{{ $setting->definition->label }}</label>
-                        <p class="text-xs text-muted-foreground mt-0.5">{{ $setting->definition->description }}</p>
-                    </div>
-
-                    @if ($setting->definition->type->value === 'boolean')
-                        <input type="hidden" name="{{ $setting->definition->key }}" value="0">
-                        <label class="inline-flex items-center gap-2 shrink-0 cursor-pointer select-none">
-                            <input type="checkbox" name="{{ $setting->definition->key }}" id="setting-{{ $setting->definition->key }}" value="1"
-                                   {{ (bool) $setting->value ? 'checked' : '' }}
-                                   class="h-4 w-4 rounded border-border accent-current">
-                            <span class="text-xs text-muted-foreground">enabled</span>
-                        </label>
-                    @else
-                        <div class="flex items-center gap-2 shrink-0">
-                            <input type="number" name="{{ $setting->definition->key }}" id="setting-{{ $setting->definition->key }}"
-                                   value="{{ old($setting->definition->key, $setting->value) }}"
-                                   @if ($setting->definition->min !== null) min="{{ $setting->definition->min }}" @endif
-                                   @if ($setting->definition->max !== null) max="{{ $setting->definition->max }}" @endif
-                                   class="w-40 h-9 rounded-md border border-input bg-card px-3 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring">
-                            @if ($setting->definition->suffix !== null)
-                                <span class="text-xs text-muted-foreground">{{ $setting->definition->suffix }}</span>
-                            @endif
-                        </div>
+        @foreach ($vm->sections() as $section)
+            <div class="rounded-xl border border-border bg-card p-5 shadow-xs mb-6">
+                <div class="mb-4">
+                    <h2 class="text-sm font-semibold flex items-center gap-2">
+                        <i data-lucide="{{ $section['icon'] }}" class="text-brand text-[15px]"></i> {{ $section['title'] }}
+                    </h2>
+                    @if ($loop->first)
+                        <p class="text-xs text-muted-foreground mt-1">Saved values are stored in the audit database and override the published config; package defaults apply when neither is set.</p>
                     @endif
                 </div>
-            @endforeach
 
-            <div class="flex items-center gap-2 pt-1 border-t border-border/60">
-                <button type="submit" class="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-3 h-8 text-xs font-semibold hover:opacity-90">
-                    <i data-lucide="save" class="text-[13px]"></i> Save settings
-                </button>
-                <button type="submit" form="audit-settings-reset" class="mt-3 inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-xs font-medium text-muted-foreground hover:bg-accent">
-                    <i data-lucide="rotate-ccw" class="text-[13px]"></i> Reset to defaults
-                </button>
+                <div class="space-y-5">
+                    @foreach ($section['settings'] as $setting)
+                        <div class="flex items-start justify-between gap-6">
+                            <div class="max-w-xl">
+                                <label for="setting-{{ $setting->definition->key }}" class="text-xs font-semibold">{{ $setting->definition->label }}</label>
+                                <p class="text-xs text-muted-foreground mt-0.5">{{ $setting->definition->description }}</p>
+                            </div>
+
+                            @if ($setting->definition->type->value === 'boolean')
+                                <input type="hidden" name="{{ $setting->definition->key }}" value="0">
+                                <label class="inline-flex items-center gap-2 shrink-0 cursor-pointer select-none">
+                                    <input type="checkbox" name="{{ $setting->definition->key }}" id="setting-{{ $setting->definition->key }}" value="1"
+                                           {{ (bool) $setting->value ? 'checked' : '' }}
+                                           class="h-4 w-4 rounded border-border accent-current">
+                                    <span class="text-xs text-muted-foreground">enabled</span>
+                                </label>
+                            @elseif ($setting->definition->type->value === 'integer')
+                                <div class="flex items-center gap-2 shrink-0">
+                                    <input type="number" name="{{ $setting->definition->key }}" id="setting-{{ $setting->definition->key }}"
+                                           value="{{ old($setting->definition->key, $setting->inputValue()) }}"
+                                           @if ($setting->definition->min !== null) min="{{ $setting->definition->min }}" @endif
+                                           @if ($setting->definition->max !== null) max="{{ $setting->definition->max }}" @endif
+                                           class="w-40 h-9 rounded-md border border-input bg-card px-3 text-sm tabular-nums focus:outline-none focus:ring-2 focus:ring-ring">
+                                    @if ($setting->definition->suffix !== null)
+                                        <span class="text-xs text-muted-foreground">{{ $setting->definition->suffix }}</span>
+                                    @endif
+                                </div>
+                            @else
+                                <input type="text" name="{{ $setting->definition->key }}" id="setting-{{ $setting->definition->key }}"
+                                       value="{{ old($setting->definition->key, $setting->inputValue()) }}"
+                                       class="w-72 h-9 rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring shrink-0">
+                            @endif
+                        </div>
+                    @endforeach
+                </div>
             </div>
-        </form>
-        <form id="audit-settings-reset" method="POST" action="{{ route('audit-log.settings.reset') }}">@csrf</form>
-    </div>
+        @endforeach
+
+        <div class="flex items-center gap-2 mb-6 -mt-2">
+            <button type="submit" class="inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-3 h-9 text-xs font-semibold hover:opacity-90">
+                <i data-lucide="save" class="text-[13px]"></i> Save settings
+            </button>
+            <button type="submit" form="audit-settings-reset" class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-9 text-xs font-medium text-muted-foreground hover:bg-accent">
+                <i data-lucide="rotate-ccw" class="text-[13px]"></i> Reset to defaults
+            </button>
+        </div>
+    </form>
+    <form id="audit-settings-reset" method="POST" action="{{ route('audit-log.settings.reset') }}">@csrf</form>
 
     <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
         <div class="mb-4">

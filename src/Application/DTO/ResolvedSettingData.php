@@ -7,8 +7,16 @@ namespace Yammi\AuditLog\Application\DTO;
 /** @internal */
 final class ResolvedSettingData
 {
+    /**
+     * @param  bool|int|string|list<string>  $value
+     */
     public function __construct(
         public readonly SettingDefinitionData $definition,
-        public readonly bool|int|string $value,
+        public readonly bool|int|string|array $value,
     ) {}
+
+    public function inputValue(): string
+    {
+        return $this->definition->type->serialize($this->value);
+    }
 }

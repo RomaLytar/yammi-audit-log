@@ -35,7 +35,7 @@ final class SettingsController
 
         return $this->view->make('audit-log::settings', [
             'vm' => new SettingsViewModel(
-                settings: $this->settings->all(),
+                settings: $this->settings->grouped(),
                 defaultConnection: $this->connections->inspect($defaultName),
                 dedicatedConnection: $dedicatedName !== null && $dedicatedName !== $defaultName
                     ? $this->connections->inspect($dedicatedName)

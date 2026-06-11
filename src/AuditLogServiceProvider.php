@@ -6,6 +6,7 @@ namespace Yammi\AuditLog;
 
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
+use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
@@ -42,8 +43,10 @@ use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
+use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
+use Yammi\AuditLog\Infrastructure\Persistence\Repository\QueuedAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Transfer\EloquentAuditDataTransferrer;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
@@ -66,7 +69,23 @@ final class AuditLogServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(self::CONFIG_PATH, 'audit-log');
 
-        $this->app->bind(AuditRecordRepository::class, EloquentAuditRecordRepository::class);
+        $this->app->bind(AuditRecordRepository::class, function (): AuditRecordRepository {
+            $config = $this->config();
+            $inner = $this->app->make(EloquentAuditRecordRepository::class);
+
+            if (! (bool) $config->get('audit-log.write.async', false)) {
+                return $inner;
+            }
+
+            $queue = $config->get('audit-log.write.queue');
+
+            return new QueuedAuditRecordRepository(
+                $inner,
+                $this->app->make(AuditRecordMapper::class),
+                $this->app->make(BusDispatcher::class),
+                is_string($queue) && $queue !== '' ? $queue : null,
+            );
+        });
         $this->app->bind(AuditLogQuery::class, EloquentAuditLogQuery::class);
         $this->app->bind(Clock::class, SystemClock::class);
 

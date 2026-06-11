@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Http;
 
 use Illuminate\Http\Request;
 use PHPUnit\Framework\TestCase;
+use Yammi\AuditLog\Application\Service\FilterParser;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 
 final class FilterFactoryTest extends TestCase
@@ -21,7 +22,7 @@ final class FilterFactoryTest extends TestCase
             'page' => '-5',
         ]);
 
-        $filters = (new FilterFactory)->fromRequest($request);
+        $filters = (new FilterFactory(new FilterParser))->fromRequest($request);
 
         $this->assertSame('App\\Models\\Order', $filters->type);
         $this->assertSame('', $filters->event);
@@ -39,7 +40,7 @@ final class FilterFactoryTest extends TestCase
             'page' => '3',
         ]);
 
-        $filters = (new FilterFactory)->fromRequest($request);
+        $filters = (new FilterFactory(new FilterParser))->fromRequest($request);
 
         $this->assertSame('updated', $filters->event);
         $this->assertSame('job', $filters->actorType);
@@ -50,7 +51,7 @@ final class FilterFactoryTest extends TestCase
     {
         $request = Request::create('/audit-log', 'GET', ['q' => str_repeat('x', 300)]);
 
-        $filters = (new FilterFactory)->fromRequest($request);
+        $filters = (new FilterFactory(new FilterParser))->fromRequest($request);
 
         $this->assertSame(255, mb_strlen($filters->search));
         $this->assertTrue($filters->isActive());
@@ -60,6 +61,6 @@ final class FilterFactoryTest extends TestCase
     {
         $request = Request::create('/audit-log', 'GET', ['q' => ['array']]);
 
-        $this->assertSame('', (new FilterFactory)->fromRequest($request)->search);
+        $this->assertSame('', (new FilterFactory(new FilterParser))->fromRequest($request)->search);
     }
 }

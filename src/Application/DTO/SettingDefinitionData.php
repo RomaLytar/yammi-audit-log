@@ -11,9 +11,10 @@ final class SettingDefinitionData
 {
     /**
      * @param  bool|int|string|list<string>  $default
-     * @param  array<string, string>|null  $options  value => label presets; the
-     *                                               current value is offered as
-     *                                               a custom entry when absent
+     * @param  array<int|string, string>|null  $options  value => label presets;
+     *                                                   the current value is
+     *                                                   offered as a custom
+     *                                                   entry when absent
      */
     public function __construct(
         public readonly string $group,

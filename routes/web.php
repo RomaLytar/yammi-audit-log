@@ -8,11 +8,13 @@ use Yammi\AuditLog\Infrastructure\Http\Controller\DatabaseTransferController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\ExportController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\NoiseController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\SettingsController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\StatsController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\TraceController;
 
 Route::get('/', DashboardController::class)->name('audit-log.dashboard');
 Route::get('/export', ExportController::class)->name('audit-log.export');
 Route::get('/noise', NoiseController::class)->name('audit-log.noise');
+Route::get('/stats', StatsController::class)->name('audit-log.stats');
 Route::get('/trace/{correlation}', TraceController::class)
     ->whereUuid('correlation')
     ->name('audit-log.trace');

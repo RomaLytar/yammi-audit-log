@@ -6,13 +6,14 @@ namespace Yammi\AuditLog\Tests\Support;
 
 use DateTimeImmutable;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
+use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 
-final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordRepository
+final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordRepository, AuditStatsQuery
 {
     /** @var list<AuditRecord> */
     public array $saved = [];
@@ -135,6 +136,78 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
         sort($keys);
 
         return array_values($keys);
+    }
+
+    public function count(AuditCriteria $criteria): int
+    {
+        return count(array_filter(
+            $this->saved,
+            fn (AuditRecord $record): bool => $this->matches($record, $criteria),
+        ));
+    }
+
+    public function eventBreakdown(AuditCriteria $criteria): array
+    {
+        return $this->breakdown($criteria, static fn (AuditRecord $record): string => $record->event()->value);
+    }
+
+    public function actorTypeBreakdown(AuditCriteria $criteria): array
+    {
+        return $this->breakdown($criteria, static fn (AuditRecord $record): string => $record->actor()->type->value);
+    }
+
+    public function modelBreakdown(AuditCriteria $criteria, int $limit = 10): array
+    {
+        return array_slice(
+            $this->breakdown($criteria, static fn (AuditRecord $record): string => $record->auditable()->type),
+            0,
+            $limit,
+            true,
+        );
+    }
+
+    public function dailyCounts(AuditCriteria $criteria, DateTimeImmutable $from, int $days): array
+    {
+        $start = $from->setTime(0, 0);
+
+        $out = [];
+
+        for ($i = 0; $i < $days; $i++) {
+            $out[$start->modify("+{$i} days")->format('Y-m-d')] = 0;
+        }
+
+        foreach ($this->saved as $record) {
+            if (! $this->matches($record, $criteria)) {
+                continue;
+            }
+
+            $day = $record->occurredAt()->format('Y-m-d');
+
+            if (array_key_exists($day, $out)) {
+                $out[$day]++;
+            }
+        }
+
+        return $out;
+    }
+
+    /**
+     * @param  callable(AuditRecord): string  $key
+     * @return array<string, int>
+     */
+    private function breakdown(AuditCriteria $criteria, callable $key): array
+    {
+        $counts = [];
+
+        foreach ($this->saved as $record) {
+            if ($this->matches($record, $criteria)) {
+                $counts[$key($record)] = ($counts[$key($record)] ?? 0) + 1;
+            }
+        }
+
+        arsort($counts);
+
+        return $counts;
     }
 
     private function matches(AuditRecord $record, AuditCriteria $criteria): bool

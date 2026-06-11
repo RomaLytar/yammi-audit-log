@@ -1,29 +1,30 @@
 @php
-    $filters = $list->filters();
+    $filters = isset($list) ? $list->filters() : $filters;
+    $action = $action ?? route('audit-log.dashboard');
 
     $typeOptions = ['' => 'All models'];
-    foreach ($list->models() as $model) {
+    foreach (isset($list) ? $list->models() : ($models ?? []) as $model) {
         $typeOptions[$model] = class_basename($model);
     }
 
     $eventOptions = ['' => 'All events'];
-    foreach ($list->events() as $event) {
+    foreach (isset($list) ? $list->events() : ($events ?? []) as $event) {
         $eventOptions[$event] = ucfirst($event);
     }
 
     $actorOptions = ['' => 'All actors'];
-    foreach ($list->actorTypes() as $actorType) {
+    foreach (isset($list) ? $list->actorTypes() : ($actorTypes ?? []) as $actorType) {
         $actorOptions[$actorType] = ucfirst($actorType);
     }
 @endphp
-<form method="GET" action="{{ route('audit-log.dashboard') }}" class="mb-5 rounded-xl border border-border bg-card p-4 shadow-xs">
+<form method="GET" action="{{ $action }}" class="mb-5 rounded-xl border border-border bg-card p-4 shadow-xs">
     <div class="flex items-center justify-between mb-3">
         <span class="inline-flex items-center gap-1.5 text-xs font-medium text-muted-foreground">
             <i data-lucide="sliders-horizontal" class="text-[14px]"></i> Filters
             <span class="text-[10px] text-muted-foreground/70">(applied automatically)</span>
         </span>
         @if ($filters->isActive())
-            <a href="{{ route('audit-log.dashboard') }}" class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-xs font-medium hover:bg-accent">
+            <a href="{{ $action }}" class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-xs font-medium hover:bg-accent">
                 <i data-lucide="x" class="text-[13px]"></i> Clear
             </a>
         @endif

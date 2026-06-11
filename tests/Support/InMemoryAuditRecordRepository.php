@@ -96,6 +96,19 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
         return count(array_filter($this->saved, static fn (AuditRecord $record): bool => $record->isNoise()));
     }
 
+    public function countAll(): int
+    {
+        return count($this->saved);
+    }
+
+    public function countSince(DateTimeImmutable $cutoff): int
+    {
+        return count(array_filter(
+            $this->saved,
+            static fn (AuditRecord $record): bool => $record->occurredAt() >= $cutoff,
+        ));
+    }
+
     public function distinctModels(): array
     {
         $models = [];

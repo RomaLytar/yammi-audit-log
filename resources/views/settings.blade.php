@@ -85,6 +85,36 @@
         <form id="audit-settings-reset" method="POST" action="{{ route('audit-log.settings.reset') }}">@csrf</form>
     </div>
 
+    <div class="rounded-xl border border-border bg-card p-5 shadow-xs mb-6">
+        <div class="mb-4">
+            <h2 class="text-sm font-semibold flex items-center gap-2">
+                <i data-lucide="bar-chart-3" class="text-brand text-[15px]"></i> Volume
+            </h2>
+            <p class="text-xs text-muted-foreground mt-1">How fast the audit table grows and where it settles with the current retention.</p>
+        </div>
+
+        <div class="grid gap-3 sm:grid-cols-2 lg:grid-cols-4">
+            <div class="rounded-lg border border-border p-4">
+                <div class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Total records</div>
+                <div class="mt-1 text-lg font-semibold tabular-nums">{{ number_format($vm->volume->total) }}</div>
+            </div>
+            <div class="rounded-lg border border-border p-4">
+                <div class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Last 30 days</div>
+                <div class="mt-1 text-lg font-semibold tabular-nums">{{ number_format($vm->volume->last30Days) }}</div>
+            </div>
+            <div class="rounded-lg border border-border p-4">
+                <div class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Per day (avg)</div>
+                <div class="mt-1 text-lg font-semibold tabular-nums">{{ $vm->volume->perDay }}</div>
+            </div>
+            <div class="rounded-lg border border-border p-4">
+                <div class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider">Projected at retention</div>
+                <div class="mt-1 text-lg font-semibold tabular-nums">
+                    {{ $vm->volume->projectedRows !== null ? '~'.number_format($vm->volume->projectedRows) : '∞' }}
+                </div>
+            </div>
+        </div>
+    </div>
+
     <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
         <div class="mb-4">
             <h2 class="text-sm font-semibold flex items-center gap-2">

@@ -8,8 +8,11 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
+use Throwable;
+use Yammi\AuditLog\Application\Action\BuildVolumeMetricsAction;
 use Yammi\AuditLog\Application\Action\ResetSettingsAction;
 use Yammi\AuditLog\Application\Action\UpdateSettingsAction;
+use Yammi\AuditLog\Application\DTO\VolumeMetricsData;
 use Yammi\AuditLog\Infrastructure\Http\Request\UpdateSettingsRequest;
 use Yammi\AuditLog\Infrastructure\Settings\EffectiveSettingsReader;
 use Yammi\AuditLog\Infrastructure\Settings\StoredSettingsApplier;
@@ -24,6 +27,7 @@ final class SettingsController
         private readonly ConfigRepository $config,
         private readonly EffectiveSettingsReader $settings,
         private readonly ConnectionStatusInspector $connections,
+        private readonly BuildVolumeMetricsAction $volume,
     ) {}
 
     public function index(): View
@@ -32,6 +36,7 @@ final class SettingsController
         $dedicatedName = $this->configString('audit-log.database.connection');
 
         $names = $this->config->get('database.connections');
+        $retentionDays = $this->config->get('audit-log.retention.days', 0);
 
         return $this->view->make('audit-log::settings', [
             'vm' => new SettingsViewModel(
@@ -41,8 +46,18 @@ final class SettingsController
                     ? $this->connections->inspect($dedicatedName)
                     : null,
                 connectionNames: is_array($names) ? array_map(strval(...), array_keys($names)) : [],
+                volume: $this->volumeMetrics(is_numeric($retentionDays) ? (int) $retentionDays : 0),
             ),
         ]);
+    }
+
+    private function volumeMetrics(int $retentionDays): VolumeMetricsData
+    {
+        try {
+            return ($this->volume)($retentionDays);
+        } catch (Throwable) {
+            return new VolumeMetricsData(0, 0, 0.0, null);
+        }
     }
 
     public function update(

@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
 use Yammi\AuditLog\Application\DTO\ResolvedSettingData;
-use Yammi\AuditLog\Application\DTO\VolumeMetricsData;
 use Yammi\AuditLog\Infrastructure\Transfer\ConnectionStatusData;
 
 /** @internal */
@@ -20,7 +19,6 @@ final class SettingsViewModel
         public readonly ConnectionStatusData $defaultConnection,
         public readonly ?ConnectionStatusData $dedicatedConnection,
         public readonly array $connectionNames,
-        public readonly VolumeMetricsData $volume,
     ) {}
 
     public function hasDedicatedConnection(): bool

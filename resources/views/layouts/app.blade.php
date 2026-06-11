@@ -166,6 +166,10 @@
                             <span class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-warning/20 text-warning text-[10px] font-bold tabular-nums">{{ $auditNoiseCount }}</span>
                         @endif
                     </a>
+                    <a href="{{ route('audit-log.stats') }}"
+                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.stats') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="bar-chart-3" class="text-[14px]"></i> Stats
+                    </a>
                     <a href="{{ route('audit-log.settings') }}"
                        class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.settings') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
                         <i data-lucide="settings" class="text-[14px]"></i> Settings

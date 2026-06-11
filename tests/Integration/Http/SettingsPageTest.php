@@ -40,17 +40,11 @@ final class SettingsPageTest extends TestCase
         $this->get('audit-log')->assertSee('audit-log/settings');
     }
 
-    public function test_the_volume_card_shows_counts_and_projection(): void
+    public function test_the_volume_card_lives_on_the_stats_page_now(): void
     {
         Post::create(['title' => 'Hello', 'status' => 'draft']);
 
-        $response = $this->get('audit-log/settings');
-
-        $response->assertOk();
-        $response->assertSee('Volume');
-        $response->assertSee('Total records');
-        $response->assertSee('Last 30 days');
-        $response->assertSee('Projected at retention');
+        $this->get('audit-log/settings')->assertOk()->assertDontSee('Projected at retention');
     }
 
     public function test_the_dedicated_card_reflects_a_configured_connection(): void

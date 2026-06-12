@@ -36,6 +36,7 @@ final class SettingRegistryTest extends TestCase
             'ignore_attributes' => 'audit-log.capture.ignore_attributes',
             'redaction_keys' => 'audit-log.redaction.keys',
             'redaction_placeholder' => 'audit-log.redaction.placeholder',
+            'timezone' => 'audit-log.timezone',
             'ui_enabled' => 'audit-log.ui.enabled',
             'ui_throttle' => 'audit-log.ui.throttle',
             'jobs_monitor_url' => 'audit-log.integrations.jobs_monitor.url',

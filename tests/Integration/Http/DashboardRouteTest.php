@@ -7,6 +7,13 @@ namespace Yammi\AuditLog\Tests\Integration\Http;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
+use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
+use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
+use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
+use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
+use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
+use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 use Yammi\AuditLog\Tests\TestCase;
 
@@ -51,6 +58,25 @@ final class DashboardRouteTest extends TestCase
 
         $this->get('audit-log?event=updated')->assertOk()->assertSee('published');
         $this->get('audit-log?event=deleted')->assertOk()->assertSee('No changes match these filters');
+    }
+
+    public function test_timestamps_follow_the_display_timezone(): void
+    {
+        $this->app['config']->set('audit-log.timezone', 'Asia/Tokyo');
+
+        $this->app->make(AuditRecordRepository::class)->save(
+            new AuditRecord(
+                auditable: AuditableReference::to('App\\Models\\Order', 1),
+                event: ChangeType::Created,
+                diff: Diff::between([], ['status' => 'new']),
+                actor: Actor::system(),
+                origin: null,
+                labels: LabelSnapshot::empty(),
+                occurredAt: (new \DateTimeImmutable('today'))->setTime(1, 0),
+            ),
+        );
+
+        $this->get('audit-log')->assertOk()->assertSee('10:00');
     }
 
     public function test_it_searches_change_content(): void

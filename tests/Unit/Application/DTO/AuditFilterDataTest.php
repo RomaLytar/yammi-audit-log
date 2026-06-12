@@ -29,4 +29,12 @@ final class AuditFilterDataTest extends TestCase
     {
         $this->assertFalse((new AuditFilterData(page: 3))->isActive());
     }
+
+    public function test_a_default_range_does_not_make_it_active(): void
+    {
+        $filters = new AuditFilterData(from: '2026-06-01', to: '2026-06-15', defaultRange: true);
+
+        $this->assertFalse($filters->isActive());
+        $this->assertTrue((new AuditFilterData(from: '2026-06-01', to: '2026-06-15'))->isActive());
+    }
 }

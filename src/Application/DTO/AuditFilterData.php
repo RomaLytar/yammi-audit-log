@@ -15,6 +15,7 @@ final class AuditFilterData
         public readonly string $to = '',
         public readonly int $page = 1,
         public readonly string $search = '',
+        public readonly bool $defaultRange = false,
     ) {}
 
     public function isActive(): bool
@@ -23,8 +24,7 @@ final class AuditFilterData
             || $this->event !== ''
             || $this->actorType !== ''
             || $this->actor !== ''
-            || $this->from !== ''
-            || $this->to !== ''
-            || $this->search !== '';
+            || $this->search !== ''
+            || (! $this->defaultRange && ($this->from !== '' || $this->to !== ''));
     }
 }

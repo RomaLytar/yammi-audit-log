@@ -13,6 +13,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
+use Yammi\AuditLog\Infrastructure\Facade\AuditLog;
 use Yammi\AuditLog\Tests\TestCase;
 
 final class TimeMachinePageTest extends TestCase
@@ -63,7 +64,8 @@ final class TimeMachinePageTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('paid-status');
-        $response->assertDontSee('fresh-status');
+        $response->assertSee('Applied history');
+        $response->assertSee('2 changes folded into this state');
     }
 
     public function test_before_creation_there_is_no_history(): void
@@ -96,6 +98,61 @@ final class TimeMachinePageTest extends TestCase
         $response->assertSee('paid-status');
     }
 
+    public function test_the_history_stops_at_the_chosen_moment(): void
+    {
+        $this->seedHistory();
+
+        $response = $this->get('audit-log/time-machine?'.http_build_query([
+            'type' => 'App\\Models\\Order',
+            'id' => '42',
+            'at' => '2026-01-15',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('1 change folded into this state');
+        $response->assertDontSee('paid-status');
+    }
+
+    public function test_the_record_link_filters_the_dashboard_to_one_record(): void
+    {
+        $this->seedHistory();
+        $this->seedRecord(ChangeType::Created, [], ['status' => 'other-record-marker'], '2026-01-05 10:00:00', '43');
+
+        $response = $this->get('audit-log/time-machine?'.http_build_query([
+            'type' => 'App\\Models\\Order',
+            'id' => '42',
+            'at' => '2026-03-01',
+        ]));
+
+        $response->assertOk();
+        $response->assertSee('id=42', false);
+
+        $dashboard = $this->get('audit-log?'.http_build_query([
+            'type' => 'App\\Models\\Order',
+            'id' => '42',
+            'from' => '2026-01-01',
+            'to' => '2026-03-01',
+        ]));
+
+        $dashboard->assertOk();
+        $dashboard->assertSee('fresh-status');
+        $dashboard->assertDontSee('other-record-marker');
+    }
+
+    public function test_the_facade_accepts_the_id_filter(): void
+    {
+        $this->seedHistory();
+        $this->seedRecord(ChangeType::Created, [], ['status' => 'other-record-marker'], '2026-01-05 10:00:00', '43');
+
+        $list = AuditLog::changes([
+            'id' => '42',
+            'from' => '2026-01-01',
+            'to' => '2026-03-01',
+        ]);
+
+        $this->assertSame(2, $list->total);
+    }
+
     public function test_the_dashboard_row_links_to_the_time_machine(): void
     {
         $this->seedHistory();
@@ -115,10 +172,10 @@ final class TimeMachinePageTest extends TestCase
      * @param  array<string, scalar|null>  $before
      * @param  array<string, scalar|null>  $after
      */
-    private function seedRecord(ChangeType $event, array $before, array $after, string $occurredAt): void
+    private function seedRecord(ChangeType $event, array $before, array $after, string $occurredAt, string $id = '42'): void
     {
         $this->app->make(AuditRecordRepository::class)->save(new AuditRecord(
-            auditable: AuditableReference::to('App\\Models\\Order', '42'),
+            auditable: AuditableReference::to('App\\Models\\Order', $id),
             event: $event,
             diff: Diff::between($before, $after),
             actor: Actor::system(),

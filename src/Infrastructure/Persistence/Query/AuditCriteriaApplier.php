@@ -24,6 +24,7 @@ final class AuditCriteriaApplier
     {
         $query->where(array_filter([
             'auditable_type' => $criteria->auditableType,
+            'auditable_id' => $criteria->auditableId,
             'event' => $criteria->event?->value,
             'actor_type' => $criteria->actorType?->value,
         ], static fn (?string $value): bool => $value !== null));

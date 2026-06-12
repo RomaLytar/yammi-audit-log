@@ -42,6 +42,16 @@ final class FilterParserTest extends TestCase
         $this->assertFalse($filters->defaultRange);
     }
 
+    public function test_the_record_id_filter_is_parsed_and_bounded(): void
+    {
+        $this->assertSame('42', $this->parser->fromArray(['id' => ' 42 '])->auditableId);
+        $this->assertSame('42', $this->parser->fromArray(['id' => 42])->auditableId);
+        $this->assertSame('', $this->parser->fromArray(['id' => ['nope']])->auditableId);
+        $this->assertSame('', $this->parser->fromArray([])->auditableId);
+        $this->assertSame(64, mb_strlen($this->parser->fromArray(['id' => str_repeat('a', 80)])->auditableId));
+        $this->assertTrue($this->parser->fromArray(['id' => '42'])->isActive());
+    }
+
     public function test_an_empty_range_defaults_to_the_current_month(): void
     {
         $filters = $this->parser->fromArray([]);

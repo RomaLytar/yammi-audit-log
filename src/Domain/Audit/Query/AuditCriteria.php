@@ -19,5 +19,6 @@ final class AuditCriteria
         public readonly ?DateTimeImmutable $to = null,
         public readonly ?bool $onlyNoise = null,
         public readonly ?string $search = null,
+        public readonly ?string $auditableId = null,
     ) {}
 }

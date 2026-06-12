@@ -14,8 +14,10 @@ use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
+use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
+use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Action\RecordChangeAction;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
@@ -48,7 +50,11 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ImpersonationAwareUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
+use Yammi\AuditLog\Infrastructure\Alert\AlertChannels;
 use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
+use Yammi\AuditLog\Infrastructure\Alert\AlertLinker;
+use Yammi\AuditLog\Infrastructure\Alert\Channel\SlackAlertChannel;
+use Yammi\AuditLog\Infrastructure\Alert\Channel\WebhookAlertChannel;
 use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
@@ -205,6 +211,34 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->app->singleton(GeneralSettingRepository::class, EloquentGeneralSettingRepository::class);
 
+        $this->app->singleton(AlertChannels::class, function (): AlertChannels {
+            $config = $this->config();
+            $appName = $config->get('app.name');
+            $source = is_string($appName) && $appName !== '' ? $appName : null;
+
+            $channels = [];
+
+            $slackUrl = $config->get('audit-log.alerts.slack_webhook_url');
+
+            if (is_string($slackUrl) && trim($slackUrl) !== '') {
+                $channels[] = new SlackAlertChannel($this->app->make(HttpFactory::class), trim($slackUrl), $source);
+            }
+
+            $webhookUrl = $config->get('audit-log.alerts.webhook.url');
+            $secret = $config->get('audit-log.alerts.webhook.secret');
+
+            if (is_string($webhookUrl) && trim($webhookUrl) !== '') {
+                $channels[] = new WebhookAlertChannel(
+                    $this->app->make(HttpFactory::class),
+                    trim($webhookUrl),
+                    is_string($secret) && $secret !== '' ? $secret : null,
+                    $source,
+                );
+            }
+
+            return new AlertChannels($this->app->make(LoggerInterface::class), $channels);
+        });
+
         $this->app->singleton(AlertDispatcher::class, function (): AlertDispatcher {
             $config = $this->config();
             $rules = $config->get('audit-log.alerts.rules', []);
@@ -215,6 +249,8 @@ final class AuditLogServiceProvider extends ServiceProvider
                 $this->app->make(Mailer::class),
                 is_array($rules) ? array_values(array_filter($rules, is_array(...))) : [],
                 $this->stringList($config->get('audit-log.alerts.mail_to', [])),
+                $this->app->make(AlertChannels::class),
+                $this->app->make(AlertLinker::class),
             );
         });
 

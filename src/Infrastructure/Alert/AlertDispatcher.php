@@ -8,6 +8,7 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Message;
 use Throwable;
+use Yammi\AuditLog\Application\DTO\AlertMessageData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Application\Service\AlertRuleMatcher;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
@@ -32,6 +33,8 @@ final class AlertDispatcher
         private readonly Mailer $mailer,
         private readonly array $rules = [],
         private readonly array $recipients = [],
+        private readonly ?AlertChannels $channels = null,
+        private readonly ?AlertLinker $links = null,
     ) {}
 
     public function inspect(AuditRecord $record): void
@@ -46,9 +49,36 @@ final class AlertDispatcher
             foreach ($this->matcher->matching($this->rules, $entry) as $rule) {
                 $this->events->dispatch(new SensitiveChangeRecorded($entry, $rule));
                 $this->mail($entry);
+                $this->channels?->dispatch($this->message($entry));
             }
         } catch (Throwable) {
         }
+    }
+
+    private function message(TimelineEntryData $entry): AlertMessageData
+    {
+        return new AlertMessageData(
+            kind: AlertMessageData::KIND_SENSITIVE_CHANGE,
+            title: sprintf('%s %s #%s', ucfirst($entry->event), $entry->model(), $entry->auditableId),
+            lines: [
+                "*Model:* {$entry->auditableType} #{$entry->auditableId}",
+                "*Event:* {$entry->event}",
+                "*Actor:* {$entry->actorLabel} ({$entry->actorType})",
+                '*Fields:* '.implode(', ', array_keys($entry->changes)),
+            ],
+            occurredAt: $entry->occurredAt,
+            deepLink: $this->links?->to('audit-log.dashboard', [
+                'type' => $entry->auditableType,
+                'id' => $entry->auditableId,
+            ]),
+            context: [
+                'model' => $entry->auditableType,
+                'id' => $entry->auditableId,
+                'event' => $entry->event,
+                'actor' => $entry->actorLabel,
+                'actor_type' => $entry->actorType,
+            ],
+        );
     }
 
     private function mail(TimelineEntryData $entry): void

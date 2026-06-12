@@ -8,6 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Tests\Support\Jobs\PublishPostJob;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 use Yammi\AuditLog\Tests\TestCase;
@@ -45,6 +46,41 @@ final class TraceRouteTest extends TestCase
         $response->assertSee('status');
         $response->assertSee('draft');
         $response->assertSee('published');
+    }
+
+    public function test_the_entry_you_navigated_from_is_highlighted(): void
+    {
+        $correlation = $this->app->make(CorrelationContext::class);
+        $correlation->push(self::CORRELATION);
+        $post = Post::create(['title' => 'Order', 'status' => 'draft']);
+        PublishPostJob::dispatchSync($post->getKey());
+        $correlation->pop();
+
+        $recordId = (int) AuditRecordModel::query()->min('id');
+
+        $this->get('audit-log/trace/'.self::CORRELATION.'?entry='.$recordId)
+            ->assertOk()
+            ->assertSee('You came from here')
+            ->assertSee('al-focus-entry');
+
+        $this->get('audit-log/trace/'.self::CORRELATION)
+            ->assertOk()
+            ->assertDontSee('You came from here');
+    }
+
+    public function test_diffs_are_collapsed_into_field_summaries(): void
+    {
+        $correlation = $this->app->make(CorrelationContext::class);
+        $correlation->push(self::CORRELATION);
+        $post = Post::create(['title' => 'Order', 'status' => 'draft']);
+        PublishPostJob::dispatchSync($post->getKey());
+        $correlation->pop();
+
+        $response = $this->get('audit-log/trace/'.self::CORRELATION);
+
+        $response->assertOk();
+        $response->assertSee('al-trace-diff-0');
+        $response->assertSee('Click an entry to see its field-level changes');
     }
 
     public function test_an_unknown_correlation_returns_404(): void

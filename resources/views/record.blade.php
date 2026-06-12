@@ -71,7 +71,7 @@
                                     </div>
                                 @endif
                                 @if ($entry->correlationId())
-                                    <a href="{{ route('audit-log.trace', $entry->correlationId()) }}"
+                                    <a href="{{ route('audit-log.trace', ['correlation' => $entry->correlationId(), 'entry' => $entry->recordId()]) }}"
                                        class="mt-2 inline-flex items-center gap-1 text-[11px] text-brand hover:underline">
                                         <i data-lucide="git-fork" class="text-[11px]"></i> View chain
                                     </a>
@@ -116,7 +116,7 @@
                                         <i data-lucide="file-clock" class="text-[12px]"></i> Record view
                                     </a>
                                     @if ($entry->correlationId())
-                                        <a href="{{ route('audit-log.trace', $entry->correlationId()) }}"
+                                        <a href="{{ route('audit-log.trace', ['correlation' => $entry->correlationId(), 'entry' => $entry->recordId()]) }}"
                                            class="inline-flex items-center gap-1 text-brand hover:underline">
                                             <i data-lucide="git-fork" class="text-[12px]"></i> View chain
                                         </a>

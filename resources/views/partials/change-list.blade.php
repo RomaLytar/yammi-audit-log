@@ -44,7 +44,7 @@
                                     <div class="flex items-center gap-1.5">
                                         <span class="text-[11px] text-muted-foreground font-mono">#{{ $entry->id() }}</span>
                                         @if ($entry->hasChain())
-                                            <a href="{{ route('audit-log.trace', $entry->correlationId()) }}" onclick="event.stopPropagation()"
+                                            <a href="{{ route('audit-log.trace', ['correlation' => $entry->correlationId(), 'entry' => $entry->recordId()]) }}" onclick="event.stopPropagation()"
                                                title="Part of a chain of {{ $entry->chainSize() }} changes"
                                                class="inline-flex items-center gap-0.5 rounded bg-brand/10 px-1.5 py-0.5 text-[10px] font-medium text-brand ring-1 ring-inset ring-brand/20 hover:bg-brand/15">
                                                 <i data-lucide="git-fork" class="text-[10px]"></i> {{ $entry->chainSize() }} in chain
@@ -100,7 +100,7 @@
                                     <i data-lucide="calendar-clock" class="text-[12px]"></i> State at this moment
                                 </a>
                                 @if ($entry->correlationId())
-                                    <a href="{{ route('audit-log.trace', $entry->correlationId()) }}"
+                                    <a href="{{ route('audit-log.trace', ['correlation' => $entry->correlationId(), 'entry' => $entry->recordId()]) }}"
                                        class="inline-flex items-center gap-1.5 rounded-md border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand hover:bg-brand/15">
                                         <i data-lucide="git-fork" class="text-[12px]"></i> View full change chain
                                     </a>

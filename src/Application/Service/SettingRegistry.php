@@ -108,6 +108,15 @@ final class SettingRegistry
                 description: 'Queue for the deferred insert. Empty = the default queue.',
             ),
             new SettingDefinitionData(
+                group: self::GROUP_WRITE,
+                key: 'integrity_enabled',
+                configPath: 'audit-log.integrity.enabled',
+                type: SettingType::Boolean,
+                default: false,
+                label: 'Hash-chain integrity',
+                description: 'Chains every stored record to the previous one (sha256), so audit-log:verify can prove the history was not edited. Costs one extra select per insert.',
+            ),
+            new SettingDefinitionData(
                 group: self::GROUP_CAPTURE,
                 key: 'ignore_attributes',
                 configPath: 'audit-log.capture.ignore_attributes',

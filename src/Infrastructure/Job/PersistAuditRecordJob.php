@@ -8,7 +8,7 @@ use Illuminate\Bus\Queueable;
 use Illuminate\Contracts\Queue\ShouldQueue;
 use Illuminate\Foundation\Bus\Dispatchable;
 use Illuminate\Queue\InteractsWithQueue;
-use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
+use Yammi\AuditLog\Infrastructure\Persistence\Repository\AuditRowWriter;
 
 /**
  * Inserts an already-built audit row. The record is fully resolved at capture
@@ -30,8 +30,8 @@ final class PersistAuditRecordJob implements ShouldQueue
         public readonly array $row,
     ) {}
 
-    public function handle(): void
+    public function handle(AuditRowWriter $writer): void
     {
-        AuditRecordModel::query()->create($this->row);
+        $writer->insert($this->row);
     }
 }

@@ -5,9 +5,11 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Persistence\Repository;
 
 use DateTimeImmutable;
+use Throwable;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
+use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 
@@ -18,12 +20,14 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
 
     public function __construct(
         private readonly AuditRecordMapper $mapper,
+        private readonly AuditRowWriter $writer,
+        private readonly GeneralSettingRepository $settings,
         private readonly int $pruneChunkSize = self::PRUNE_CHUNK,
     ) {}
 
     public function save(AuditRecord $record): void
     {
-        AuditRecordModel::query()->create($this->mapper->toRow($record)->toArray());
+        $this->writer->insert($this->mapper->toRow($record)->toArray());
     }
 
     public function timelineFor(AuditableReference $auditable, int $limit = 50): array
@@ -48,6 +52,7 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
     public function deleteOlderThan(DateTimeImmutable $cutoff): int
     {
         $total = 0;
+        $anchor = null;
 
         do {
             $ids = AuditRecordModel::query()
@@ -58,12 +63,37 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
                 ->all();
 
             if ($ids === []) {
-                return $total;
+                break;
+            }
+
+            $newestHash = AuditRecordModel::query()
+                ->whereIn('id', $ids)
+                ->orderByDesc('id')
+                ->value('integrity_hash');
+
+            if (is_string($newestHash) && $newestHash !== '') {
+                $anchor = $newestHash;
             }
 
             $total += AuditRecordModel::query()->whereIn('id', $ids)->delete();
         } while (count($ids) === $this->pruneChunkSize);
 
+        if ($anchor !== null) {
+            $this->storeChainAnchor($anchor);
+        }
+
         return $total;
+    }
+
+    /**
+     * Pruned rows leave the chain headless; remembering the newest pruned hash
+     * keeps audit-log:verify strict instead of trusting the first survivor.
+     */
+    private function storeChainAnchor(string $anchor): void
+    {
+        try {
+            $this->settings->set('integrity', 'chain_anchor', $anchor, 'string');
+        } catch (Throwable) {
+        }
     }
 }

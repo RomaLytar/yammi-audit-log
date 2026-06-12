@@ -16,11 +16,12 @@ final class DashboardViewModel
     public function __construct(
         private readonly ChangeListData $list,
         ?string $jobsMonitorUrl = null,
+        ?string $timezone = null,
     ) {
         $entries = [];
 
         foreach ($list->entries as $entry) {
-            $entries[] = new TimelineEntryViewModel($entry, $list->chainSize($entry->correlationId), $jobsMonitorUrl);
+            $entries[] = new TimelineEntryViewModel($entry, $list->chainSize($entry->correlationId), $jobsMonitorUrl, $timezone);
         }
 
         $this->entries = $entries;

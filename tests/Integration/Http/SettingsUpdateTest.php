@@ -114,6 +114,7 @@ final class SettingsUpdateTest extends TestCase
             'ignore_attributes' => 'created_at, updated_at',
             'redaction_keys' => 'password, token',
             'redaction_placeholder' => '[redacted]',
+            'timezone' => '',
             'ui_enabled' => '1',
             'ui_throttle' => '60,1',
             'jobs_monitor_url' => '',

@@ -19,6 +19,7 @@ final class TimelineEntryViewModel
         private readonly TimelineEntryData $entry,
         private readonly int $chainSize,
         private readonly ?string $jobsMonitorUrl = null,
+        private readonly ?string $timezone = null,
     ) {}
 
     public function jobsMonitorLink(): ?string
@@ -82,7 +83,13 @@ final class TimelineEntryViewModel
 
     public function occurredAt(string $format = 'Y-m-d H:i'): string
     {
-        return Carbon::parse($this->entry->occurredAt)->format($format);
+        $moment = Carbon::parse($this->entry->occurredAt);
+
+        if ($this->timezone !== null && $this->timezone !== '') {
+            $moment = $moment->setTimezone($this->timezone);
+        }
+
+        return $moment->format($format);
     }
 
     public function changeCount(): int

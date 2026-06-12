@@ -79,6 +79,11 @@ return [
         'guards' => [],
     ],
 
+    // Timezone for DISPLAYED timestamps. Empty = the application timezone
+    // (records are stored in it); e.g. 'Asia/Tokyo' to read local wall-clock
+    // times. Invalid names fall back to UTC.
+    'timezone' => env('AUDIT_LOG_TIMEZONE', ''),
+
     'labels' => [
         // Map foreign-key columns to the Eloquent model they reference. When a
         // mapped column appears in a diff, a human-readable label is snapshotted

@@ -43,6 +43,7 @@ use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
 use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
+use Yammi\AuditLog\Infrastructure\Actor\Provider\ImpersonationAwareUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
 use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
@@ -161,12 +162,22 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->singleton(ImpersonationAwareUserProvider::class, function (): ImpersonationAwareUserProvider {
+            return new ImpersonationAwareUserProvider(
+                $this->app->make(AuthenticatedUserProvider::class),
+                $this->app->make(RequestContextHolder::class),
+                $this->app->make(AuthFactory::class),
+                $this->stringList($this->config()->get('audit-log.actor.impersonation_keys', ['impersonated_by'])),
+                $this->stringList($this->config()->get('audit-log.actor.guards', [])),
+            );
+        });
+
         $this->app->singleton(ActorResolver::class, function (): ActorResolver {
             return new ActorResolverChain([
                 $this->app->make(QueuedJobActorProvider::class),
                 $this->app->make(SchedulerActorProvider::class),
                 $this->app->make(ConsoleActorProvider::class),
-                $this->app->make(AuthenticatedUserProvider::class),
+                $this->app->make(ImpersonationAwareUserProvider::class),
             ], $this->app->make(ActorContext::class));
         });
 

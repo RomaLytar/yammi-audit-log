@@ -7,7 +7,7 @@
 [![Tested on](https://img.shields.io/badge/tests-PHP%208.1%20%7C%208.2%20%7C%208.3-777BB4?logo=php&logoColor=white)](https://github.com/RomaLytar/yammi-audit-Log/actions/workflows/ci.yml)
 [![License](https://img.shields.io/packagist/l/romalytar/yammi-audit-log-laravel.svg)](https://packagist.org/packages/romalytar/yammi-audit-log-laravel)
 
-**The audit log that answers not only *what* changed, but *who* really changed it, and why.** Every Eloquent create/update/delete/restore is recorded with a real actor (user, queued job, Artisan command, scheduler), the person who *started* the cascade, field-level diffs with secret redaction, and a correlation id that ties a whole request → job → job chain together. The only Laravel audit log with **verifiable history integrity**: hash-chain every record and prove nobody edited the past.
+**The audit log that answers not only *what* changed, but *who* really changed it, and why.** Every Eloquent create/update/delete/restore is recorded with a real actor (user, queued job, Artisan command, scheduler), the person who *started* the cascade, field-level diffs with secret redaction, and a correlation id that ties a whole request → job → job chain together. History integrity is verifiable: an optional hash chain links every record to the previous one, and `audit-log:verify` proves nothing was edited.
 
 Zero per-model setup. Install, migrate, done, the dashboard is optional and off by default.
 
@@ -25,6 +25,16 @@ php artisan audit-log:ui enable
 
 That's it, changes are being recorded. **No publishing needed:** the package config and migrations are auto-discovered and loaded automatically; defaults are safe (UI off, 180-day retention, secrets redacted). Run `vendor:publish` only when you want to customize the config or the views, see [Publishing assets](#publishing-assets).
 
+## In 30 seconds
+
+- Automatic capture of every Eloquent create / update / delete / restore, no traits or observers to register
+- Real actors: user, queued job, Artisan command, scheduler, attribution survives the queue
+- Correlation tracing: one id per request → job → job cascade, drawn as a chain in the UI
+- Optional hash-chain integrity, verified with one command
+- GDPR tooling: retention, archive, redaction, subject access reports
+- Anomaly detection with Slack / webhook / mail alerts
+- Dashboard is optional; everything is also available as facades and a JSON API
+
 ## Requirements
 
 - PHP `^8.1`
@@ -33,7 +43,7 @@ That's it, changes are being recorded. **No publishing needed:** the package con
 
 ## Features
 
-- [Actor attribution & change chains](#actor-attribution--change-chains), the moat: who did it, even through the queue
+- [Actor attribution & change chains](#actor-attribution--change-chains), who did it, even through the queue
 - [Record view](#record-view), one page per record: history + everything connected to it
 - [Time machine](#time-machine), the exact state a record had at any past moment
 - [Noise diagnostics](#noise-diagnostics), double writes flagged, not hidden
@@ -168,7 +178,7 @@ php artisan audit-log:verify
 # Integrity OK: 169 hashed record(s) verified.
 ```
 
-If someone edits or deletes a row in the table, `verify` names the first broken record. Pruning stores a chain anchor so verification stays strict even after retention deletes old rows. No other Laravel audit package can prove its history was not edited.
+If someone edits or deletes a row in the table, `verify` names the first broken record. Pruning stores a chain anchor so verification stays strict even after retention deletes old rows.
 
 ---
 
@@ -257,24 +267,28 @@ AuditLog::record(Order::class, $order->id, 'updated',
 
 ---
 
-## How it compares
+## Why another audit package?
 
-| | spatie/laravel-activitylog | owen-it/laravel-auditing | Yammi Audit Log |
-|---|---|---|---|
-| Per-model include/exclude | yes | yes | yes, without traits |
-| Request metadata (ip/url/agent) | — | yes | yes, opt-in, real HTTP only |
-| Multi-level actor (user/job/command/scheduler) | — | — | yes |
-| Origin through a real queue | — | — | yes |
-| Correlation traces across models | batch uuid | — | yes, with a trace UI |
-| Time machine (state at any date) | — | partial | yes |
-| Tamper-evident hash chain + verify | — | — | yes |
-| GDPR subject report in one command | — | — | yes |
-| Impersonation-aware attribution | — | — | yes |
-| Anomaly detection + Slack/webhook alerts | — | — | yes |
-| Native multi-tenancy | — | — | yes |
-| Dashboard, stats, settings UI, playground | — | third-party | yes, optional |
+The Laravel ecosystem already provides excellent audit packages, [spatie/laravel-activitylog](https://github.com/spatie/laravel-activitylog) and [owen-it/laravel-auditing](https://github.com/owen-it/laravel-auditing) among them. This package was built for projects that additionally needed:
 
-If you come from spatie: everything you are used to is here, plus a real actor instead of a `causer` and traces instead of batches. If you come from owen-it: your request metadata and queued writes are here, plus the dashboard, retention, integrity and alerts you had to build yourself.
+- actor attribution across queued jobs, Artisan commands and the scheduler, not only authenticated users
+- correlation traces across request → queue → queue cascades
+- tamper-evident history that can be verified after the fact
+- anomaly detection and alerting on the audit stream itself
+- a bundled dashboard, retention and archive tooling, and an operational settings UI
+
+Rather than combining several packages with custom infrastructure, it aims to provide these capabilities in a single, self-contained solution. If your current audit setup covers your needs, keep it; if the list above reads like your requirements, this package was built for you.
+
+---
+
+## How it works
+
+- One global listener subscribes to Eloquent's `created` / `updated` / `deleted` / `restored` events. There are no observers or traits to register per model.
+- Each change runs through a small pipeline: diff computation with secret redaction, actor and origin resolution, FK label snapshotting, optional request metadata, then a single insert into one dedicated `audit_log` table (optionally on its own database connection).
+- A stored record carries: the model reference, event type, field-level before/after diff, actor (type, id, label), origin actor, correlation id, chain depth, request context, tenant id, an optional integrity hash, and timestamps.
+- Writes are synchronous by default. With `AUDIT_LOG_WRITE_ASYNC=true` the insert is deferred to the queue while attribution, redaction and correlation are still resolved at the moment of the change.
+- The write path is fail-open: a failed audit insert is logged and never breaks the host operation (see [Security](#security)).
+- Internals follow a strict domain / application / infrastructure layering; the supported public surface is the `AuditLog` facade, the published config, the events and the contracts shown in this README.
 
 ---
 
@@ -329,7 +343,7 @@ php artisan vendor:publish --tag=audit-log-migrations
 ## Security
 
 - **Secrets never reach the database.** Recursive redaction runs before the diff is stored; changed secret values are still audited, as `[redacted]`.
-- **Fail-closed write path.** If the audit insert fails, the error goes to your log and your request continues untouched.
+- **Fail-open write path, by design.** Auditing must never take your application down: if the audit insert fails, the error goes to your log and the business operation continues. If you need the opposite guarantee (no audit record, no write), wrap both in your own transaction.
 - **UI off by default**, behind configurable middleware (`web`, `auth`), an optional Gate and a rate limit.
 - **Read-only JSON API**, off by default, with host-chosen auth; the one write method (`record()`) is deliberately PHP-only.
 - **Signed outbound webhooks** (HMAC-SHA256) so receivers can verify alerts are genuine.

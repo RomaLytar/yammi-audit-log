@@ -11,7 +11,7 @@
             'intro' => 'Every Eloquent change is recorded automatically — no traits, no per-model setup.',
             'points' => [
                 'Captured events: created, updated, deleted, restored.',
-                'Fail-closed: if the audit insert fails, the error goes to your application log and your request continues untouched.',
+                'Fail-open by design: if the audit insert fails, the error goes to your application log and your request continues untouched. Auditing never breaks the host.',
                 'NOT captured (Eloquent events never fire): mass Query-Builder ->update(), raw SQL, pivot sync(). Record those explicitly:',
             ],
             'code' => "AuditLog::record(Order::class, \$order->id, 'updated',\n    before: ['status' => 'pending'],\n    after: ['status' => 'cancelled'],\n);",

@@ -23,7 +23,7 @@ is recorded, with no code on your side, as:
     "auditable": "App\\Models\\User #1",
     "actor": {"type": "user", "label": "John Doe"},
     "origin": null,
-    "correlation_id": "0d4007cb-44a3-4af1-a807-5acc4ec5d3a1",
+    "correlation_id": "550e8400-e29b-41d4-a716-446655440000",
     "changes": {
         "email": {"old": "old@example.com", "new": "new@example.com"}
     }
@@ -58,12 +58,25 @@ That's it, changes are being recorded. **No publishing needed:** the package con
 
 ## How it works
 
-- One global listener subscribes to Eloquent's `created` / `updated` / `deleted` / `restored` events. There are no observers or traits to register per model.
-- Each change runs through a small pipeline: diff computation with secret redaction, actor and origin resolution, FK label snapshotting, optional request metadata, then a single insert into one dedicated `audit_log` table (optionally on its own database connection).
-- A stored record carries: the model reference, event type, field-level before/after diff, actor (type, id, label), origin actor, correlation id, chain depth, request context, tenant id, an optional integrity hash, and timestamps.
-- Writes are synchronous by default. With `AUDIT_LOG_WRITE_ASYNC=true` the insert is deferred to the queue while attribution, redaction and correlation are still resolved at the moment of the change.
-- The write path is fail-open: a failed audit insert is logged and never breaks the host operation (see [Security](#security)).
-- Internals follow a strict domain / application / infrastructure layering; the supported public surface is the `AuditLog` facade, the published config, the events and the contracts shown in this README.
+- One global listener subscribes to Eloquent's `created` / `updated` / `deleted` / `restored` events; nothing to register per model.
+- Each change runs through a small pipeline (diff + redaction, actor and origin resolution, label snapshotting, optional request metadata) and ends in a single insert into one `audit_log` table, optionally on a dedicated connection.
+- Each audit record stores:
+  - model reference and event type
+  - field-level before/after diff
+  - actor and origin (type, id, label)
+  - correlation id and chain depth
+  - request and tenant context
+  - optional integrity hash, timestamps
+- Writes are synchronous by default; `AUDIT_LOG_WRITE_ASYNC=true` defers the insert to the queue while attribution and redaction are still resolved at the moment of the change.
+- Fail-open: a failed audit insert is logged and never breaks the host operation (see [Security](#security)).
+
+## Performance
+
+- One insert per audited change, nothing else on the hot path; the capture services are resolved once per request, not per event.
+- No additional queries during capture, with two opt-in exceptions: FK label lookups for columns you explicitly map, and one chain-head select when integrity is enabled.
+- `AUDIT_LOG_WRITE_ASYNC=true` moves the insert itself to the queue.
+- A dedicated database connection keeps audit I/O away from your primary database (with a built-in transfer command).
+- Reads stay bounded: dashboard and export ranges are capped at one year, exports at 10k rows, retention deletes in chunks.
 
 ## Requirements
 

@@ -112,6 +112,7 @@ final class SettingsUpdateTest extends TestCase
             'write_async' => '0',
             'write_queue' => '',
             'ignore_attributes' => 'created_at, updated_at',
+            'request_context' => '0',
             'redaction_keys' => 'password, token',
             'redaction_placeholder' => '[redacted]',
             'timezone' => '',

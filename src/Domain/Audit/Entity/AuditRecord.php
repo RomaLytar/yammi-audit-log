@@ -13,6 +13,9 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 
 final class AuditRecord
 {
+    /**
+     * @param  array<string, string>  $context
+     */
     public function __construct(
         private readonly AuditableReference $auditable,
         private readonly ChangeType $event,
@@ -24,6 +27,7 @@ final class AuditRecord
         private readonly ?string $correlationId = null,
         private readonly bool $isNoise = false,
         private readonly ?int $id = null,
+        private readonly array $context = [],
     ) {}
 
     public function id(): ?int
@@ -69,6 +73,16 @@ final class AuditRecord
     public function correlationId(): ?string
     {
         return $this->correlationId;
+    }
+
+    /**
+     * Request metadata captured with the change (ip, url, method, user agent).
+     *
+     * @return array<string, string>
+     */
+    public function context(): array
+    {
+        return $this->context;
     }
 
     /**

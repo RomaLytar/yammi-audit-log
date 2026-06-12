@@ -12,6 +12,7 @@ final class TimelineEntryData
     /**
      * @param  array<string, array{old: scalar|array<array-key, mixed>|null, new: scalar|array<array-key, mixed>|null}>  $changes
      * @param  array<string, string>  $labels
+     * @param  array<string, string>  $context
      */
     public function __construct(
         public readonly ?int $id,
@@ -26,6 +27,7 @@ final class TimelineEntryData
         public readonly string $occurredAt,
         public readonly ?string $correlationId,
         public readonly bool $isNoise = false,
+        public readonly array $context = [],
     ) {}
 
     public static function fromRecord(AuditRecord $record): self
@@ -43,6 +45,7 @@ final class TimelineEntryData
             occurredAt: $record->occurredAt()->format(DateTimeInterface::ATOM),
             correlationId: $record->correlationId(),
             isNoise: $record->isNoise(),
+            context: $record->context(),
         );
     }
 

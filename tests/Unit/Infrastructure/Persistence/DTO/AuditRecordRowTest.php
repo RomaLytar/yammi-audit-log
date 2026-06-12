@@ -44,6 +44,7 @@ final class AuditRecordRowTest extends TestCase
             'is_noise' => true,
             'occurred_at' => '2026-01-01 10:00:00',
             'created_at' => '2026-01-01 10:00:00',
+            'context' => [],
         ], $row->toArray());
     }
 }

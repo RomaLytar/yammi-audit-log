@@ -42,6 +42,7 @@ final class RecordChangeAction
             occurredAt: $this->clock->now(),
             correlationId: $this->correlation->resolve(),
             isNoise: $context->isNoise,
+            context: $context->requestContext,
         );
 
         $this->repository->save($record);

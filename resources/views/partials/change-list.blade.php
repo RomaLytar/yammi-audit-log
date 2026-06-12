@@ -90,22 +90,24 @@
                                     <span>This write changed nothing meaningful — only ignored attributes (e.g. timestamps). Likely a double update of the same record.</span>
                                 </div>
                             @endif
-                            @if ($entry->correlationId() || $entry->jobsMonitorLink())
-                                <div class="mb-3 flex items-center gap-2">
-                                    @if ($entry->correlationId())
-                                        <a href="{{ route('audit-log.trace', $entry->correlationId()) }}"
-                                           class="inline-flex items-center gap-1.5 rounded-md border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand hover:bg-brand/15">
-                                            <i data-lucide="git-fork" class="text-[12px]"></i> View full change chain
-                                        </a>
-                                    @endif
-                                    @if ($entry->jobsMonitorLink())
-                                        <a href="{{ $entry->jobsMonitorLink() }}" target="_blank" rel="noopener"
-                                           class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent">
-                                            <i data-lucide="activity" class="text-[12px]"></i> Open job in JobsMonitor
-                                        </a>
-                                    @endif
-                                </div>
-                            @endif
+                            <div class="mb-3 flex items-center gap-2 flex-wrap">
+                                <a href="{{ route('audit-log.time-machine', ['type' => $entry->auditableType(), 'id' => $entry->id(), 'at' => $entry->occurredAt('Y-m-d')]) }}"
+                                   class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent">
+                                    <i data-lucide="calendar-clock" class="text-[12px]"></i> State at this moment
+                                </a>
+                                @if ($entry->correlationId())
+                                    <a href="{{ route('audit-log.trace', $entry->correlationId()) }}"
+                                       class="inline-flex items-center gap-1.5 rounded-md border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand hover:bg-brand/15">
+                                        <i data-lucide="git-fork" class="text-[12px]"></i> View full change chain
+                                    </a>
+                                @endif
+                                @if ($entry->jobsMonitorLink())
+                                    <a href="{{ $entry->jobsMonitorLink() }}" target="_blank" rel="noopener"
+                                       class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent">
+                                        <i data-lucide="activity" class="text-[12px]"></i> Open job in JobsMonitor
+                                    </a>
+                                @endif
+                            </div>
                             @if ($entry->originLabel())
                                 <div class="mb-3 flex items-center gap-2 text-xs">
                                     <span class="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 font-medium text-brand ring-1 ring-inset ring-brand/30">

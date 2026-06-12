@@ -11,12 +11,14 @@ use Yammi\AuditLog\Infrastructure\Http\Controller\NoiseController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\PlaygroundController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\SettingsController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\StatsController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\TimeMachineController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\TraceController;
 
 Route::get('/', DashboardController::class)->name('audit-log.dashboard');
 Route::get('/export', ExportController::class)->name('audit-log.export');
 Route::get('/noise', NoiseController::class)->name('audit-log.noise');
 Route::get('/stats', StatsController::class)->name('audit-log.stats');
+Route::get('/time-machine', TimeMachineController::class)->name('audit-log.time-machine');
 Route::get('/trace/{correlation}', TraceController::class)
     ->whereUuid('correlation')
     ->name('audit-log.trace');

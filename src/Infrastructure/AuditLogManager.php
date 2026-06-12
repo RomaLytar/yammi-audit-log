@@ -4,18 +4,23 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure;
 
+use DateTimeImmutable;
+use Exception;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Application\Action\BuildChainAction;
 use Yammi\AuditLog\Application\Action\BuildStatsAction;
 use Yammi\AuditLog\Application\Action\ListChangesAction;
+use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
+use Yammi\AuditLog\Application\DTO\StateData;
 use Yammi\AuditLog\Application\DTO\StatsData;
 use Yammi\AuditLog\Application\DTO\TimelineData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Application\Service\FilterParser;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
+use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Recorder\ManualChangeRecorder;
 
@@ -35,11 +40,24 @@ final class AuditLogManager
         private readonly BuildStatsAction $buildStats,
         private readonly FilterParser $filters,
         private readonly ConfigRepository $config,
+        private readonly Clock $clock,
     ) {}
 
     public function for(Model|string $auditable, int|string|null $id = null, int $limit = 50): TimelineData
     {
         return $this->reader->for($auditable, $id, $limit);
+    }
+
+    /**
+     * The read-only state one record had at a moment, folded from its diffs.
+     * A date-only string means the end of that day; null means now.
+     */
+    public function stateAt(
+        Model|string $auditable,
+        int|string|null $id = null,
+        DateTimeImmutable|string|null $at = null,
+    ): StateData {
+        return $this->reader->stateAt($auditable, $id, $this->resolveMoment($at));
     }
 
     /**
@@ -99,5 +117,28 @@ final class AuditLogManager
         array $after = [],
     ): ?TimelineEntryData {
         return $this->recorder->record($auditable, $id, $event, $before, $after);
+    }
+
+    private function resolveMoment(DateTimeImmutable|string|null $at): DateTimeImmutable
+    {
+        if ($at instanceof DateTimeImmutable) {
+            return $at;
+        }
+
+        $raw = trim((string) $at);
+
+        if ($raw === '') {
+            return $this->clock->now();
+        }
+
+        try {
+            $moment = new DateTimeImmutable($raw);
+        } catch (Exception) {
+            throw InvalidAuditData::invalidDate($raw);
+        }
+
+        return preg_match('/^\d{4}-\d{2}-\d{2}$/', $raw) === 1
+            ? $moment->setTime(23, 59, 59)
+            : $moment;
     }
 }

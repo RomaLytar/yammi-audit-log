@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Reader;
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
 use Yammi\AuditLog\Application\Action\BuildTimelineAction;
+use Yammi\AuditLog\Application\Action\ReconstructStateAction;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
@@ -26,7 +27,10 @@ final class AuditReaderTest extends TestCase
     protected function setUp(): void
     {
         $this->repository = new InMemoryAuditRecordRepository;
-        $this->reader = new AuditReader(new BuildTimelineAction($this->repository));
+        $this->reader = new AuditReader(
+            new BuildTimelineAction($this->repository),
+            new ReconstructStateAction($this->repository),
+        );
     }
 
     public function test_it_reads_the_timeline_for_a_model_instance(): void
@@ -56,6 +60,19 @@ final class AuditReaderTest extends TestCase
     public function test_an_unknown_auditable_yields_an_empty_timeline(): void
     {
         $this->assertTrue($this->reader->for('App\\Models\\Order', 1)->isEmpty());
+    }
+
+    public function test_it_reconstructs_the_state_for_a_model_instance(): void
+    {
+        $post = new Post;
+        $post->setRawAttributes(['id' => 7], true);
+
+        $this->repository->save($this->record($post->getMorphClass(), '7'));
+
+        $state = $this->reader->stateAt($post, null, new DateTimeImmutable('2026-02-01T00:00:00+00:00'));
+
+        $this->assertTrue($state->existed);
+        $this->assertSame('7', $state->auditableId);
     }
 
     private function record(string $type, string $id): AuditRecord

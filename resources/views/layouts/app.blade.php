@@ -170,6 +170,10 @@
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.stats') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
                         <i data-lucide="bar-chart-3" class="text-[14px]"></i> <span class="hidden sm:inline">Stats</span>
                     </a>
+                    <a href="{{ route('audit-log.time-machine') }}" title="Time machine"
+                       class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.time-machine') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="calendar-clock" class="text-[14px]"></i> <span class="hidden lg:inline">Time machine</span>
+                    </a>
                     <a href="{{ route('audit-log.settings') }}" title="Settings"
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.settings') || request()->routeIs('audit-log.settings.*') || request()->routeIs('audit-log.playground') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
                         <i data-lucide="settings" class="text-[14px]"></i> <span class="hidden sm:inline">Settings</span>

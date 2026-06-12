@@ -17,4 +17,9 @@ final class InvalidAuditData extends DomainException
     {
         return new self("Audit data is invalid: \"{$event}\" is not a known change type.");
     }
+
+    public static function invalidDate(string $value): self
+    {
+        return new self("Audit data is invalid: \"{$value}\" is not a valid date.");
+    }
 }

@@ -77,6 +77,22 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
         ));
     }
 
+    public function historyFor(AuditableReference $auditable, DateTimeImmutable $until, int $limit = 1000): array
+    {
+        $matches = array_values(array_filter(
+            $this->saved,
+            static fn (AuditRecord $record): bool => $record->auditable()->equals($auditable)
+                && $record->occurredAt() <= $until,
+        ));
+
+        usort(
+            $matches,
+            static fn (AuditRecord $a, AuditRecord $b): int => $a->occurredAt() <=> $b->occurredAt(),
+        );
+
+        return array_slice($matches, 0, $limit);
+    }
+
     public function chainSizes(array $correlationIds): array
     {
         $counts = [];

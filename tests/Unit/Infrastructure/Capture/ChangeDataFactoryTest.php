@@ -9,7 +9,9 @@ use Illuminate\Support\Stringable;
 use PHPUnit\Framework\TestCase;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Infrastructure\Capture\ChangeDataFactory;
+use Yammi\AuditLog\Tests\Support\Models\Document;
 use Yammi\AuditLog\Tests\Support\Models\Post;
+use Yammi\AuditLog\Tests\Support\Models\Profile;
 
 final class ChangeDataFactoryTest extends TestCase
 {
@@ -74,6 +76,31 @@ final class ChangeDataFactoryTest extends TestCase
         $this->assertSame('2026-01-01T10:00:00+00:00', $change->after['seen_at']);
         $this->assertSame('hello', $change->after['slug']);
         $this->assertSame('{"a":1}', $change->after['meta']);
+    }
+
+    public function test_audit_exclude_drops_attributes_entirely(): void
+    {
+        $document = new Document;
+        $document->setRawAttributes(['id' => 1, 'title' => 'Spec', 'internal_notes' => 'secret plan'], true);
+
+        $change = $this->factory->make($document, ChangeType::Created);
+
+        $this->assertArrayNotHasKey('internal_notes', $change->after);
+        $this->assertSame('Spec', $change->after['title']);
+    }
+
+    public function test_audit_include_keeps_only_the_listed_attributes(): void
+    {
+        $profile = new Profile;
+        $profile->setRawAttributes(['id' => 1, 'status' => 'active', 'role' => 'admin', 'bio' => 'long text'], true);
+        $profile->status = 'blocked';
+        $profile->bio = 'changed too';
+        $profile->syncChanges();
+
+        $change = $this->factory->make($profile, ChangeType::Updated);
+
+        $this->assertSame(['status' => 'blocked'], $change->after);
+        $this->assertSame(['status' => 'active'], $change->before);
     }
 
     public function test_scalar_and_array_values_pass_through(): void

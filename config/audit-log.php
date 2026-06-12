@@ -61,6 +61,12 @@ return [
     ],
 
     'capture' => [
+        // "all" audits every model automatically; "opt_in" audits only models
+        // implementing Yammi\AuditLog\Contracts\ShouldAudit. Models can also
+        // narrow their own surface with public $auditInclude / $auditExclude
+        // attribute lists.
+        'mode' => env('AUDIT_LOG_CAPTURE_MODE', 'all'),
+
         'exclude' => [
             // Fully-qualified model classes that must never be audited.
         ],

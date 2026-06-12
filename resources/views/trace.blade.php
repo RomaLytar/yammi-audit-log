@@ -16,7 +16,7 @@
             started by <span class="font-medium text-foreground">{{ $chain->rootActorLabel() }}</span>
             on <span class="font-medium text-foreground">{{ $chain->rootModel() }}</span>.
         </p>
-        <p class="mt-1 text-[11px] font-mono text-muted-foreground/70">{{ $chain->correlationId() }}</p>
+        <p class="mt-1 text-[11px] font-mono text-muted-foreground/70 break-all">{{ $chain->correlationId() }}</p>
     </div>
 
     <ol class="relative border-s border-border ml-3">
@@ -62,8 +62,8 @@
                         @endif
                     </div>
                     @if ($entry->changeCount() > 0)
-                        <div class="mt-3 overflow-hidden rounded-lg border border-border">
-                            <table class="w-full text-xs font-mono">
+                        <div class="mt-3 overflow-x-auto rounded-lg border border-border">
+                            <table class="w-full min-w-[420px] text-xs font-mono">
                                 <thead>
                                     <tr class="bg-muted/50 text-[10px] uppercase tracking-wider text-muted-foreground text-left">
                                         <th class="px-3 py-1.5">Field</th>

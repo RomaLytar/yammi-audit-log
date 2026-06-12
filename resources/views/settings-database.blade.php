@@ -73,7 +73,7 @@
         @endphp
         <form method="POST" action="{{ route('audit-log.settings.transfer') }}" class="flex flex-wrap items-end gap-3">
             @csrf
-            <div class="w-56">
+            <div class="w-full sm:w-56">
                 @include('audit-log::components.select', [
                     'name' => 'from',
                     'label' => 'From',
@@ -83,7 +83,7 @@
                     'autoSubmit' => false,
                 ])
             </div>
-            <div class="w-56">
+            <div class="w-full sm:w-56">
                 @include('audit-log::components.select', [
                     'name' => 'to',
                     'label' => 'To',

@@ -20,8 +20,8 @@
         @endif
     </div>
 @else
-    <div class="rounded-xl border border-border bg-card shadow-xs overflow-hidden">
-        <table class="w-full text-sm">
+    <div class="rounded-xl border border-border bg-card shadow-xs overflow-x-auto">
+        <table class="w-full min-w-[680px] text-sm">
             <thead>
                 <tr class="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground text-left">
                     <th class="px-4 py-2.5 font-medium">Model</th>
@@ -122,8 +122,8 @@
                             @if ($entry->changeCount() === 0)
                                 <p class="text-xs text-muted-foreground">No field-level changes recorded.</p>
                             @else
-                                <div class="overflow-hidden rounded-lg border border-border">
-                                    <table class="w-full text-xs font-mono">
+                                <div class="overflow-x-auto rounded-lg border border-border">
+                                    <table class="w-full min-w-[420px] text-xs font-mono">
                                         <thead>
                                             <tr class="bg-muted/50 text-[10px] uppercase tracking-wider text-muted-foreground text-left">
                                                 <th class="px-3 py-1.5">Field</th>

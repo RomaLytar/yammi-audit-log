@@ -40,7 +40,7 @@
 
                 <div class="space-y-5">
                     @foreach ($section['settings'] as $setting)
-                        <div class="flex items-start justify-between gap-6">
+                        <div class="flex flex-col gap-3 sm:flex-row sm:items-start sm:justify-between sm:gap-6">
                             <div class="max-w-xl">
                                 <label for="setting-{{ $setting->definition->key }}" class="text-xs font-semibold">{{ $setting->definition->label }}</label>
                                 <p class="text-xs text-muted-foreground mt-0.5">{{ $setting->definition->description }}</p>
@@ -55,7 +55,7 @@
                                     }
                                     $presetOptions['__custom'] = 'Custom…';
                                 @endphp
-                                <div class="w-72 shrink-0 space-y-2" data-al-custom-select>
+                                <div class="w-full sm:w-72 sm:shrink-0 space-y-2" data-al-custom-select>
                                     @include('audit-log::components.select', [
                                         'name' => $setting->definition->key,
                                         'options' => $presetOptions,
@@ -90,7 +90,7 @@
                             @else
                                 <input type="text" name="{{ $setting->definition->key }}" id="setting-{{ $setting->definition->key }}"
                                        value="{{ old($setting->definition->key, $setting->inputValue()) }}"
-                                       class="w-72 h-9 rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring shrink-0">
+                                       class="w-full sm:w-72 h-9 rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:shrink-0">
                             @endif
                         </div>
                     @endforeach

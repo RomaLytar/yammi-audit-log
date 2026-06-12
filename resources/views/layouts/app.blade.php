@@ -149,33 +149,33 @@
                     </div>
                     <div class="flex flex-col leading-tight">
                         <span class="font-semibold text-sm tracking-tight bg-gradient-to-r from-foreground to-brand bg-clip-text text-transparent">Yammi</span>
-                        <span class="text-[10px] text-muted-foreground -mt-0.5">Change history</span>
+                        <span class="hidden sm:block text-[10px] text-muted-foreground -mt-0.5">Change history</span>
                     </div>
                 </a>
 
-                <div class="flex items-center gap-2">
+                <div class="flex items-center gap-1.5 sm:gap-2 min-w-0">
                     @php $onLog = request()->routeIs('audit-log.dashboard') || request()->routeIs('audit-log.trace'); @endphp
-                    <a href="{{ route('audit-log.dashboard') }}"
-                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ $onLog ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
-                        <i data-lucide="list" class="text-[14px]"></i> Log
+                    <a href="{{ route('audit-log.dashboard') }}" title="Log"
+                       class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ $onLog ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="list" class="text-[14px]"></i> <span class="hidden sm:inline">Log</span>
                     </a>
-                    <a href="{{ route('audit-log.noise') }}"
-                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.noise') ? 'border-warning/40 bg-warning/10 text-warning' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
-                        <i data-lucide="alert-triangle" class="text-[14px]"></i> Noise
+                    <a href="{{ route('audit-log.noise') }}" title="Noise"
+                       class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.noise') ? 'border-warning/40 bg-warning/10 text-warning' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="alert-triangle" class="text-[14px]"></i> <span class="hidden sm:inline">Noise</span>
                         @if (($auditNoiseCount ?? 0) > 0)
                             <span class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-warning/20 text-warning text-[10px] font-bold tabular-nums">{{ $auditNoiseCount }}</span>
                         @endif
                     </a>
-                    <a href="{{ route('audit-log.stats') }}"
-                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.stats') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
-                        <i data-lucide="bar-chart-3" class="text-[14px]"></i> Stats
+                    <a href="{{ route('audit-log.stats') }}" title="Stats"
+                       class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.stats') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="bar-chart-3" class="text-[14px]"></i> <span class="hidden sm:inline">Stats</span>
                     </a>
-                    <a href="{{ route('audit-log.settings') }}"
-                       class="inline-flex items-center gap-1.5 rounded-md px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.settings') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
-                        <i data-lucide="settings" class="text-[14px]"></i> Settings
+                    <a href="{{ route('audit-log.settings') }}" title="Settings"
+                       class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.settings') || request()->routeIs('audit-log.settings.*') || request()->routeIs('audit-log.playground') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
+                        <i data-lucide="settings" class="text-[14px]"></i> <span class="hidden sm:inline">Settings</span>
                     </a>
                     <button type="button" onclick="__alToggleTheme()" title="Toggle theme"
-                            class="inline-flex items-center justify-center h-8 w-8 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                            class="inline-flex items-center justify-center h-8 w-8 shrink-0 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                         <i data-lucide="sun-moon" class="text-[15px]"></i>
                     </button>
                 </div>

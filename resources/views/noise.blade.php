@@ -3,7 +3,7 @@
 @section('title', 'Noisy writes — Yammi')
 
 @section('content')
-    <div class="mb-6 flex items-end justify-between gap-4">
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
             <h1 class="text-xl font-semibold tracking-tight flex items-center gap-2">
                 <i data-lucide="alert-triangle" class="text-warning text-[20px]"></i> Noisy writes

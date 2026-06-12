@@ -85,7 +85,7 @@
                         @foreach ($rows as $row)
                             <div>
                                 <div class="flex items-center justify-between text-xs mb-1">
-                                    <span class="font-medium truncate">{{ $row['label'] }}</span>
+                                    <span class="font-medium truncate min-w-0">{{ $row['label'] }}</span>
                                     <span class="text-muted-foreground tabular-nums shrink-0 ml-2">{{ number_format($row['count']) }}</span>
                                 </div>
                                 <div class="h-1.5 rounded-full bg-muted overflow-hidden">

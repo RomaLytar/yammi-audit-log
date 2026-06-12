@@ -20,6 +20,7 @@ final class RequestContextTest extends TestCase
     {
         parent::defineEnvironment($app);
 
+        $app['config']->set('app.key', 'base64:'.base64_encode(str_repeat('a', 32)));
         $app['config']->set('audit-log.capture.request_context', true);
     }
 

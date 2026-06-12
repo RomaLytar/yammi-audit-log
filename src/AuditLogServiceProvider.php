@@ -89,6 +89,8 @@ final class AuditLogServiceProvider extends ServiceProvider
 
     private const ROUTES_PATH = __DIR__.'/../routes/web.php';
 
+    private const API_ROUTES_PATH = __DIR__.'/../routes/api.php';
+
     public function register(): void
     {
         $this->mergeConfigFrom(self::CONFIG_PATH, 'audit-log');
@@ -271,6 +273,10 @@ final class AuditLogServiceProvider extends ServiceProvider
             $this->registerNavComposer();
         }
 
+        if ((bool) $config->get('audit-log.api.enabled', false)) {
+            $this->registerApiRoutes($config);
+        }
+
         $this->registerRetention($config);
 
         if (! (bool) $config->get('audit-log.enabled', true)) {
@@ -295,6 +301,19 @@ final class AuditLogServiceProvider extends ServiceProvider
                 ->cron((string) $config->get('audit-log.retention.schedule.cron', '0 3 * * *'))
                 ->name('audit-log:prune')
                 ->withoutOverlapping();
+        });
+    }
+
+    private function registerApiRoutes(ConfigRepository $config): void
+    {
+        $path = $config->get('audit-log.api.path', 'audit-log/api');
+        $configured = $config->get('audit-log.api.middleware', ['api']);
+
+        $this->app->make(Router::class)->group([
+            'prefix' => is_string($path) ? $path : 'audit-log/api',
+            'middleware' => is_array($configured) ? array_values($configured) : ['api'],
+        ], function (): void {
+            $this->loadRoutesFrom(self::API_ROUTES_PATH);
         });
     }
 

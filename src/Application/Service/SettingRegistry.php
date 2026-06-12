@@ -136,6 +136,15 @@ final class SettingRegistry
             ),
             new SettingDefinitionData(
                 group: self::GROUP_UI,
+                key: 'timezone',
+                configPath: 'audit-log.timezone',
+                type: SettingType::String,
+                default: '',
+                label: 'Display timezone',
+                description: 'Timestamps on the dashboard are shown in this timezone (e.g. Europe/Kyiv, Asia/Tokyo). Empty = the application timezone; storage is unaffected.',
+            ),
+            new SettingDefinitionData(
+                group: self::GROUP_UI,
                 key: 'ui_enabled',
                 configPath: 'audit-log.ui.enabled',
                 type: SettingType::Boolean,

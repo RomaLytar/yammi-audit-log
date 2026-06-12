@@ -40,6 +40,27 @@ final class TimelineEntryViewModelTest extends TestCase
         $this->assertSame('01.01.2026', $entry->occurredAt('d.m.Y'));
     }
 
+    public function test_occurred_at_converts_to_the_display_timezone(): void
+    {
+        $entry = new TimelineEntryData(
+            id: 1,
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: 'updated',
+            actorType: 'user',
+            actorLabel: 'Jane',
+            originLabel: null,
+            changes: [],
+            labels: [],
+            occurredAt: '2026-01-01T10:00:00+00:00',
+            correlationId: null,
+        );
+
+        $viewModel = new TimelineEntryViewModel($entry, 1, null, 'Asia/Tokyo');
+
+        $this->assertSame('2026-01-01 19:00', $viewModel->occurredAt());
+    }
+
     public function test_change_rows_present_nulls_and_arrays_as_strings(): void
     {
         $rows = $this->viewModel(chainSize: 1)->changes();

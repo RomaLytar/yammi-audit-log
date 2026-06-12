@@ -8,6 +8,7 @@ use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Yammi\AuditLog\Application\Action\BuildChainAction;
 use Yammi\AuditLog\Infrastructure\Integration\JobsMonitorBridge;
+use Yammi\AuditLog\Infrastructure\Support\AuditTimezone;
 use Yammi\AuditLog\Presentation\ViewModel\TraceViewModel;
 
 /** @internal */
@@ -17,6 +18,7 @@ final class TraceController
         private readonly ViewFactory $view,
         private readonly BuildChainAction $buildChain,
         private readonly JobsMonitorBridge $jobsMonitor,
+        private readonly AuditTimezone $timezone,
     ) {}
 
     public function __invoke(string $correlation): View
@@ -28,7 +30,7 @@ final class TraceController
         }
 
         return $this->view->make('audit-log::trace', [
-            'chain' => new TraceViewModel($chain, $this->jobsMonitor->url()),
+            'chain' => new TraceViewModel($chain, $this->jobsMonitor->url(), $this->timezone->name()),
         ]);
     }
 }

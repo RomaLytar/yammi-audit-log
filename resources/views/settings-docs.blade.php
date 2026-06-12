@@ -75,7 +75,7 @@
             'points' => [
                 'The Anomalies page in the nav runs the scan on demand for a chosen window (hour to 30 days).',
                 'Three rules, tunable in Settings → General → Anomaly detection: change-burst threshold, mass-delete threshold and an off-hours range (e.g. 0,5).',
-                'Each finding fires the AnomalyDetected event and mails alerts.mail_to — wire Slack or webhooks by listening to the event.',
+                'Each finding fires the AnomalyDetected event, mails alerts.mail_to and goes to the configured Slack / webhook channels (Settings → General → Alerts).',
                 'Set the automatic scan cron there too (or anomalies.cron in the config), or run it yourself:',
             ],
             'code' => "php artisan audit-log:detect-anomalies\nphp artisan audit-log:detect-anomalies --window=1440",
@@ -194,10 +194,11 @@
             'intro' => 'Hear about a role change the moment it happens, not in next week\'s review.',
             'points' => [
                 'Declare rules: model, optionally attributes and events (empty = any).',
-                'A match fires the SensitiveChangeRecorded event (listen for Slack / webhooks) and mails the configured recipients.',
-                'Automatic and manual records are both inspected; alerting is fail-soft.',
+                'A match fires the SensitiveChangeRecorded event, mails the recipients, posts to Slack (Block Kit with a deep link to the filtered feed) and calls a generic JSON webhook signed with HMAC-SHA256 (X-Audit-Log-Signature).',
+                'Slack / webhook URLs live in Settings → General → Alerts; the signing secret stays in the env.',
+                'Automatic and manual records are both inspected; every channel is fail-soft.',
             ],
-            'code' => "// config/audit-log.php\n'alerts' => [\n    'rules' => [\n        ['model' => App\\Models\\User::class, 'attributes' => ['role'], 'events' => ['updated']],\n    ],\n    'mail_to' => ['security@your.app'],\n],",
+            'code' => "// config/audit-log.php\n'alerts' => [\n    'rules' => [\n        ['model' => App\\Models\\User::class, 'attributes' => ['role'], 'events' => ['updated']],\n    ],\n    'mail_to' => ['security@your.app'],\n    'slack_webhook_url' => env('AUDIT_LOG_SLACK_WEBHOOK'),\n    'webhook' => ['url' => env('AUDIT_LOG_WEBHOOK_URL'), 'secret' => env('AUDIT_LOG_WEBHOOK_SECRET')],\n],",
         ],
         [
             'id' => 'performance',

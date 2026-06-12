@@ -147,6 +147,18 @@ return [
 
         // Recipients for the built-in mail alert. Empty = event only.
         'mail_to' => [],
+
+        // Slack incoming-webhook URL. When set, every alert and anomaly
+        // summary is delivered as a Block Kit message. Empty = off.
+        'slack_webhook_url' => env('AUDIT_LOG_SLACK_WEBHOOK'),
+
+        // Generic JSON webhook for incident routers / automation hubs.
+        // The body is signed with HMAC-SHA256 (X-Audit-Log-Signature)
+        // when a secret is set. Empty url = off.
+        'webhook' => [
+            'url' => env('AUDIT_LOG_WEBHOOK_URL'),
+            'secret' => env('AUDIT_LOG_WEBHOOK_SECRET'),
+        ],
     ],
 
     'tenancy' => [

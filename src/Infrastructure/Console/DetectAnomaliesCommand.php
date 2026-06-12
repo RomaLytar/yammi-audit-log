@@ -10,8 +10,11 @@ use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Mail\Message;
 use Throwable;
+use Yammi\AuditLog\Application\DTO\AlertMessageData;
 use Yammi\AuditLog\Application\DTO\AnomalyData;
 use Yammi\AuditLog\Events\AnomalyDetected;
+use Yammi\AuditLog\Infrastructure\Alert\AlertChannels;
+use Yammi\AuditLog\Infrastructure\Alert\AlertLinker;
 use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
 
 /** @internal */
@@ -27,6 +30,8 @@ final class DetectAnomaliesCommand extends Command
         ConfigRepository $config,
         Dispatcher $events,
         Mailer $mailer,
+        AlertChannels $channels,
+        AlertLinker $links,
     ): int {
         $windowOption = $this->option('window');
         $configured = $config->get('audit-log.anomalies.window_minutes', 60);
@@ -58,6 +63,18 @@ final class DetectAnomaliesCommand extends Command
         }
 
         $this->mail($mailer, $this->recipients($config), $findings);
+
+        $channels->dispatch(new AlertMessageData(
+            kind: AlertMessageData::KIND_ANOMALY,
+            title: count($findings).' audit '.(count($findings) === 1 ? 'anomaly' : 'anomalies').' detected',
+            lines: array_map(
+                static fn (AnomalyData $finding): string => "• [{$finding->rule}] {$finding->description}",
+                $findings,
+            ),
+            occurredAt: $findings[0]->windowEnd,
+            deepLink: $links->to('audit-log.anomalies'),
+            context: ['window_minutes' => $window, 'findings' => count($findings)],
+        ));
 
         return self::SUCCESS;
     }

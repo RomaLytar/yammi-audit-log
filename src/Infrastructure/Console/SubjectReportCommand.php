@@ -31,7 +31,8 @@ final class SubjectReportCommand extends Command
         ViewFactory $view,
         Clock $clock,
     ): int {
-        $format = strtolower(trim((string) $this->option('format')));
+        $formatOption = $this->option('format');
+        $format = strtolower(trim(is_string($formatOption) ? $formatOption : ''));
 
         if (! in_array($format, ['ndjson', 'html'], true)) {
             $this->error('Format must be ndjson or html.');
@@ -39,8 +40,10 @@ final class SubjectReportCommand extends Command
             return self::FAILURE;
         }
 
-        $model = trim((string) $this->argument('model'));
-        $id = trim((string) $this->argument('id'));
+        $modelArgument = $this->argument('model');
+        $idArgument = $this->argument('id');
+        $model = trim(is_string($modelArgument) ? $modelArgument : '');
+        $id = trim(is_string($idArgument) ? $idArgument : '');
 
         $report = $build(AuditableReference::to($model, $id));
 

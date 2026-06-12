@@ -22,7 +22,7 @@ final class SubjectReportFacadeTest extends TestCase
 
     public function test_the_facade_builds_the_subject_report(): void
     {
-        $this->seed();
+        $this->seedAuditData();
 
         $report = AuditLog::subjectReport('App\\Models\\User', '5');
 
@@ -33,7 +33,7 @@ final class SubjectReportFacadeTest extends TestCase
 
     public function test_the_playground_executes_subject_report(): void
     {
-        $this->seed();
+        $this->seedAuditData();
 
         $response = $this->postJson(route('audit-log.playground.execute'), [
             'method' => 'subjectReport',
@@ -56,7 +56,7 @@ final class SubjectReportFacadeTest extends TestCase
             ->assertSee('AuditLog::subjectReport');
     }
 
-    private function seed(): void
+    private function seedAuditData(): void
     {
         $repository = $this->app->make(AuditRecordRepository::class);
 

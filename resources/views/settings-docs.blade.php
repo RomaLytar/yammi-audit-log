@@ -37,6 +37,7 @@
                 'Actor types: user, job, command, scheduler, system.',
                 'Origin: a job dispatched by a user keeps that user attached — even across a real queue (it is serialized into the job payload).',
                 'Correlation: all changes of one request / command / job cascade share one id; the trace page draws the cascade as a ladder, indented by job nesting depth.',
+                'Impersonation-proof: when an admin works as another user (login-as), the label names both — "Jane Doe (impersonated by Support Admin)". Session keys are configurable via actor.impersonation_keys; lab404/laravel-impersonate works out of the box.',
                 'Click any actor badge to open everything that actor ever changed.',
             ],
             'code' => null,

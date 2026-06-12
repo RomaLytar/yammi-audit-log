@@ -88,6 +88,11 @@ return [
     'actor' => [
         // Auth guards checked when attributing a change to a user. Empty = default guard.
         'guards' => [],
+
+        // Session keys that mark a login-as session (lab404/laravel-impersonate
+        // stores impersonated_by). When one is present the actor label names both
+        // people: "Jane Doe (impersonated by Support Admin)". Empty = off.
+        'impersonation_keys' => ['impersonated_by'],
     ],
 
     // Timezone for DISPLAYED timestamps. Empty = the application timezone

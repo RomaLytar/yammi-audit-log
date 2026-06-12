@@ -11,6 +11,7 @@ use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
 use Yammi\AuditLog\Application\DTO\StateData;
 use Yammi\AuditLog\Application\DTO\StatsData;
+use Yammi\AuditLog\Application\DTO\SubjectReportData;
 use Yammi\AuditLog\Application\DTO\TimelineData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
@@ -23,6 +24,7 @@ use Yammi\AuditLog\Infrastructure\AuditLogManager;
  * @method static ChangeListData noise(array $filters = [])
  * @method static ChainData|null chain(string $correlationId)
  * @method static StatsData stats(array $filters = [])
+ * @method static SubjectReportData subjectReport(Model|string $auditable, int|string|null $id = null)
  * @method static TimelineEntryData|null record(Model|string $auditable, int|string|null $id, ChangeType|string $event, array $before = [], array $after = [])
  *
  * @see AuditLogManager

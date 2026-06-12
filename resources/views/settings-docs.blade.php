@@ -55,6 +55,18 @@
             'code' => "\$state = AuditLog::stateAt(Order::class, 42, '2026-03-03');\n\nif (\$state->existed) {\n    echo \$state->attributes['status'];\n}",
         ],
         [
+            'id' => 'subject-report',
+            'icon' => 'file-check',
+            'title' => 'GDPR subject reports',
+            'intro' => 'Answer a subject access request (GDPR Art. 15) with one command: every change to the record plus every change the subject made.',
+            'points' => [
+                'Writes NDJSON (machine-readable) or HTML (human-readable) to a filesystem disk.',
+                'Values are stored after redaction, so the report never leaks secrets.',
+                'The same report is available as data via AuditLog::subjectReport(User::class, 5).',
+            ],
+            'code' => "php artisan audit-log:subject-report \"App\\Models\\User\" 5\nphp artisan audit-log:subject-report \"App\\Models\\User\" 5 --format=html --disk=s3",
+        ],
+        [
             'id' => 'request-metadata',
             'icon' => 'globe',
             'title' => 'Request metadata',

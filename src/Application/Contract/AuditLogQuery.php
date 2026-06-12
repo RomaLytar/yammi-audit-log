@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Application\Contract;
 
 use DateTimeImmutable;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
+use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
@@ -38,6 +39,14 @@ interface AuditLogQuery
      * @return list<AuditRecord>
      */
     public function historyFor(AuditableReference $auditable, DateTimeImmutable $until, int $limit = 1000): array;
+
+    /**
+     * Every change performed BY one actor (exact identifier match), oldest
+     * first, capped at $limit.
+     *
+     * @return list<AuditRecord>
+     */
+    public function byActor(ActorType $type, string $identifier, int $limit = 10000): array;
 
     /**
      * @return list<string>

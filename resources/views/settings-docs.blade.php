@@ -68,6 +68,18 @@
             'code' => "php artisan audit-log:subject-report \"App\\Models\\User\" 5\nphp artisan audit-log:subject-report \"App\\Models\\User\" 5 --format=html --disk=s3",
         ],
         [
+            'id' => 'anomalies',
+            'icon' => 'siren',
+            'title' => 'Anomaly detection',
+            'intro' => 'The audit log watches itself: bursts of changes, mass deletions and off-hours activity are flagged.',
+            'points' => [
+                'Three rules, all configurable under anomalies in the config: rate_threshold (changes per actor per window), delete_threshold (deletions per actor per window), off_hours (user activity inside an hour range, e.g. [0, 5]).',
+                'Each finding fires the AnomalyDetected event and mails alerts.mail_to — wire Slack or webhooks by listening to the event.',
+                'Set anomalies.cron (e.g. 0 * * * *) to scan automatically, or run it yourself:',
+            ],
+            'code' => "php artisan audit-log:detect-anomalies\nphp artisan audit-log:detect-anomalies --window=1440",
+        ],
+        [
             'id' => 'request-metadata',
             'icon' => 'globe',
             'title' => 'Request metadata',

@@ -5,87 +5,181 @@
 @php
     $sections = [
         [
+            'id' => 'capture',
             'icon' => 'radar',
             'title' => 'How capture works',
-            'body' => 'Every Eloquent create / update / delete / restore is recorded automatically — no traits, no per-model setup. The write path is fail-closed: if the audit insert ever fails, the error goes to your application log and your request continues untouched. Eloquent events do not fire for mass Query-Builder updates, raw SQL or pivot sync() — record those explicitly:',
+            'intro' => 'Every Eloquent change is recorded automatically — no traits, no per-model setup.',
+            'points' => [
+                'Captured events: created, updated, deleted, restored.',
+                'Fail-closed: if the audit insert fails, the error goes to your application log and your request continues untouched.',
+                'NOT captured (Eloquent events never fire): mass Query-Builder ->update(), raw SQL, pivot sync(). Record those explicitly:',
+            ],
             'code' => "AuditLog::record(Order::class, \$order->id, 'updated',\n    before: ['status' => 'pending'],\n    after: ['status' => 'cancelled'],\n);",
         ],
         [
+            'id' => 'scope',
             'icon' => 'filter',
             'title' => 'Choosing what gets audited',
-            'body' => 'By default everything is captured. Switch to opt-in mode (AUDIT_LOG_CAPTURE_MODE=opt_in) and only models implementing the ShouldAudit marker are recorded. Any model can narrow its own surface — excluded values never reach storage:',
-            'code' => "use Yammi\\AuditLog\\Contracts\\ShouldAudit;\n\nclass Document extends Model implements ShouldAudit\n{\n    public array \$auditExclude = ['internal_notes'];\n    // or the inverse:\n    public array \$auditInclude = ['status', 'price'];\n}",
+            'intro' => 'By default everything is captured; narrow it globally or per model.',
+            'points' => [
+                'Opt-in mode: AUDIT_LOG_CAPTURE_MODE=opt_in — only models implementing the ShouldAudit marker are recorded.',
+                'Exclude whole models via capture.exclude in the config.',
+                'Per-model attribute lists — excluded values never reach the database:',
+            ],
+            'code' => "use Yammi\\AuditLog\\Contracts\\ShouldAudit;\n\nclass Document extends Model implements ShouldAudit\n{\n    public array \$auditExclude = ['internal_notes'];\n    // or the inverse — only these attributes are audited:\n    public array \$auditInclude = ['status', 'price'];\n}",
         ],
         [
+            'id' => 'actors',
             'icon' => 'users',
             'title' => 'Actors, origins and chains',
-            'body' => 'Every record names who physically made the change (user, job, command, scheduler or system) and who triggered it: a job dispatched by a user keeps that user as its origin — even across a real queue, because the origin is serialized into the job payload. All changes of one request, command or job cascade share a correlation id; the trace page draws the whole cascade as a ladder, indented by how deep each job was nested. Click any actor badge to see everything that actor ever changed.',
+            'intro' => 'Every record answers not only "what changed" but WHO changed it — and who started the cascade.',
+            'points' => [
+                'Actor types: user, job, command, scheduler, system.',
+                'Origin: a job dispatched by a user keeps that user attached — even across a real queue (it is serialized into the job payload).',
+                'Correlation: all changes of one request / command / job cascade share one id; the trace page draws the cascade as a ladder, indented by job nesting depth.',
+                'Click any actor badge to open everything that actor ever changed.',
+            ],
             'code' => null,
         ],
         [
+            'id' => 'request-metadata',
             'icon' => 'globe',
-            'title' => 'Request metadata (ip, url, user agent)',
-            'body' => 'Settings → General → Capture → "Request metadata". When enabled, every change captured during an HTTP request stores the client ip, the full url, the method and the user agent — open a record\'s expanded row to see them. It applies to NEW changes only (existing records stay as they are), and only to changes made over HTTP: console commands and queue workers never get synthetic metadata. It is PII — retention prunes it together with the record.',
+            'title' => 'Request metadata',
+            'intro' => 'Attach ip, url, method and user agent to every change made during an HTTP request.',
+            'points' => [
+                'Enable: Settings → General → Capture → "Request metadata" (or AUDIT_LOG_REQUEST_CONTEXT=true).',
+                'Shown in the expanded row of each record and included in the JSON export.',
+                'Applies to NEW changes only; console commands and queue workers never get synthetic metadata.',
+                'It is PII — retention prunes it together with the record.',
+            ],
             'code' => null,
         ],
         [
+            'id' => 'labels',
             'icon' => 'tag',
             'title' => 'Human-readable labels',
-            'body' => 'A diff like user_id: 5 → 7 is useless a month later. Map foreign keys to their models and the package snapshots a label for the old and the new value at event time — it survives later edits or deletion of the referenced row. Models may expose getAuditLabel(); otherwise name / title / email is used.',
+            'intro' => 'Show "John Doe → Jane Smith" instead of user_id: 5 → 7.',
+            'points' => [
+                'Labels are snapshotted at event time — they survive later edits or deletion of the referenced row.',
+                'Models may expose getAuditLabel(); otherwise name / title / email is used.',
+            ],
             'code' => "// config/audit-log.php\n'labels' => [\n    'map' => [\n        'user_id' => App\\Models\\User::class,\n    ],\n],",
         ],
         [
+            'id' => 'noise',
             'icon' => 'alert-triangle',
             'title' => 'Noise diagnostics',
-            'body' => 'An update that only bumped ignored attributes (timestamps by default) changed nothing real — usually a double save. Such writes are recorded, flagged, counted in the nav badge and listed on the Noise page so you can hunt the double writes down. Configure the ignored attributes in Settings → General → Capture.',
+            'intro' => 'Updates that changed nothing real — usually a double save — are recorded and flagged.',
+            'points' => [
+                'An update touching only ignored attributes (timestamps by default) is marked as noise.',
+                'The Noise page lists them and the nav badge counts them, so double writes are easy to hunt down.',
+                'Configure the ignored attributes in Settings → General → Capture.',
+            ],
             'code' => null,
         ],
         [
+            'id' => 'search',
             'icon' => 'search',
             'title' => 'Finding things',
-            'body' => 'The dashboard filters by model, event, actor type, actor name and date — plus full-text search across the stored old/new values and exact record ids. Dates default to the current month and a selection can never span more than one year. Timestamps are shown in the Display timezone from Settings (empty = your application timezone). Every entry links to its full change chain, and actor badges link to that actor\'s feed.',
+            'intro' => 'Filters, full-text search and bounded date ranges on the dashboard.',
+            'points' => [
+                'Filter by model, event, actor type, actor name and dates.',
+                'Search matches the stored old/new values and exact record ids.',
+                'Dates default to the current month; a selection can never span more than one year.',
+                'Timestamps are displayed in the Settings → Dashboard → "Display timezone" (empty = your application timezone).',
+            ],
             'code' => null,
         ],
         [
+            'id' => 'export',
             'icon' => 'download',
-            'title' => 'Export and the JSON API',
-            'body' => 'The CSV / JSON buttons on the dashboard download the current filter result (capped at 10,000 rows and one year — nobody bulk-extracts five years of PII). For SPA admins there are JSON endpoints mirroring the facade; they are OFF by default and you must put real auth in front:',
-            'code' => "# .env\nAUDIT_LOG_API_ENABLED=true\n\n// config/audit-log.php\n'api' => ['middleware' => ['api', 'auth:sanctum']],\n\nGET /audit-log/api/changes?event=updated&search=refund\nGET /audit-log/api/chain/{correlation-uuid}\nGET /audit-log/api/stats\nGET /audit-log/api/timeline?auditable_type=App\\Models\\Order&auditable_id=42",
+            'title' => 'Export (CSV / JSON)',
+            'intro' => 'The CSV and JSON buttons on the dashboard download the current filter result.',
+            'points' => [
+                'Capped at 10,000 rows and at most one year of data — nobody bulk-extracts five years of PII.',
+                'CSV cells are hardened against spreadsheet formula injection.',
+            ],
+            'code' => null,
         ],
         [
+            'id' => 'api',
+            'icon' => 'plug',
+            'title' => 'JSON API',
+            'intro' => 'The same data the dashboard shows, as JSON endpoints — for SPA admins that cannot call PHP.',
+            'points' => [
+                'OFF by default. When enabling, put real auth into the middleware — the endpoints expose audit data.',
+                'Endpoints accept the same filter query parameters as the facade (model, event, actor_type, actor, from, to, search, page).',
+            ],
+            'code' => "# .env\nAUDIT_LOG_API_ENABLED=true\n\n// config/audit-log.php\n'api' => ['middleware' => ['api', 'auth:sanctum']],\n\nGET /audit-log/api/changes?event=updated&search=refund\nGET /audit-log/api/noise\nGET /audit-log/api/chain/{correlation-uuid}\nGET /audit-log/api/stats\nGET /audit-log/api/timeline?auditable_type=App\\Models\\Order&auditable_id=42",
+        ],
+        [
+            'id' => 'retention',
             'icon' => 'database-zap',
-            'title' => 'Retention, archive and the dedicated database',
-            'body' => 'Audit data is PII: records older than the retention window (Settings → General, default 180 days, minimum 7) are pruned daily. To keep a copy for compliance, archive the expiring rows to any filesystem disk (S3 included) before they go — or do both in one step. The whole audit store can also live on its own database connection; Settings → Database Connection shows both and moves the data.',
+            'title' => 'Retention, archive, dedicated DB',
+            'intro' => 'Audit data is PII: keep it only as long as you must, and keep a copy if compliance asks.',
+            'points' => [
+                'Records older than the retention window (default 180 days, minimum 7) are pruned daily.',
+                'Archive expiring rows to any filesystem disk (S3 included) before they go.',
+                'The whole audit store can live on its own database connection — Settings → Database Connection shows both and moves the data.',
+            ],
             'code' => "php artisan audit-log:archive                # NDJSON of expiring rows\nphp artisan audit-log:archive --then-prune   # archive, then delete\nphp artisan audit-log:transfer-data          # move to the dedicated DB",
         ],
         [
+            'id' => 'integrity',
             'icon' => 'shield-check',
             'title' => 'Tamper evidence',
-            'body' => 'Settings → General → Writing → "Hash-chain integrity". Every new record stores a sha256 hash chaining it to the previous record; editing or deleting a stored row breaks every hash after it. Verification names the first tampered record, and pruning keeps the chain verifiable by anchoring the newest pruned hash:',
+            'intro' => 'Prove the history was not edited: every record is hash-chained to the previous one.',
+            'points' => [
+                'Enable: Settings → General → Writing → "Hash-chain integrity" (or AUDIT_LOG_INTEGRITY=true).',
+                'Editing or deleting a stored row breaks every hash after it; verification names the first tampered record.',
+                'Pruning anchors the newest pruned hash, so the chain stays verifiable after retention runs.',
+            ],
             'code' => 'php artisan audit-log:verify',
         ],
         [
+            'id' => 'alerts',
             'icon' => 'bell-ring',
             'title' => 'Sensitive-change alerts',
-            'body' => 'Declare what counts as sensitive and the package fires the SensitiveChangeRecorded event (listen for Slack / webhooks) and mails the configured recipients the moment a matching change is recorded — automatic and manual records alike:',
+            'intro' => 'Hear about a role change the moment it happens, not in next week\'s review.',
+            'points' => [
+                'Declare rules: model, optionally attributes and events (empty = any).',
+                'A match fires the SensitiveChangeRecorded event (listen for Slack / webhooks) and mails the configured recipients.',
+                'Automatic and manual records are both inspected; alerting is fail-soft.',
+            ],
             'code' => "// config/audit-log.php\n'alerts' => [\n    'rules' => [\n        ['model' => App\\Models\\User::class, 'attributes' => ['role'], 'events' => ['updated']],\n    ],\n    'mail_to' => ['security@your.app'],\n],",
         ],
         [
+            'id' => 'performance',
             'icon' => 'send',
             'title' => 'Performance: async writes',
-            'body' => 'Settings → General → Writing → "Async writes". The audit insert is dispatched to the queue instead of running inside your request — while the actor, origin, correlation and redacted diff are still resolved synchronously at the moment of the change, so attribution never depends on worker state. The whole capture graph is also resolved once per request, not per change.',
+            'intro' => 'Move the audit insert off your request path.',
+            'points' => [
+                'Enable: Settings → General → Writing → "Async writes" (+ optional queue name).',
+                'The actor, origin, correlation and redacted diff are still resolved at the moment of the change — only the insert is deferred, so attribution never depends on worker state.',
+            ],
             'code' => null,
         ],
         [
+            'id' => 'embedding',
             'icon' => 'terminal',
             'title' => 'Embedding without this dashboard',
-            'body' => 'This UI is optional (php artisan audit-log:ui enable|disable; it ships disabled). Everything it shows is available as plain data through the AuditLog facade — changes(), noise(), chain(), stats(), for(), record() — so you can render the audit log inside your own admin. Try every method live in the Facade Playground.',
-            'code' => null,
+            'intro' => 'This UI is optional — everything it shows is available as plain data.',
+            'points' => [
+                'The dashboard ships disabled; toggle it with php artisan audit-log:ui enable|disable.',
+                'Facade methods: for(), changes(), noise(), chain(), stats(), record() — try each one live in the Facade Playground.',
+            ],
+            'code' => "\$list = AuditLog::changes(['actor_type' => 'job', 'search' => 'refund']);\n\$stats = AuditLog::stats();\n\$chain = AuditLog::chain(\$entry->correlationId);",
         ],
         [
+            'id' => 'redaction',
             'icon' => 'eye-off',
             'title' => 'Secrets and redaction',
-            'body' => 'Field names containing password, token, secret, api_key, … (Settings → General → Redaction) are stored as [redacted] — including inside nested JSON values, and the redaction happens before anything touches the database. The diff is computed first, so "a secret changed" is still on record; only the values are masked.',
+            'intro' => 'Secret values never reach the database.',
+            'points' => [
+                'Field names containing password, token, secret, api_key, … are stored as [redacted] — including inside nested JSON values.',
+                'The diff is computed first, so "a secret changed" is still on record; only the values are masked.',
+                'Patterns and the placeholder are editable in Settings → General → Redaction.',
+            ],
             'code' => null,
         ],
     ];
@@ -102,19 +196,75 @@
         <p class="text-sm text-muted-foreground mt-1">What the audit log records, how every feature works and how to use it.</p>
     </div>
 
-    <div class="space-y-4">
-        @foreach ($sections as $section)
-            <div class="rounded-xl border border-border bg-card p-5 shadow-xs min-w-0">
-                <h2 class="text-sm font-semibold flex items-center gap-2 mb-2">
-                    <i data-lucide="{{ $section['icon'] }}" class="text-brand text-[15px]"></i> {{ $section['title'] }}
-                </h2>
-                <p class="text-sm text-muted-foreground max-w-3xl leading-relaxed">{{ $section['body'] }}</p>
-                @if ($section['code'] !== null)
-                    <pre class="mt-3 rounded-lg border border-border bg-muted/30 p-3 text-[11px] font-mono overflow-x-auto leading-relaxed max-w-3xl"><code>{{ $section['code'] }}</code></pre>
-                @endif
+    <div class="lg:grid lg:grid-cols-[230px_minmax(0,1fr)] lg:gap-8">
+        <nav class="mb-6 lg:mb-0 lg:sticky lg:top-20 lg:self-start" aria-label="Documentation sections">
+            <div class="flex flex-wrap gap-1.5 lg:flex-col lg:gap-0.5">
+                @foreach ($sections as $section)
+                    <a href="#{{ $section['id'] }}" data-al-doc-link="{{ $section['id'] }}"
+                       class="inline-flex items-center gap-2 rounded-md px-2.5 py-1.5 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
+                        <i data-lucide="{{ $section['icon'] }}" class="text-[13px] shrink-0"></i>
+                        <span>{{ $section['title'] }}</span>
+                    </a>
+                @endforeach
             </div>
-        @endforeach
+        </nav>
+
+        <div class="space-y-6 min-w-0">
+            @foreach ($sections as $section)
+                <section id="{{ $section['id'] }}" data-al-doc-section class="rounded-xl border border-border bg-card p-6 shadow-xs min-w-0 scroll-mt-20">
+                    <h2 class="text-base font-semibold flex items-center gap-2 mb-1.5">
+                        <i data-lucide="{{ $section['icon'] }}" class="text-brand text-[17px]"></i> {{ $section['title'] }}
+                    </h2>
+                    <p class="text-sm text-foreground/90 mb-3 max-w-3xl leading-relaxed">{{ $section['intro'] }}</p>
+
+                    @if ($section['points'] !== [])
+                        <ul class="space-y-2 max-w-3xl">
+                            @foreach ($section['points'] as $point)
+                                <li class="flex items-start gap-2 text-sm text-muted-foreground leading-relaxed">
+                                    <i data-lucide="check" class="text-brand text-[13px] mt-1 shrink-0"></i>
+                                    <span>{{ $point }}</span>
+                                </li>
+                            @endforeach
+                        </ul>
+                    @endif
+
+                    @if ($section['code'] !== null)
+                        <pre class="mt-4 rounded-lg border border-border bg-muted/30 p-4 text-[12px] font-mono overflow-x-auto leading-relaxed max-w-3xl"><code>{{ $section['code'] }}</code></pre>
+                    @endif
+                </section>
+            @endforeach
+        </div>
     </div>
 
-    @push('scripts')<script>__alIcons();</script>@endpush
+    @push('scripts')
+    <script>
+        __alIcons();
+
+        (function () {
+            var links = {};
+            document.querySelectorAll('[data-al-doc-link]').forEach(function (link) {
+                links[link.getAttribute('data-al-doc-link')] = link;
+            });
+
+            var activeClasses = ['bg-brand/10', 'text-brand'];
+
+            var observer = new IntersectionObserver(function (entries) {
+                entries.forEach(function (entry) {
+                    if (!entry.isIntersecting) { return; }
+
+                    Object.values(links).forEach(function (link) {
+                        link.classList.remove.apply(link.classList, activeClasses);
+                    });
+
+                    var link = links[entry.target.id];
+                    if (link) { link.classList.add.apply(link.classList, activeClasses); }
+                });
+            }, { rootMargin: '-20% 0px -70% 0px' });
+
+            document.querySelectorAll('[data-al-doc-section]').forEach(function (section) {
+                observer.observe(section);
+            });
+        })();
+    </script>
+    @endpush
 @endsection

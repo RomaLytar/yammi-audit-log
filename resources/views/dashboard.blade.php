@@ -3,14 +3,14 @@
 @section('title', 'Audit log — Yammi')
 
 @section('content')
-    <div class="mb-6 flex items-end justify-between gap-4">
+    <div class="mb-6 flex flex-wrap items-end justify-between gap-4">
         <div>
             <h1 class="text-xl font-semibold tracking-tight flex items-center gap-2">
                 <i data-lucide="history" class="text-brand text-[20px]"></i> Change history
             </h1>
             <p class="text-sm text-muted-foreground mt-1">Who changed what, and when — across your models.</p>
         </div>
-        <div class="flex items-center gap-2">
+        <div class="flex flex-wrap items-center gap-2">
             <a href="{{ route('audit-log.export', array_merge(request()->query(), ['format' => 'csv'])) }}"
                class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-3 h-8 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent"
                title="Export the current filter result (first 10000 rows) as CSV">

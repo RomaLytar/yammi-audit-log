@@ -31,6 +31,7 @@ final class DocsPageTest extends TestCase
             'Actors, origins and chains',
             'Time machine',
             'GDPR subject reports',
+            'Anomaly detection',
             'Request metadata',
             'Human-readable labels',
             'Noise diagnostics',

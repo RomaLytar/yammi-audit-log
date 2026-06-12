@@ -32,6 +32,11 @@ final class ActorResolverChain implements ActorResolver
         return Actor::system();
     }
 
+    public function depth(): int
+    {
+        return $this->context->jobDepth();
+    }
+
     public function resolveOrigin(): ?Actor
     {
         $origin = $this->context->currentOrigin();

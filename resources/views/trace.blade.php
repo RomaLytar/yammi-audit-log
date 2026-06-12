@@ -25,7 +25,7 @@
                 $dots = ['created' => 'bg-success', 'updated' => 'bg-info', 'deleted' => 'bg-destructive', 'restored' => 'bg-warning'];
                 $dot = $entry->isNoise() ? 'bg-warning' : ($dots[$entry->event()] ?? 'bg-muted-foreground');
             @endphp
-            <li class="mb-5 ms-6">
+            <li class="mb-5 ms-6" style="padding-left: {{ $entry->chainDepth() * 1.25 }}rem">
                 <span class="absolute -start-[7px] mt-1.5 h-3.5 w-3.5 rounded-full ring-4 ring-background {{ $dot }}"></span>
                 <div class="rounded-xl border {{ $entry->isNoise() ? 'border-warning/40 bg-warning/5' : ($loop->first ? 'border-brand/40 bg-brand/5' : 'border-border bg-card') }} p-4 shadow-xs">
                     <div class="flex items-center justify-between gap-3 flex-wrap">

@@ -28,6 +28,7 @@ final class AuditRecord
         private readonly bool $isNoise = false,
         private readonly ?int $id = null,
         private readonly array $context = [],
+        private readonly int $chainDepth = 0,
     ) {}
 
     public function id(): ?int
@@ -83,6 +84,15 @@ final class AuditRecord
     public function context(): array
     {
         return $this->context;
+    }
+
+    /**
+     * Nesting inside the unit of work: 0 for the root request/command, +1
+     * per job dispatched inside a job.
+     */
+    public function chainDepth(): int
+    {
+        return $this->chainDepth;
     }
 
     /**

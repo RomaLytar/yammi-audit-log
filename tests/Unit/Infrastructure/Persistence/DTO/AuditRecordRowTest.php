@@ -45,6 +45,7 @@ final class AuditRecordRowTest extends TestCase
             'occurred_at' => '2026-01-01 10:00:00',
             'created_at' => '2026-01-01 10:00:00',
             'context' => [],
+            'chain_depth' => 0,
         ], $row->toArray());
     }
 }

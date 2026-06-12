@@ -13,8 +13,10 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
+use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
+use Yammi\AuditLog\Infrastructure\Persistence\Repository\AuditRowWriter;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
 use Yammi\AuditLog\Tests\TestCase;
 
@@ -82,6 +84,8 @@ final class EloquentAuditRecordRepositoryTest extends TestCase
     {
         $repository = new EloquentAuditRecordRepository(
             $this->app->make(AuditRecordMapper::class),
+            $this->app->make(AuditRowWriter::class),
+            $this->app->make(GeneralSettingRepository::class),
             pruneChunkSize: 2,
         );
 

@@ -50,6 +50,7 @@ use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
 use Yammi\AuditLog\Infrastructure\Console\ToggleUiCommand;
 use Yammi\AuditLog\Infrastructure\Console\TransferAuditDataCommand;
+use Yammi\AuditLog\Infrastructure\Console\VerifyIntegrityCommand;
 use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
 use Yammi\AuditLog\Infrastructure\Context\HttpRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
@@ -58,10 +59,12 @@ use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
+use Yammi\AuditLog\Infrastructure\Integrity\IntegrityHasher;
 use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditStatsQuery;
+use Yammi\AuditLog\Infrastructure\Persistence\Repository\AuditRowWriter;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Repository\QueuedAuditRecordRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Transfer\EloquentAuditDataTransferrer;
@@ -177,6 +180,13 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->app->singleton(GeneralSettingRepository::class, EloquentGeneralSettingRepository::class);
 
+        $this->app->singleton(AuditRowWriter::class, function (): AuditRowWriter {
+            return new AuditRowWriter(
+                new IntegrityHasher,
+                (bool) $this->config()->get('audit-log.integrity.enabled', false),
+            );
+        });
+
         $this->app->singleton(ConnectionStatusInspector::class, function (): ConnectionStatusInspector {
             return new ConnectionStatusInspector(
                 $this->app->make(ConnectionResolverInterface::class),
@@ -217,7 +227,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->loadViewsFrom(self::VIEWS_PATH, 'audit-log');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class]);
+            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class, VerifyIntegrityCommand::class]);
 
             $this->publishes(
                 [self::CONFIG_PATH => config_path('audit-log.php')],

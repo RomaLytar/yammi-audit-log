@@ -111,6 +111,7 @@ final class SettingsUpdateTest extends TestCase
             'prune_cron' => '0 3 * * *',
             'write_async' => '0',
             'write_queue' => '',
+            'integrity_enabled' => '0',
             'ignore_attributes' => 'created_at, updated_at',
             'request_context' => '0',
             'redaction_keys' => 'password, token',

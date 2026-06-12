@@ -36,6 +36,7 @@ final class AuditRowWriter
 
         $model->getConnection()->transaction(function () use ($row): void {
             $previous = AuditRecordModel::query()
+                ->withoutGlobalScopes()
                 ->orderByDesc('id')
                 ->lockForUpdate()
                 ->value('integrity_hash');

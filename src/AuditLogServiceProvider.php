@@ -13,6 +13,7 @@ use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\ConnectionResolverInterface;
+use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
 use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
 use Throwable;
@@ -25,6 +26,7 @@ use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\LabelResolver;
 use Yammi\AuditLog\Application\Contract\RequestContextResolver;
+use Yammi\AuditLog\Application\Contract\TenantResolver;
 use Yammi\AuditLog\Application\Contract\ValueRedactor;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
@@ -70,6 +72,7 @@ use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 use Yammi\AuditLog\Infrastructure\Integrity\IntegrityHasher;
 use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditStatsQuery;
@@ -82,6 +85,7 @@ use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
 use Yammi\AuditLog\Infrastructure\Settings\Persistence\Repository\EloquentGeneralSettingRepository;
 use Yammi\AuditLog\Infrastructure\Settings\StoredSettingsApplier;
 use Yammi\AuditLog\Infrastructure\Support\SystemClock;
+use Yammi\AuditLog\Infrastructure\Tenancy\NullTenantResolver;
 use Yammi\AuditLog\Infrastructure\Transfer\ConnectionStatusInspector;
 
 final class AuditLogServiceProvider extends ServiceProvider
@@ -214,6 +218,20 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->singleton(TenantResolver::class, function (): TenantResolver {
+            $resolver = $this->config()->get('audit-log.tenancy.resolver');
+
+            if (is_string($resolver) && is_subclass_of($resolver, TenantResolver::class)) {
+                $instance = $this->app->make($resolver);
+
+                if ($instance instanceof TenantResolver) {
+                    return $instance;
+                }
+            }
+
+            return new NullTenantResolver;
+        });
+
         $this->app->singleton(AnomalyScanner::class, function (): AnomalyScanner {
             $config = $this->config();
 
@@ -293,6 +311,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $config = $this->config();
 
         $this->app->make(StoredSettingsApplier::class)->apply();
+        $this->registerTenantScope();
 
         if ((bool) $config->get('audit-log.ui.enabled', true)) {
             $this->registerRoutes($config);
@@ -329,6 +348,21 @@ final class AuditLogServiceProvider extends ServiceProvider
                 ->name('audit-log:prune')
                 ->withoutOverlapping();
         });
+    }
+
+    private function registerTenantScope(): void
+    {
+        AuditRecordModel::addGlobalScope(
+            'audit-log-tenant',
+            /** @param  EloquentBuilder<AuditRecordModel>  $query */
+            function (EloquentBuilder $query): void {
+                $tenant = $this->app->make(TenantResolver::class)->resolve();
+
+                if ($tenant !== null && $tenant !== '') {
+                    $query->where($query->qualifyColumn('tenant_id'), $tenant);
+                }
+            },
+        );
     }
 
     private function registerAnomalyScan(ConfigRepository $config): void

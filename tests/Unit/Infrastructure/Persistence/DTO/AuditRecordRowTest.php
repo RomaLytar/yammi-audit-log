@@ -26,6 +26,7 @@ final class AuditRecordRowTest extends TestCase
             correlationId: 'corr-1',
             isNoise: true,
             occurredAt: '2026-01-01 10:00:00',
+            tenantId: 'acme',
         );
 
         $this->assertSame([
@@ -46,6 +47,7 @@ final class AuditRecordRowTest extends TestCase
             'created_at' => '2026-01-01 10:00:00',
             'context' => [],
             'chain_depth' => 0,
+            'tenant_id' => 'acme',
         ], $row->toArray());
     }
 }

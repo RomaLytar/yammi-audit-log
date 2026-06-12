@@ -8,6 +8,7 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Yammi\AuditLog\Application\DTO\ResolvedSettingData;
 use Yammi\AuditLog\Application\DTO\SettingDefinitionData;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
+use Yammi\AuditLog\Infrastructure\Support\AuditTimezone;
 
 /**
  * Reads the value each setting currently has after env, config and stored
@@ -20,6 +21,7 @@ final class EffectiveSettingsReader
     public function __construct(
         private readonly SettingRegistry $registry,
         private readonly ConfigRepository $config,
+        private readonly AuditTimezone $timezone,
     ) {}
 
     /**
@@ -42,6 +44,10 @@ final class EffectiveSettingsReader
     private function effectiveValue(SettingDefinitionData $definition): bool|int|string|array
     {
         $value = $this->config->get($definition->configPath, $definition->default);
+
+        if ($definition->key === 'timezone' && ($value === '' || $value === null)) {
+            return $this->timezone->name();
+        }
 
         if (is_array($value)) {
             return array_values(array_filter($value, is_string(...)));

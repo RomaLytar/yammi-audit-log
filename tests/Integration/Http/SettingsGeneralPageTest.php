@@ -25,6 +25,13 @@ final class SettingsGeneralPageTest extends TestCase
         $response->assertSee('JobsMonitor URL');
     }
 
+    public function test_the_timezone_field_shows_the_effective_zone(): void
+    {
+        $this->app['config']->set('app.timezone', 'UTC');
+
+        $this->get('audit-log/settings/general')->assertSee('value="UTC"', false);
+    }
+
     public function test_retention_and_cron_offer_presets_with_a_custom_entry(): void
     {
         $response = $this->get('audit-log/settings/general');

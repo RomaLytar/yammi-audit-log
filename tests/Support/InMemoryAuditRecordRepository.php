@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
+use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
@@ -83,6 +84,22 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
             $this->saved,
             static fn (AuditRecord $record): bool => $record->auditable()->equals($auditable)
                 && $record->occurredAt() <= $until,
+        ));
+
+        usort(
+            $matches,
+            static fn (AuditRecord $a, AuditRecord $b): int => $a->occurredAt() <=> $b->occurredAt(),
+        );
+
+        return array_slice($matches, 0, $limit);
+    }
+
+    public function byActor(ActorType $type, string $identifier, int $limit = 10000): array
+    {
+        $matches = array_values(array_filter(
+            $this->saved,
+            static fn (AuditRecord $record): bool => $record->actor()->type === $type
+                && $record->actor()->identifier === $identifier,
         ));
 
         usort(

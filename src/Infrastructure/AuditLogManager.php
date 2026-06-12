@@ -16,6 +16,7 @@ use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
 use Yammi\AuditLog\Application\DTO\StateData;
 use Yammi\AuditLog\Application\DTO\StatsData;
+use Yammi\AuditLog\Application\DTO\SubjectReportData;
 use Yammi\AuditLog\Application\DTO\TimelineData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Application\Service\FilterParser;
@@ -58,6 +59,15 @@ final class AuditLogManager
         DateTimeImmutable|string|null $at = null,
     ): StateData {
         return $this->reader->stateAt($auditable, $id, $this->resolveMoment($at));
+    }
+
+    /**
+     * The GDPR subject access report as data: every change to the record
+     * plus every change the record made as a user actor.
+     */
+    public function subjectReport(Model|string $auditable, int|string|null $id = null): SubjectReportData
+    {
+        return $this->reader->subjectReport($auditable, $id);
     }
 
     /**

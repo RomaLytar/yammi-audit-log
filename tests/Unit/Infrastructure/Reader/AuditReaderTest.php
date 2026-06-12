@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Reader;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
+use Yammi\AuditLog\Application\Action\BuildSubjectReportAction;
 use Yammi\AuditLog\Application\Action\BuildTimelineAction;
 use Yammi\AuditLog\Application\Action\ReconstructStateAction;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
@@ -15,6 +16,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
+use Yammi\AuditLog\Tests\Support\FixedClock;
 use Yammi\AuditLog\Tests\Support\InMemoryAuditRecordRepository;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 
@@ -30,6 +32,7 @@ final class AuditReaderTest extends TestCase
         $this->reader = new AuditReader(
             new BuildTimelineAction($this->repository),
             new ReconstructStateAction($this->repository),
+            new BuildSubjectReportAction($this->repository, new FixedClock(new DateTimeImmutable('2026-06-01T00:00:00+00:00'))),
         );
     }
 

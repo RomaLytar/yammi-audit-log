@@ -33,8 +33,9 @@ final class DocsPageTest extends TestCase
             'Human-readable labels',
             'Noise diagnostics',
             'Finding things',
-            'Export and the JSON API',
-            'Retention, archive and the dedicated database',
+            'Export (CSV / JSON)',
+            'JSON API',
+            'Retention, archive, dedicated DB',
             'Tamper evidence',
             'Sensitive-change alerts',
             'Performance: async writes',
@@ -45,6 +46,7 @@ final class DocsPageTest extends TestCase
         }
 
         $response->assertSee('audit-log:verify');
+        $response->assertSee('data-al-doc-link', false);
         $response->assertSee('audit-log:archive');
         $response->assertSee('AUDIT_LOG_API_ENABLED');
     }

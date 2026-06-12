@@ -31,11 +31,54 @@ final class PlaygroundTest extends TestCase
         $response->assertOk();
         $response->assertSee('Facade playground');
         $response->assertSee('AuditLog::for()');
+        $response->assertSee('AuditLog::changes()');
+        $response->assertSee('AuditLog::noise()');
+        $response->assertSee('AuditLog::chain()');
+        $response->assertSee('AuditLog::stats()');
         $response->assertSee('AuditLog::record()');
         $response->assertSee('read-only');
         $response->assertSee('writes data');
         $response->assertSee('AuditLog::for(Order::class, 42)');
         $response->assertSee('mass', false);
+    }
+
+    public function test_executing_changes_returns_the_dashboard_list(): void
+    {
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+        $post->update(['status' => 'published']);
+
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'changes',
+            'args' => ['event' => 'updated'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+        $response->assertJsonPath('result.total', 1);
+        $response->assertJsonPath('result.entries.0.event', 'updated');
+    }
+
+    public function test_executing_stats_returns_the_summary(): void
+    {
+        Post::create(['title' => 'Hello', 'status' => 'draft']);
+
+        $response = $this->postJson(route('audit-log.playground.execute'), ['method' => 'stats']);
+
+        $response->assertOk();
+        $response->assertJsonPath('result.total', 1);
+        $response->assertJsonPath('result.byEvent.created', 1);
+    }
+
+    public function test_executing_chain_returns_null_for_an_unknown_id(): void
+    {
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'chain',
+            'args' => ['correlation_id' => '00000000-0000-4000-8000-000000000000'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+        $response->assertJsonPath('result', null);
     }
 
     public function test_the_settings_page_links_to_the_playground(): void

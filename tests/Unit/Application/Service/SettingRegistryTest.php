@@ -34,6 +34,7 @@ final class SettingRegistryTest extends TestCase
             'write_async' => 'audit-log.write.async',
             'write_queue' => 'audit-log.write.queue',
             'ignore_attributes' => 'audit-log.capture.ignore_attributes',
+            'request_context' => 'audit-log.capture.request_context',
             'redaction_keys' => 'audit-log.redaction.keys',
             'redaction_placeholder' => 'audit-log.redaction.placeholder',
             'timezone' => 'audit-log.timezone',

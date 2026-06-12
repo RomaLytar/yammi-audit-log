@@ -67,6 +67,11 @@ return [
         // attribute lists.
         'mode' => env('AUDIT_LOG_CAPTURE_MODE', 'all'),
 
+        // Attach request metadata (ip, url, method, user agent) to every
+        // change captured during an HTTP request. Off by default — it is PII;
+        // retention applies to it like to everything else.
+        'request_context' => (bool) env('AUDIT_LOG_REQUEST_CONTEXT', false),
+
         'exclude' => [
             // Fully-qualified model classes that must never be audited.
         ],

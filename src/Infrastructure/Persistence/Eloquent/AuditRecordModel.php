@@ -20,6 +20,7 @@ final class AuditRecordModel extends Model
     protected $casts = [
         'changes' => 'array',
         'labels' => 'array',
+        'context' => 'array',
         'is_noise' => 'boolean',
     ];
 

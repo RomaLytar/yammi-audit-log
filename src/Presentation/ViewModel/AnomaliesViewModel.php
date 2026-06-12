@@ -78,7 +78,7 @@ final class AnomaliesViewModel
     }
 
     /**
-     * @return array<string, string>
+     * @return array<int|string, string>
      */
     public function windowOptions(): array
     {

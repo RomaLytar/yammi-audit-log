@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Facade;
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\Facade;
+use Yammi\AuditLog\Application\DTO\AnomalyData;
 use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
 use Yammi\AuditLog\Application\DTO\RecordViewData;
@@ -25,6 +26,7 @@ use Yammi\AuditLog\Infrastructure\AuditLogManager;
  * @method static ChangeListData noise(array $filters = [])
  * @method static ChainData|null chain(string $correlationId)
  * @method static StatsData stats(array $filters = [])
+ * @method static list<AnomalyData> anomalies(int|null $windowMinutes = null)
  * @method static SubjectReportData subjectReport(Model|string $auditable, int|string|null $id = null)
  * @method static RecordViewData recordView(Model|string $auditable, int|string|null $id = null)
  * @method static TimelineEntryData|null record(Model|string $auditable, int|string|null $id, ChangeType|string $event, array $before = [], array $after = [])

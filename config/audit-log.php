@@ -131,6 +131,13 @@ return [
         'queue' => env('AUDIT_LOG_WRITE_QUEUE'),
     ],
 
+    'integrity' => [
+        // Chain every stored record to the previous one with a sha256 hash, so
+        // audit-log:verify can prove the history was not edited or thinned out.
+        // Off by default: it costs one extra select per insert.
+        'enabled' => (bool) env('AUDIT_LOG_INTEGRITY', false),
+    ],
+
     'retention' => [
         // Records older than this many days are pruned daily. Values are
         // clamped to 7..9999; 0 = keep forever (audit data is PII — avoid).

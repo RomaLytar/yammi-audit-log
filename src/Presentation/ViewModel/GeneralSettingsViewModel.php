@@ -15,6 +15,7 @@ final class GeneralSettingsViewModel
         SettingRegistry::GROUP_WRITE => ['Writing', 'send'],
         SettingRegistry::GROUP_CAPTURE => ['Capture', 'radar'],
         SettingRegistry::GROUP_REDACTION => ['Redaction', 'eye-off'],
+        SettingRegistry::GROUP_ANOMALIES => ['Anomaly detection', 'siren'],
         SettingRegistry::GROUP_UI => ['Dashboard', 'layout-dashboard'],
     ];
 

@@ -12,6 +12,7 @@ use Yammi\AuditLog\Application\Action\BuildChainAction;
 use Yammi\AuditLog\Application\Action\BuildStatsAction;
 use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Application\Contract\Clock;
+use Yammi\AuditLog\Application\DTO\AnomalyData;
 use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
 use Yammi\AuditLog\Application\DTO\RecordViewData;
@@ -23,6 +24,7 @@ use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Application\Service\FilterParser;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
+use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Recorder\ManualChangeRecorder;
 
@@ -43,6 +45,7 @@ final class AuditLogManager
         private readonly FilterParser $filters,
         private readonly ConfigRepository $config,
         private readonly Clock $clock,
+        private readonly AnomalyScanner $anomalyScanner,
     ) {}
 
     public function for(Model|string $auditable, int|string|null $id = null, int $limit = 50): TimelineData
@@ -124,6 +127,22 @@ final class AuditLogManager
             $this->filters->fromArray($filters),
             is_numeric($retention) ? (int) $retention : 0,
         );
+    }
+
+    /**
+     * The anomaly scan as data: change bursts, mass deletions and off-hours
+     * user activity inside the look-back window. Null means the configured
+     * anomalies.window_minutes.
+     *
+     * @return list<AnomalyData>
+     */
+    public function anomalies(?int $windowMinutes = null): array
+    {
+        $configured = $this->config->get('audit-log.anomalies.window_minutes', 60);
+
+        $window = $windowMinutes ?? (is_numeric($configured) ? (int) $configured : 60);
+
+        return $this->anomalyScanner->scan(max(1, $window));
     }
 
     /**

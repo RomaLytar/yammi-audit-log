@@ -38,6 +38,7 @@ final class PlaygroundExecutor
             'noise' => $this->manager->noise($args),
             'chain' => $this->manager->chain($this->stringArg($args, 'correlation_id')),
             'stats' => $this->manager->stats($args),
+            'anomalies' => $this->manager->anomalies($this->optionalIntArg($args, 'window')),
             'recordView' => $this->manager->recordView(
                 $this->stringArg($args, 'auditable_type'),
                 $this->stringArg($args, 'auditable_id'),
@@ -75,6 +76,16 @@ final class PlaygroundExecutor
         $value = $this->stringArg($args, $name);
 
         return $value === '' ? null : $value;
+    }
+
+    /**
+     * @param  array<string, mixed>  $args
+     */
+    private function optionalIntArg(array $args, string $name): ?int
+    {
+        $value = $args[$name] ?? null;
+
+        return is_numeric($value) ? max(1, (int) $value) : null;
     }
 
     /**

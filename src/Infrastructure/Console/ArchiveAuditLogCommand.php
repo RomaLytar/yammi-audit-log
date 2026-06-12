@@ -51,6 +51,7 @@ final class ArchiveAuditLogCommand extends Command
         $archived = 0;
 
         AuditRecordModel::query()
+            ->withoutGlobalScopes()
             ->where('occurred_at', '<', $cutoff->format('Y-m-d H:i:s'))
             ->orderBy('id')
             ->chunk(self::CHUNK, function ($models) use ($disk, $path, &$archived): void {

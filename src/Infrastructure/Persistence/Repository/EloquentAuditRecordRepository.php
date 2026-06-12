@@ -56,6 +56,7 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
 
         do {
             $ids = AuditRecordModel::query()
+                ->withoutGlobalScopes()
                 ->where('occurred_at', '<', $cutoff->format('Y-m-d H:i:s'))
                 ->orderBy('id')
                 ->limit($this->pruneChunkSize)
@@ -67,6 +68,7 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
             }
 
             $newestHash = AuditRecordModel::query()
+                ->withoutGlobalScopes()
                 ->whereIn('id', $ids)
                 ->orderByDesc('id')
                 ->value('integrity_hash');
@@ -75,7 +77,7 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
                 $anchor = $newestHash;
             }
 
-            $total += AuditRecordModel::query()->whereIn('id', $ids)->delete();
+            $total += AuditRecordModel::query()->withoutGlobalScopes()->whereIn('id', $ids)->delete();
         } while (count($ids) === $this->pruneChunkSize);
 
         if ($anchor !== null) {

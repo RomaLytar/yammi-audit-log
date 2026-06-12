@@ -5,6 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Persistence\Mapper;
 
 use DateTimeImmutable;
+use Yammi\AuditLog\Application\Contract\TenantResolver;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
@@ -15,10 +16,15 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\FieldDiff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 use Yammi\AuditLog\Infrastructure\Persistence\DTO\AuditRecordRow;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
+use Yammi\AuditLog\Infrastructure\Tenancy\NullTenantResolver;
 
 /** @internal */
 final class AuditRecordMapper
 {
+    public function __construct(
+        private readonly TenantResolver $tenants = new NullTenantResolver,
+    ) {}
+
     public function toRow(AuditRecord $record): AuditRecordRow
     {
         return new AuditRecordRow(
@@ -38,6 +44,7 @@ final class AuditRecordMapper
             occurredAt: $record->occurredAt()->format('Y-m-d H:i:s'),
             context: $record->context(),
             chainDepth: $record->chainDepth(),
+            tenantId: $this->tenants->resolve(),
         );
     }
 

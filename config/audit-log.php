@@ -149,6 +149,15 @@ return [
         'mail_to' => [],
     ],
 
+    'tenancy' => [
+        // Class implementing Yammi\AuditLog\Application\Contract\TenantResolver.
+        // When it returns a tenant id, every new record is stamped with it and
+        // every read (dashboard, facades, API, exports) is scoped to it
+        // automatically. Retention, archive, transfer and integrity always run
+        // across all tenants. null = single-tenant.
+        'resolver' => null,
+    ],
+
     'anomalies' => [
         // Look-back window in minutes for audit-log:detect-anomalies.
         'window_minutes' => 60,

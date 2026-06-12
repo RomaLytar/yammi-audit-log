@@ -15,6 +15,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
+use Yammi\AuditLog\Tests\Support\FixedTenantResolver;
 
 final class AuditRecordMapperTest extends TestCase
 {
@@ -53,6 +54,28 @@ final class AuditRecordMapperTest extends TestCase
         $this->assertSame('corr-1', $row->correlationId);
         $this->assertTrue($row->isNoise);
         $this->assertSame('2026-01-01 10:00:00', $row->occurredAt);
+        $this->assertNull($row->tenantId);
+    }
+
+    public function test_to_row_stamps_the_current_tenant(): void
+    {
+        FixedTenantResolver::$tenant = 'acme';
+
+        try {
+            $row = (new AuditRecordMapper(new FixedTenantResolver))->toRow(new AuditRecord(
+                auditable: AuditableReference::to('App\\Models\\Order', 7),
+                event: ChangeType::Updated,
+                diff: Diff::between(['status' => 'a'], ['status' => 'b']),
+                actor: Actor::user('1', 'Jane'),
+                origin: null,
+                labels: LabelSnapshot::empty(),
+                occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
+            ));
+        } finally {
+            FixedTenantResolver::$tenant = null;
+        }
+
+        $this->assertSame('acme', $row->tenantId);
     }
 
     public function test_to_domain_rebuilds_the_record_from_a_model(): void

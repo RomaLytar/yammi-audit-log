@@ -171,6 +171,15 @@ return [
         ],
     ],
 
+    'api' => [
+        // JSON endpoints mirroring the facade (changes, noise, chain, stats,
+        // timeline) for SPA admins. Off by default; when you enable it, put
+        // real auth in the middleware (e.g. ['api', 'auth:sanctum']).
+        'enabled' => (bool) env('AUDIT_LOG_API_ENABLED', false),
+        'path' => env('AUDIT_LOG_API_PATH', 'audit-log/api'),
+        'middleware' => ['api'],
+    ],
+
     'ui' => [
         // Off by default: embed the data via the AuditLog facade, or turn the
         // bundled dashboard on with `php artisan audit-log:ui enable` (stored in

@@ -19,6 +19,7 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 - Sensitive-change alerts: declare rules (model + attributes + events) and the package fires `SensitiveChangeRecorded` and mails the configured recipients when, say, a user's role changes.
 - Optional tamper evidence (`AUDIT_LOG_INTEGRITY=true`): every record is hash-chained to the previous one and `php artisan audit-log:verify` names the first edited row; pruning stores a chain anchor so verification stays strict.
 - Optional async writes (`AUDIT_LOG_WRITE_ASYNC=true`): the insert is queued while actor, correlation and redaction stay resolved at the moment of the change.
+- Optional JSON API (`AUDIT_LOG_API_ENABLED=true`, bring your own auth middleware): the same changes/noise/chain/stats/timeline data for SPA admins.
 - JobsMonitor bridge: set `AUDIT_LOG_JOBS_MONITOR_URL=/jobs-monitor` and every job actor links straight to the monitor — "why did this change" meets "which job did it".
 
 ## Public API

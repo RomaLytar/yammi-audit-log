@@ -151,6 +151,12 @@ return [
         'enabled' => (bool) env('AUDIT_LOG_INTEGRITY', false),
     ],
 
+    'archive' => [
+        // Disk audit-log:archive writes NDJSON exports to before retention
+        // deletes the rows (s3, local, ...).
+        'disk' => env('AUDIT_LOG_ARCHIVE_DISK', 'local'),
+    ],
+
     'retention' => [
         // Records older than this many days are pruned daily. Values are
         // clamped to 7..9999; 0 = keep forever (audit data is PII — avoid).

@@ -17,7 +17,7 @@
 
     <div class="space-y-6">
         @foreach ($methods as $method)
-            <div class="rounded-xl border border-border bg-card p-5 shadow-xs" data-al-method="{{ $method->key }}">
+            <div class="rounded-xl border border-border bg-card p-5 shadow-xs min-w-0 overflow-hidden" data-al-method="{{ $method->key }}">
                 <div class="flex items-start justify-between gap-4 mb-1">
                     <h2 class="text-sm font-semibold font-mono">AuditLog::{{ $method->key }}()</h2>
                     @if ($method->destructive)
@@ -38,12 +38,12 @@
                 </div>
 
                 <div class="grid gap-4 lg:grid-cols-2">
-                    <div>
+                    <div class="min-w-0">
                         <div class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Example</div>
                         <pre class="rounded-lg border border-border bg-muted/30 p-3 text-[11px] font-mono overflow-x-auto leading-relaxed"><code>{{ $method->example }}</code></pre>
                     </div>
 
-                    <div>
+                    <div class="min-w-0">
                         <div class="text-[11px] font-medium text-muted-foreground uppercase tracking-wider mb-1.5">Try it</div>
                         <form class="space-y-3" data-al-playground-form data-method="{{ $method->key }}">
                             @foreach ($method->arguments as $argument)

@@ -110,6 +110,16 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
         return array_slice($matches, 0, $limit);
     }
 
+    public function touchingField(string $field, int $limit = 500): array
+    {
+        $matches = array_values(array_filter(
+            $this->saved,
+            static fn (AuditRecord $record): bool => $record->diff()->has($field),
+        ));
+
+        return array_slice(array_reverse($matches), 0, $limit);
+    }
+
     public function chainSizes(array $correlationIds): array
     {
         $counts = [];

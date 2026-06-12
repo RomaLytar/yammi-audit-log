@@ -10,6 +10,7 @@ use Yammi\AuditLog\Infrastructure\Http\Controller\DatabaseTransferController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\ExportController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\NoiseController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\PlaygroundController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\RecordController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\SettingsController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\StatsController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\TimeMachineController;
@@ -21,6 +22,7 @@ Route::get('/noise', NoiseController::class)->name('audit-log.noise');
 Route::get('/stats', StatsController::class)->name('audit-log.stats');
 Route::get('/anomalies', AnomaliesController::class)->name('audit-log.anomalies');
 Route::get('/time-machine', TimeMachineController::class)->name('audit-log.time-machine');
+Route::get('/record', RecordController::class)->name('audit-log.record');
 Route::get('/trace/{correlation}', TraceController::class)
     ->whereUuid('correlation')
     ->name('audit-log.trace');

@@ -49,6 +49,15 @@ interface AuditLogQuery
     public function byActor(ActorType $type, string $identifier, int $limit = 10000): array;
 
     /**
+     * Changes of OTHER records whose diff touched the given field — used to
+     * find foreign-key references back to one record. Newest first, capped;
+     * callers match the exact value on the returned diffs.
+     *
+     * @return list<AuditRecord>
+     */
+    public function touchingField(string $field, int $limit = 500): array;
+
+    /**
      * @return list<string>
      */
     public function distinctModels(): array;

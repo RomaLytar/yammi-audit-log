@@ -14,6 +14,7 @@ use Yammi\AuditLog\Application\Action\ListChangesAction;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\DTO\ChainData;
 use Yammi\AuditLog\Application\DTO\ChangeListData;
+use Yammi\AuditLog\Application\DTO\RecordViewData;
 use Yammi\AuditLog\Application\DTO\StateData;
 use Yammi\AuditLog\Application\DTO\StatsData;
 use Yammi\AuditLog\Application\DTO\SubjectReportData;
@@ -68,6 +69,16 @@ final class AuditLogManager
     public function subjectReport(Model|string $auditable, int|string|null $id = null): SubjectReportData
     {
         return $this->reader->subjectReport($auditable, $id);
+    }
+
+    /**
+     * The single-record page as data: the record's own history plus changes
+     * of other records connected through correlation chains and foreign-key
+     * references.
+     */
+    public function recordView(Model|string $auditable, int|string|null $id = null): RecordViewData
+    {
+        return $this->reader->recordView($auditable, $id);
     }
 
     /**

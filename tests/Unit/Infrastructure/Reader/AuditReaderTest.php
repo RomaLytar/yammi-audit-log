@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Reader;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
+use Yammi\AuditLog\Application\Action\BuildRecordViewAction;
 use Yammi\AuditLog\Application\Action\BuildSubjectReportAction;
 use Yammi\AuditLog\Application\Action\BuildTimelineAction;
 use Yammi\AuditLog\Application\Action\ReconstructStateAction;
@@ -29,10 +30,13 @@ final class AuditReaderTest extends TestCase
     protected function setUp(): void
     {
         $this->repository = new InMemoryAuditRecordRepository;
+        $clock = new FixedClock(new DateTimeImmutable('2026-06-01T00:00:00+00:00'));
+
         $this->reader = new AuditReader(
             new BuildTimelineAction($this->repository),
             new ReconstructStateAction($this->repository),
-            new BuildSubjectReportAction($this->repository, new FixedClock(new DateTimeImmutable('2026-06-01T00:00:00+00:00'))),
+            new BuildSubjectReportAction($this->repository, $clock),
+            new BuildRecordViewAction($this->repository, $clock),
         );
     }
 

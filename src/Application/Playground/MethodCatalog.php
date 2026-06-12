@@ -85,6 +85,16 @@ final class MethodCatalog
                 ],
             ),
             new PlaygroundMethodData(
+                key: 'recordView',
+                signature: 'AuditLog::recordView(Model|string $auditable, int|string|null $id = null): RecordViewData',
+                summary: 'The single-record page as data: the record\'s own history plus changes of OTHER records connected to it — cascades it took part in (correlation chains) and diffs of other models whose <model>_id points at it.',
+                example: "use Yammi\\AuditLog\\Infrastructure\\Facade\\AuditLog;\n\n\$view = AuditLog::recordView(Order::class, 42);\n\nforeach (\$view->related as \$related) {\n    echo \"{\$related->entry->auditableType} #{\$related->entry->auditableId} via {\$related->via}\";\n}",
+                arguments: [
+                    new PlaygroundArgumentData('auditable_type', 'string', true, 'App\\Models\\Order', 'Fully-qualified model class (or morph alias).'),
+                    new PlaygroundArgumentData('auditable_id', 'string', true, '42', 'The record key.'),
+                ],
+            ),
+            new PlaygroundMethodData(
                 key: 'subjectReport',
                 signature: 'AuditLog::subjectReport(Model|string $auditable, int|string|null $id = null): SubjectReportData',
                 summary: 'The GDPR subject access report as data: every recorded change to one record PLUS every change that record performed as a user actor. The audit-log:subject-report command writes the same report to disk as NDJSON or HTML.',

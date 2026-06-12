@@ -30,6 +30,7 @@ final class DocsPageTest extends TestCase
             'Choosing what gets audited',
             'Actors, origins and chains',
             'Time machine',
+            'GDPR subject reports',
             'Request metadata',
             'Human-readable labels',
             'Noise diagnostics',

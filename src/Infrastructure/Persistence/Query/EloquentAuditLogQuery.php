@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Infrastructure\Persistence\Query;
 
 use DateTimeImmutable;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
+use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
@@ -82,6 +83,25 @@ final class EloquentAuditLogQuery implements AuditLogQuery
             ->where('auditable_type', $auditable->type)
             ->where('auditable_id', $auditable->id)
             ->where('occurred_at', '<=', $until->format('Y-m-d H:i:s'))
+            ->orderBy('occurred_at')
+            ->orderBy('id')
+            ->limit($limit)
+            ->get();
+
+        $records = [];
+
+        foreach ($models as $model) {
+            $records[] = $this->mapper->toDomain($model);
+        }
+
+        return $records;
+    }
+
+    public function byActor(ActorType $type, string $identifier, int $limit = 10000): array
+    {
+        $models = AuditRecordModel::query()
+            ->where('actor_type', $type->value)
+            ->where('actor_id', $identifier)
             ->orderBy('occurred_at')
             ->orderBy('id')
             ->limit($limit)

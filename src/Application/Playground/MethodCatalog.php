@@ -84,6 +84,16 @@ final class MethodCatalog
                 ],
             ),
             new PlaygroundMethodData(
+                key: 'subjectReport',
+                signature: 'AuditLog::subjectReport(Model|string $auditable, int|string|null $id = null): SubjectReportData',
+                summary: 'The GDPR subject access report as data: every recorded change to one record PLUS every change that record performed as a user actor. The audit-log:subject-report command writes the same report to disk as NDJSON or HTML.',
+                example: "use Yammi\\AuditLog\\Infrastructure\\Facade\\AuditLog;\n\n\$report = AuditLog::subjectReport(User::class, 5);\n\necho count(\$report->recordChanges).' changes to the record, ';\necho count(\$report->actorChanges).' made by them';",
+                arguments: [
+                    new PlaygroundArgumentData('auditable_type', 'string', true, 'App\\Models\\User', 'Fully-qualified model class (or morph alias) of the subject.'),
+                    new PlaygroundArgumentData('auditable_id', 'string', true, '5', 'The subject key.'),
+                ],
+            ),
+            new PlaygroundMethodData(
                 key: 'record',
                 signature: 'AuditLog::record(Model|string $auditable, int|string|null $id, ChangeType|string $event, array $before = [], array $after = []): ?TimelineEntryData',
                 summary: 'Writes a change Eloquent events cannot see — mass ->update(), raw SQL, pivot sync(). Goes through the exact same pipeline as captured changes: secret redaction, actor attribution, FK labels and correlation. A no-op update returns null.',

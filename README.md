@@ -11,6 +11,27 @@
 
 Zero per-model setup. Install, migrate, done, the dashboard is optional and off by default.
 
+```php
+$user->update(['email' => 'new@example.com']);
+```
+
+is recorded, with no code on your side, as:
+
+```json
+{
+    "event": "updated",
+    "auditable": "App\\Models\\User #1",
+    "actor": {"type": "user", "label": "John Doe"},
+    "origin": null,
+    "correlation_id": "0d4007cb-44a3-4af1-a807-5acc4ec5d3a1",
+    "changes": {
+        "email": {"old": "old@example.com", "new": "new@example.com"}
+    }
+}
+```
+
+And when a queued job changes it instead, `actor` becomes the job class and `origin` keeps the user who dispatched it.
+
 ![Audit log dashboard](screenshots/dashboard.png)
 
 ## Install
@@ -34,6 +55,15 @@ That's it, changes are being recorded. **No publishing needed:** the package con
 - GDPR tooling: retention, archive, redaction, subject access reports
 - Anomaly detection with Slack / webhook / mail alerts
 - Dashboard is optional; everything is also available as facades and a JSON API
+
+## How it works
+
+- One global listener subscribes to Eloquent's `created` / `updated` / `deleted` / `restored` events. There are no observers or traits to register per model.
+- Each change runs through a small pipeline: diff computation with secret redaction, actor and origin resolution, FK label snapshotting, optional request metadata, then a single insert into one dedicated `audit_log` table (optionally on its own database connection).
+- A stored record carries: the model reference, event type, field-level before/after diff, actor (type, id, label), origin actor, correlation id, chain depth, request context, tenant id, an optional integrity hash, and timestamps.
+- Writes are synchronous by default. With `AUDIT_LOG_WRITE_ASYNC=true` the insert is deferred to the queue while attribution, redaction and correlation are still resolved at the moment of the change.
+- The write path is fail-open: a failed audit insert is logged and never breaks the host operation (see [Security](#security)).
+- Internals follow a strict domain / application / infrastructure layering; the supported public surface is the `AuditLog` facade, the published config, the events and the contracts shown in this README.
 
 ## Requirements
 
@@ -60,7 +90,7 @@ That's it, changes are being recorded. **No publishing needed:** the package con
 
 ## Actor attribution & change chains
 
-Most audit packages collapse a status flip by a queued job, a command or the scheduler into an anonymous `null`. Here attribution is first-class:
+Many audit solutions focus primarily on authenticated users, which can make changes triggered by queued jobs, Artisan commands or the scheduler harder to attribute. Here attribution is first-class:
 
 - **Actor types:** `user`, `job`, `command`, `scheduler`, `system`, resolved by a chain of providers you can extend.
 - **Origin survives the queue.** A job dispatched by a user keeps that user attached, serialized into the queue payload, proven by tests against a real database queue worker.
@@ -278,17 +308,6 @@ The Laravel ecosystem already provides excellent audit packages, [spatie/laravel
 - a bundled dashboard, retention and archive tooling, and an operational settings UI
 
 Rather than combining several packages with custom infrastructure, it aims to provide these capabilities in a single, self-contained solution. If your current audit setup covers your needs, keep it; if the list above reads like your requirements, this package was built for you.
-
----
-
-## How it works
-
-- One global listener subscribes to Eloquent's `created` / `updated` / `deleted` / `restored` events. There are no observers or traits to register per model.
-- Each change runs through a small pipeline: diff computation with secret redaction, actor and origin resolution, FK label snapshotting, optional request metadata, then a single insert into one dedicated `audit_log` table (optionally on its own database connection).
-- A stored record carries: the model reference, event type, field-level before/after diff, actor (type, id, label), origin actor, correlation id, chain depth, request context, tenant id, an optional integrity hash, and timestamps.
-- Writes are synchronous by default. With `AUDIT_LOG_WRITE_ASYNC=true` the insert is deferred to the queue while attribution, redaction and correlation are still resolved at the moment of the change.
-- The write path is fail-open: a failed audit insert is logged and never breaks the host operation (see [Security](#security)).
-- Internals follow a strict domain / application / infrastructure layering; the supported public surface is the `AuditLog` facade, the published config, the events and the contracts shown in this README.
 
 ---
 

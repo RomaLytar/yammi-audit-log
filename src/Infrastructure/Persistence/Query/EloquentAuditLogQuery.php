@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
+use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 
@@ -64,6 +65,26 @@ final class EloquentAuditLogQuery implements AuditLogQuery
             ->where('correlation_id', $correlationId)
             ->orderBy('occurred_at')
             ->orderBy('id')
+            ->get();
+
+        $records = [];
+
+        foreach ($models as $model) {
+            $records[] = $this->mapper->toDomain($model);
+        }
+
+        return $records;
+    }
+
+    public function historyFor(AuditableReference $auditable, DateTimeImmutable $until, int $limit = 1000): array
+    {
+        $models = AuditRecordModel::query()
+            ->where('auditable_type', $auditable->type)
+            ->where('auditable_id', $auditable->id)
+            ->where('occurred_at', '<=', $until->format('Y-m-d H:i:s'))
+            ->orderBy('occurred_at')
+            ->orderBy('id')
+            ->limit($limit)
             ->get();
 
         $records = [];

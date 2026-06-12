@@ -29,6 +29,7 @@ final class DocsPageTest extends TestCase
             'How capture works',
             'Choosing what gets audited',
             'Actors, origins and chains',
+            'Time machine',
             'Request metadata',
             'Human-readable labels',
             'Noise diagnostics',

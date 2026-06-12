@@ -29,6 +29,11 @@ final class PlaygroundExecutor
                 $this->stringArg($args, 'auditable_id'),
                 $this->intArg($args, 'limit', 50),
             ),
+            'stateAt' => $this->manager->stateAt(
+                $this->stringArg($args, 'auditable_type'),
+                $this->stringArg($args, 'auditable_id'),
+                $this->optionalStringArg($args, 'at'),
+            ),
             'changes' => $this->manager->changes($args),
             'noise' => $this->manager->noise($args),
             'chain' => $this->manager->chain($this->stringArg($args, 'correlation_id')),
@@ -52,6 +57,16 @@ final class PlaygroundExecutor
         $value = $args[$name] ?? null;
 
         return is_scalar($value) ? trim((string) $value) : '';
+    }
+
+    /**
+     * @param  array<string, mixed>  $args
+     */
+    private function optionalStringArg(array $args, string $name): ?string
+    {
+        $value = $this->stringArg($args, $name);
+
+        return $value === '' ? null : $value;
     }
 
     /**

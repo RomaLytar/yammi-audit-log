@@ -16,7 +16,7 @@ final class MethodCatalogTest extends TestCase
             (new MethodCatalog)->all(),
         );
 
-        $this->assertSame(['for', 'changes', 'noise', 'chain', 'stats', 'record'], $keys);
+        $this->assertSame(['for', 'stateAt', 'changes', 'noise', 'chain', 'stats', 'record'], $keys);
     }
 
     public function test_each_method_carries_docs_and_a_real_example(): void

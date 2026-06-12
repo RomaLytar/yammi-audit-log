@@ -8,6 +8,7 @@ use DateTimeImmutable;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;
+use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 
 /**
  * Read-side port for the dashboard. Separate from the domain repository so the
@@ -29,6 +30,14 @@ interface AuditLogQuery
      * @return list<AuditRecord>
      */
     public function chain(string $correlationId): array;
+
+    /**
+     * The full history of one record up to a moment, oldest first, capped
+     * at $limit.
+     *
+     * @return list<AuditRecord>
+     */
+    public function historyFor(AuditableReference $auditable, DateTimeImmutable $until, int $limit = 1000): array;
 
     /**
      * @return list<string>

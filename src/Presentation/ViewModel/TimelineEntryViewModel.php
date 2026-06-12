@@ -36,6 +36,11 @@ final class TimelineEntryViewModel
         return $this->entry->model();
     }
 
+    public function auditableType(): string
+    {
+        return $this->entry->auditableType;
+    }
+
     public function id(): string
     {
         return $this->entry->auditableId;

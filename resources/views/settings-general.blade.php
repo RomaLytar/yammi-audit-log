@@ -90,6 +90,7 @@
                             @else
                                 <input type="text" name="{{ $setting->definition->key }}" id="setting-{{ $setting->definition->key }}"
                                        value="{{ old($setting->definition->key, $setting->inputValue()) }}"
+                                       placeholder="Not set"
                                        class="w-full sm:w-72 h-9 rounded-md border border-input bg-card px-3 text-sm focus:outline-none focus:ring-2 focus:ring-ring sm:shrink-0">
                             @endif
                         </div>

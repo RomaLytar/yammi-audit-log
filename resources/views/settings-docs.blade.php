@@ -42,6 +42,19 @@
             'code' => null,
         ],
         [
+            'id' => 'time-machine',
+            'icon' => 'calendar-clock',
+            'title' => 'Time machine',
+            'intro' => 'See the exact attribute state any record had at any past moment — read-only, nothing is ever restored.',
+            'points' => [
+                'The Time machine page folds the recorded diffs of one record, oldest first, into its state at the chosen date.',
+                'Every dashboard row has a "State at this moment" shortcut that opens the page pre-filled.',
+                'A deleted record shows its last-known values with a "deleted at this moment" badge.',
+                'Also available as data:',
+            ],
+            'code' => "\$state = AuditLog::stateAt(Order::class, 42, '2026-03-03');\n\nif (\$state->existed) {\n    echo \$state->attributes['status'];\n}",
+        ],
+        [
             'id' => 'request-metadata',
             'icon' => 'globe',
             'title' => 'Request metadata',

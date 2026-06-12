@@ -30,6 +30,17 @@ final class MethodCatalog
                 ],
             ),
             new PlaygroundMethodData(
+                key: 'stateAt',
+                signature: 'AuditLog::stateAt(Model|string $auditable, int|string|null $id = null, DateTimeImmutable|string|null $at = null): StateData',
+                summary: 'The time machine: reconstructs the read-only attribute state one record had at any moment by folding its recorded diffs — what did this order look like on March 3rd? A date-only value means the end of that day; empty means now.',
+                example: "use Yammi\\AuditLog\\Infrastructure\\Facade\\AuditLog;\n\n\$state = AuditLog::stateAt(Order::class, 42, '2026-03-03');\n\nif (\$state->existed) {\n    echo \$state->attributes['status'];\n}",
+                arguments: [
+                    new PlaygroundArgumentData('auditable_type', 'string', true, 'App\\Models\\Order', 'Fully-qualified model class (or morph alias).'),
+                    new PlaygroundArgumentData('auditable_id', 'string', true, '42', 'The record key.'),
+                    new PlaygroundArgumentData('at', 'string', false, '2026-03-03', 'Date or datetime; date-only means the end of that day. Empty = now.'),
+                ],
+            ),
+            new PlaygroundMethodData(
                 key: 'changes',
                 signature: 'AuditLog::changes(array $filters = []): ChangeListData',
                 summary: 'The dashboard list as data: filtered, paginated changes with totals, filter options and chain sizes — embed the audit log in your own admin. Filters: model, event, actor_type, actor, from, to, search, page.',

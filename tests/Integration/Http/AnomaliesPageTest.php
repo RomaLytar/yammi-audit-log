@@ -13,6 +13,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
 use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
+use Yammi\AuditLog\Infrastructure\Facade\AuditLog;
 use Yammi\AuditLog\Tests\TestCase;
 
 final class AnomaliesPageTest extends TestCase
@@ -79,6 +80,27 @@ final class AnomaliesPageTest extends TestCase
         $this->get('audit-log/anomalies?window=10080')
             ->assertOk()
             ->assertSee('Change burst');
+    }
+
+    public function test_the_facade_and_playground_expose_the_scan(): void
+    {
+        foreach (range(1, 4) as $i) {
+            $this->seedChange((string) $i);
+        }
+
+        $findings = AuditLog::anomalies(1440);
+
+        $this->assertNotSame([], $findings);
+        $this->assertSame('rate_spike', $findings[0]->rule);
+
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'anomalies',
+            'args' => ['window' => 1440],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+        $response->assertJsonPath('result.0.rule', 'rate_spike');
     }
 
     public function test_the_settings_page_carries_the_anomaly_group(): void

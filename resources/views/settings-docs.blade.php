@@ -173,7 +173,7 @@
                 'OFF by default. When enabling, put real auth into the middleware — the endpoints expose audit data.',
                 'Endpoints accept the same filter query parameters as the facade (model, event, actor_type, actor, from, to, search, page).',
             ],
-            'code' => "# .env\nAUDIT_LOG_API_ENABLED=true\n\n// config/audit-log.php\n'api' => ['middleware' => ['api', 'auth:sanctum']],\n\nGET /audit-log/api/changes?event=updated&search=refund\nGET /audit-log/api/noise\nGET /audit-log/api/chain/{correlation-uuid}\nGET /audit-log/api/stats\nGET /audit-log/api/timeline?auditable_type=App\\Models\\Order&auditable_id=42",
+            'code' => "# .env\nAUDIT_LOG_API_ENABLED=true\n\n// config/audit-log.php\n'api' => ['middleware' => ['api', 'auth:sanctum']],\n\nGET /audit-log/api/changes?event=updated&search=refund\nGET /audit-log/api/noise\nGET /audit-log/api/chain/{correlation-uuid}\nGET /audit-log/api/stats\nGET /audit-log/api/timeline?auditable_type=App\\Models\\Order&auditable_id=42\nGET /audit-log/api/state?auditable_type=App\\Models\\Order&auditable_id=42&at=2026-03-03\nGET /audit-log/api/record-view?auditable_type=App\\Models\\Order&auditable_id=42\nGET /audit-log/api/subject-report?auditable_type=App\\Models\\User&auditable_id=5\nGET /audit-log/api/anomalies?window=1440",
         ],
         [
             'id' => 'retention',

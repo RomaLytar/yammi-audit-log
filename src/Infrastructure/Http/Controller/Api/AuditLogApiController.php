@@ -62,4 +62,61 @@ final class AuditLogApiController
             is_numeric($limit) ? (int) $limit : 50,
         )]);
     }
+
+    public function state(Request $request): JsonResponse
+    {
+        [$type, $id] = $this->auditable($request, ['at' => 'sometimes|nullable|date']);
+
+        $at = $request->query('at');
+
+        return new JsonResponse(['data' => $this->manager->stateAt(
+            $type,
+            $id,
+            is_string($at) && trim($at) !== '' ? trim($at) : null,
+        )]);
+    }
+
+    public function recordView(Request $request): JsonResponse
+    {
+        [$type, $id] = $this->auditable($request);
+
+        return new JsonResponse(['data' => $this->manager->recordView($type, $id)]);
+    }
+
+    public function subjectReport(Request $request): JsonResponse
+    {
+        [$type, $id] = $this->auditable($request);
+
+        return new JsonResponse(['data' => $this->manager->subjectReport($type, $id)]);
+    }
+
+    public function anomalies(Request $request): JsonResponse
+    {
+        $validated = $request->validate([
+            'window' => 'sometimes|nullable|integer|min:1|max:43200',
+        ]);
+
+        $window = $validated['window'] ?? null;
+
+        return new JsonResponse(['data' => $this->manager->anomalies(
+            is_numeric($window) ? (int) $window : null,
+        )]);
+    }
+
+    /**
+     * @param  array<string, string>  $extraRules
+     * @return array{0: string, 1: string}
+     */
+    private function auditable(Request $request, array $extraRules = []): array
+    {
+        $validated = $request->validate($extraRules + [
+            'auditable_type' => 'required|string|max:191',
+            'auditable_id' => 'required|string|max:64',
+        ]);
+
+        return [
+            is_string($validated['auditable_type']) ? $validated['auditable_type'] : '',
+            is_string($validated['auditable_id']) ? $validated['auditable_id'] : '',
+        ];
+    }
 }

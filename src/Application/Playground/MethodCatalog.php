@@ -85,6 +85,15 @@ final class MethodCatalog
                 ],
             ),
             new PlaygroundMethodData(
+                key: 'anomalies',
+                signature: 'AuditLog::anomalies(int|null $windowMinutes = null): list<AnomalyData>',
+                summary: 'The anomaly scan as data: change bursts, mass deletions and off-hours user activity inside the look-back window — the Anomalies page as an array. Null = the configured anomalies.window_minutes.',
+                example: "use Yammi\\AuditLog\\Infrastructure\\Facade\\AuditLog;\n\nforeach (AuditLog::anomalies(1440) as \$finding) {\n    echo \"[{\$finding->rule}] {\$finding->description}\";\n}",
+                arguments: [
+                    new PlaygroundArgumentData('window', 'int', false, '1440', 'Look-back window in minutes. Empty = the configured default.'),
+                ],
+            ),
+            new PlaygroundMethodData(
                 key: 'recordView',
                 signature: 'AuditLog::recordView(Model|string $auditable, int|string|null $id = null): RecordViewData',
                 summary: 'The single-record page as data: the record\'s own history plus changes of OTHER records connected to it — cascades it took part in (correlation chains) and diffs of other models whose <model>_id points at it.',

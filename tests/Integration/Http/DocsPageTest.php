@@ -30,6 +30,7 @@ final class DocsPageTest extends TestCase
             'Choosing what gets audited',
             'Actors, origins and chains',
             'Time machine',
+            'Record view',
             'GDPR subject reports',
             'Anomaly detection',
             'Multi-tenancy',

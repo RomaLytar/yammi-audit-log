@@ -88,6 +88,9 @@
                 @if ($state->lastChangeAt() !== null)
                     <span>last change <span class="font-medium text-foreground font-mono">{{ $state->lastChangeAt() }}</span></span>
                 @endif
+                <a href="{{ route('audit-log.record', ['type' => $type, 'id' => $id]) }}" class="text-brand hover:underline inline-flex items-center gap-1">
+                    <i data-lucide="file-clock" class="text-[12px]"></i> Record view
+                </a>
                 <a href="{{ route('audit-log.dashboard', ['type' => $type, 'id' => $id, 'from' => $rangeFrom, 'to' => $rangeTo]) }}" class="text-brand hover:underline inline-flex items-center gap-1">
                     <i data-lucide="list" class="text-[12px]"></i> View this record's changes
                 </a>

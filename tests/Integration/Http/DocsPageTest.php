@@ -32,6 +32,7 @@ final class DocsPageTest extends TestCase
             'Time machine',
             'GDPR subject reports',
             'Anomaly detection',
+            'Multi-tenancy',
             'Request metadata',
             'Human-readable labels',
             'Noise diagnostics',

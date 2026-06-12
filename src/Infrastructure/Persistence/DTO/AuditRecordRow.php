@@ -35,6 +35,7 @@ final class AuditRecordRow
         public readonly string $occurredAt,
         public readonly array $context = [],
         public readonly int $chainDepth = 0,
+        public readonly ?string $tenantId = null,
     ) {}
 
     /**
@@ -60,6 +61,7 @@ final class AuditRecordRow
             'created_at' => $this->occurredAt,
             'context' => $this->context,
             'chain_depth' => $this->chainDepth,
+            'tenant_id' => $this->tenantId,
         ];
     }
 }

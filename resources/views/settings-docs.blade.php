@@ -80,6 +80,18 @@
             'code' => "php artisan audit-log:detect-anomalies\nphp artisan audit-log:detect-anomalies --window=1440",
         ],
         [
+            'id' => 'tenancy',
+            'icon' => 'building-2',
+            'title' => 'Multi-tenancy',
+            'intro' => 'Running a SaaS? Stamp every record with the current tenant and scope every read to it automatically.',
+            'points' => [
+                'Implement the TenantResolver contract and point tenancy.resolver at it — dashboard, facades, JSON API and exports only ever show the current tenant.',
+                'Retention, archive, transfer and integrity verification always run across all tenants.',
+                'Returning null (the default) means single-tenant: nothing changes.',
+            ],
+            'code' => "final class CurrentTenantResolver implements \\Yammi\\AuditLog\\Application\\Contract\\TenantResolver\n{\n    public function resolve(): ?string\n    {\n        return tenant()?->id;\n    }\n}\n\n// config/audit-log.php\n'tenancy' => ['resolver' => CurrentTenantResolver::class],",
+        ],
+        [
             'id' => 'request-metadata',
             'icon' => 'globe',
             'title' => 'Request metadata',

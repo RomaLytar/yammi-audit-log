@@ -27,6 +27,7 @@ final class VerifyIntegrityCommand extends Command
         $brokenId = null;
 
         AuditRecordModel::query()
+            ->withoutGlobalScopes()
             ->orderBy('id')
             ->chunk(self::CHUNK, function ($models) use ($hasher, &$previous, &$verified, &$unhashed, &$brokenId): bool {
                 foreach ($models as $model) {

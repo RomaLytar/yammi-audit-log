@@ -38,6 +38,10 @@ final class PlaygroundExecutor
             'noise' => $this->manager->noise($args),
             'chain' => $this->manager->chain($this->stringArg($args, 'correlation_id')),
             'stats' => $this->manager->stats($args),
+            'recordView' => $this->manager->recordView(
+                $this->stringArg($args, 'auditable_type'),
+                $this->stringArg($args, 'auditable_id'),
+            ),
             'subjectReport' => $this->manager->subjectReport(
                 $this->stringArg($args, 'auditable_type'),
                 $this->stringArg($args, 'auditable_id'),

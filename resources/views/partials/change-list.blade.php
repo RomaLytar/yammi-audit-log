@@ -91,6 +91,10 @@
                                 </div>
                             @endif
                             <div class="mb-3 flex items-center gap-2 flex-wrap">
+                                <a href="{{ route('audit-log.record', ['type' => $entry->auditableType(), 'id' => $entry->id()]) }}"
+                                   class="inline-flex items-center gap-1.5 rounded-md border border-brand/30 bg-brand/10 px-2.5 py-1 text-xs font-medium text-brand hover:bg-brand/15">
+                                    <i data-lucide="file-clock" class="text-[12px]"></i> Record view
+                                </a>
                                 <a href="{{ route('audit-log.time-machine', ['type' => $entry->auditableType(), 'id' => $entry->id(), 'at' => $entry->occurredAt('Y-m-d')]) }}"
                                    class="inline-flex items-center gap-1.5 rounded-md border border-border bg-card px-2.5 py-1 text-xs font-medium text-muted-foreground hover:text-foreground hover:bg-accent">
                                     <i data-lucide="calendar-clock" class="text-[12px]"></i> State at this moment

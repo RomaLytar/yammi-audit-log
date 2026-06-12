@@ -56,6 +56,18 @@
             'code' => "\$state = AuditLog::stateAt(Order::class, 42, '2026-03-03');\n\nif (\$state->existed) {\n    echo \$state->attributes['status'];\n}",
         ],
         [
+            'id' => 'record-view',
+            'icon' => 'file-clock',
+            'title' => 'Record view',
+            'intro' => 'One page per record: its full history side by side with every change connected to it.',
+            'points' => [
+                'Open it from any dashboard row ("Record view") or from the time machine.',
+                'Related changes come from two honest sources: records changed by the SAME action (correlation chains) and diffs of other models whose <model>_id field points at this record.',
+                'Also available as data:',
+            ],
+            'code' => "\$view = AuditLog::recordView(Order::class, 42);\n\nforeach (\$view->related as \$related) {\n    echo \"{\$related->entry->auditableType} #{\$related->entry->auditableId} via {\$related->via}\";\n}",
+        ],
+        [
             'id' => 'subject-report',
             'icon' => 'file-check',
             'title' => 'GDPR subject reports',

@@ -116,6 +116,24 @@ final class EloquentAuditLogQuery implements AuditLogQuery
         return $records;
     }
 
+    public function touchingField(string $field, int $limit = 500): array
+    {
+        $query = AuditRecordModel::query()
+            ->orderByDesc('occurred_at')
+            ->orderByDesc('id')
+            ->limit($limit);
+
+        $this->applier->whereChangesContain($query, '"'.$field.'":');
+
+        $records = [];
+
+        foreach ($query->get() as $model) {
+            $records[] = $this->mapper->toDomain($model);
+        }
+
+        return $records;
+    }
+
     public function distinctModels(): array
     {
         return $this->distinctColumn('auditable_type');

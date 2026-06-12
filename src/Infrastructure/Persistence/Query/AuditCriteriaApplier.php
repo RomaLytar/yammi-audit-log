@@ -56,6 +56,16 @@ final class AuditCriteriaApplier
         }
     }
 
+    /**
+     * @param  Builder<AuditRecordModel>  $query
+     */
+    public function whereChangesContain(Builder $query, string $fragment): void
+    {
+        $changesAsText = $this->changesAsText($query);
+
+        $query->whereRaw("{$changesAsText} like ? escape '!'", ['%'.$this->escapeLike($fragment).'%']);
+    }
+
     private function escapeLike(string $value): string
     {
         return str_replace(['!', '%', '_'], ['!!', '!%', '!_'], $value);

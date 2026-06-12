@@ -20,6 +20,6 @@ final class ResolveActorStage implements RecordChangeStage
         return $context->withActor(
             $this->resolver->resolve(),
             $this->resolver->resolveOrigin(),
-        );
+        )->withDepth($this->resolver->depth());
     }
 }

@@ -36,6 +36,11 @@ final class ActorContext
         array_pop($this->frames);
     }
 
+    public function jobDepth(): int
+    {
+        return count($this->frames);
+    }
+
     public function currentJob(): ?string
     {
         $key = array_key_last($this->frames);

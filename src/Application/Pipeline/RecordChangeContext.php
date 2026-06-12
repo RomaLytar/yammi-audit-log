@@ -23,6 +23,7 @@ final class RecordChangeContext
         public readonly LabelSnapshot $labels,
         public readonly bool $isNoise = false,
         public readonly array $requestContext = [],
+        public readonly int $depth = 0,
     ) {}
 
     public static function start(ChangeData $change): self
@@ -32,22 +33,27 @@ final class RecordChangeContext
 
     public function withDiff(Diff $diff): self
     {
-        return new self($this->change, $diff, $this->actor, $this->origin, $this->labels, $this->isNoise, $this->requestContext);
+        return new self($this->change, $diff, $this->actor, $this->origin, $this->labels, $this->isNoise, $this->requestContext, $this->depth);
     }
 
     public function withNoise(bool $isNoise): self
     {
-        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $isNoise, $this->requestContext);
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $isNoise, $this->requestContext, $this->depth);
     }
 
     public function withActor(Actor $actor, ?Actor $origin): self
     {
-        return new self($this->change, $this->diff, $actor, $origin, $this->labels, $this->isNoise, $this->requestContext);
+        return new self($this->change, $this->diff, $actor, $origin, $this->labels, $this->isNoise, $this->requestContext, $this->depth);
     }
 
     public function withLabels(LabelSnapshot $labels): self
     {
-        return new self($this->change, $this->diff, $this->actor, $this->origin, $labels, $this->isNoise, $this->requestContext);
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $labels, $this->isNoise, $this->requestContext, $this->depth);
+    }
+
+    public function withDepth(int $depth): self
+    {
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $this->isNoise, $this->requestContext, $depth);
     }
 
     /**
@@ -55,6 +61,6 @@ final class RecordChangeContext
      */
     public function withRequestContext(array $requestContext): self
     {
-        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $this->isNoise, $requestContext);
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $this->isNoise, $requestContext, $this->depth);
     }
 }

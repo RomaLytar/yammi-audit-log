@@ -12,6 +12,7 @@ final class FixedActorResolver implements ActorResolver
     public function __construct(
         private readonly Actor $actor,
         private readonly ?Actor $origin = null,
+        private readonly int $depth = 0,
     ) {}
 
     public function resolve(): Actor
@@ -22,5 +23,10 @@ final class FixedActorResolver implements ActorResolver
     public function resolveOrigin(): ?Actor
     {
         return $this->origin;
+    }
+
+    public function depth(): int
+    {
+        return $this->depth;
     }
 }

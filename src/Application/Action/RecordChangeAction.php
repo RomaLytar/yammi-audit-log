@@ -43,6 +43,7 @@ final class RecordChangeAction
             correlationId: $this->correlation->resolve(),
             isNoise: $context->isNoise,
             context: $context->requestContext,
+            chainDepth: $context->depth,
         );
 
         $this->repository->save($record);

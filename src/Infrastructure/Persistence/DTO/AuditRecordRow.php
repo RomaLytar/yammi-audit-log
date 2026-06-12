@@ -34,6 +34,7 @@ final class AuditRecordRow
         public readonly bool $isNoise,
         public readonly string $occurredAt,
         public readonly array $context = [],
+        public readonly int $chainDepth = 0,
     ) {}
 
     /**
@@ -58,6 +59,7 @@ final class AuditRecordRow
             'occurred_at' => $this->occurredAt,
             'created_at' => $this->occurredAt,
             'context' => $this->context,
+            'chain_depth' => $this->chainDepth,
         ];
     }
 }

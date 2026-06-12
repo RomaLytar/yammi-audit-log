@@ -28,6 +28,7 @@ final class TimelineEntryData
         public readonly ?string $correlationId,
         public readonly bool $isNoise = false,
         public readonly array $context = [],
+        public readonly int $chainDepth = 0,
     ) {}
 
     public static function fromRecord(AuditRecord $record): self
@@ -46,6 +47,7 @@ final class TimelineEntryData
             correlationId: $record->correlationId(),
             isNoise: $record->isNoise(),
             context: $record->context(),
+            chainDepth: $record->chainDepth(),
         );
     }
 

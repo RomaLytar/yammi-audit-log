@@ -37,6 +37,7 @@ final class AuditRecordMapper
             isNoise: $record->isNoise(),
             occurredAt: $record->occurredAt()->format('Y-m-d H:i:s'),
             context: $record->context(),
+            chainDepth: $record->chainDepth(),
         );
     }
 
@@ -74,6 +75,7 @@ final class AuditRecordMapper
             isNoise: (bool) $model->getAttribute('is_noise'),
             id: (int) $model->getAttribute('id'),
             context: $this->stringMap($model->getAttribute('context')),
+            chainDepth: max(0, (int) $model->getAttribute('chain_depth')),
         );
     }
 

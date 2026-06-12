@@ -33,7 +33,7 @@
         @csrf
 
         @foreach ($vm->sections() as $section)
-            <div class="rounded-xl border border-border bg-card p-5 shadow-xs mb-6">
+            <div id="section-{{ \Illuminate\Support\Str::slug($section['title']) }}" class="rounded-xl border border-border bg-card p-5 shadow-xs mb-6 scroll-mt-20">
                 <h2 class="text-sm font-semibold flex items-center gap-2 mb-4">
                     <i data-lucide="{{ $section['icon'] }}" class="text-brand text-[15px]"></i> {{ $section['title'] }}
                 </h2>

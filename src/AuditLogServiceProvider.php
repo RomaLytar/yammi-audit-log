@@ -8,6 +8,8 @@ use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
+use Illuminate\Contracts\Mail\Mailer;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Database\ConnectionResolverInterface;
@@ -30,6 +32,7 @@ use Yammi\AuditLog\Application\Pipeline\Stage\ResolveActorStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveRequestContextStage;
 use Yammi\AuditLog\Application\Playground\MethodCatalog;
+use Yammi\AuditLog\Application\Service\AlertRuleMatcher;
 use Yammi\AuditLog\Application\Service\CriteriaFactory;
 use Yammi\AuditLog\Application\Service\FilterParser;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
@@ -42,6 +45,7 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
+use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
@@ -179,6 +183,19 @@ final class AuditLogServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(GeneralSettingRepository::class, EloquentGeneralSettingRepository::class);
+
+        $this->app->singleton(AlertDispatcher::class, function (): AlertDispatcher {
+            $config = $this->config();
+            $rules = $config->get('audit-log.alerts.rules', []);
+
+            return new AlertDispatcher(
+                new AlertRuleMatcher,
+                $this->app->make(EventDispatcher::class),
+                $this->app->make(Mailer::class),
+                is_array($rules) ? array_values(array_filter($rules, is_array(...))) : [],
+                $this->stringList($config->get('audit-log.alerts.mail_to', [])),
+            );
+        });
 
         $this->app->singleton(AuditRowWriter::class, function (): AuditRowWriter {
             return new AuditRowWriter(

@@ -131,6 +131,19 @@ return [
         'queue' => env('AUDIT_LOG_WRITE_QUEUE'),
     ],
 
+    'alerts' => [
+        // Rules that fire the SensitiveChangeRecorded event (and mail the
+        // recipients below) when a matching change is recorded.
+        //
+        //   ['model' => App\Models\User::class, 'attributes' => ['role'], 'events' => ['updated']],
+        //
+        // Empty attributes/events mean "any".
+        'rules' => [],
+
+        // Recipients for the built-in mail alert. Empty = event only.
+        'mail_to' => [],
+    ],
+
     'integrity' => [
         // Chain every stored record to the previous one with a sha256 hash, so
         // audit-log:verify can prove the history was not edited or thinned out.

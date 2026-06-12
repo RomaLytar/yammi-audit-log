@@ -431,9 +431,6 @@ final class AuditLogServiceProvider extends ServiceProvider
     }
 
     /**
-     * @return list<string>
-     */
-    /**
      * @return list<int>
      */
     private function hourRange(mixed $value): array
@@ -454,6 +451,9 @@ final class AuditLogServiceProvider extends ServiceProvider
         return $from >= 0 && $from <= 23 && $to >= 0 && $to <= 23 ? [$from, $to] : [];
     }
 
+    /**
+     * @return list<string>
+     */
     private function stringList(mixed $value): array
     {
         if (! is_array($value)) {

@@ -72,7 +72,7 @@ final class AuditLogManager
 
     /**
      * The dashboard list: filtered, paginated changes plus the filter options.
-     * Filters: model, event, actor_type, actor, from, to, search, page.
+     * Filters: model, event, actor_type, actor, id, from, to, search, page.
      *
      * @param  array<string, mixed>  $filters
      */

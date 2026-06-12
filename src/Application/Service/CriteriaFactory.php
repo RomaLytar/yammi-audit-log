@@ -32,6 +32,7 @@ final class CriteriaFactory
             to: $to,
             onlyNoise: $onlyNoise,
             search: $filters->search !== '' ? $filters->search : null,
+            auditableId: $filters->auditableId !== '' ? $filters->auditableId : null,
         );
     }
 

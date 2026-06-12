@@ -88,7 +88,7 @@
                 @if ($state->lastChangeAt() !== null)
                     <span>last change <span class="font-medium text-foreground font-mono">{{ $state->lastChangeAt() }}</span></span>
                 @endif
-                <a href="{{ route('audit-log.dashboard', ['model' => $type, 'search' => $id]) }}" class="text-brand hover:underline inline-flex items-center gap-1">
+                <a href="{{ route('audit-log.dashboard', ['type' => $type, 'id' => $id, 'from' => $rangeFrom, 'to' => $rangeTo]) }}" class="text-brand hover:underline inline-flex items-center gap-1">
                     <i data-lucide="list" class="text-[12px]"></i> View this record's changes
                 </a>
             </div>
@@ -122,5 +122,45 @@
                 </p>
             </div>
         </div>
+
+        @if ($history !== [])
+            <div class="mt-6">
+                <h2 class="text-sm font-semibold flex items-center gap-2 mb-3">
+                    <i data-lucide="layers" class="text-brand text-[15px]"></i> Applied history
+                    <span class="text-xs font-normal text-muted-foreground">— the {{ count($history) }} {{ \Illuminate\Support\Str::plural('change', count($history)) }} folded into this state, oldest first</span>
+                </h2>
+                <ol class="relative border-s border-border ml-3">
+                    @foreach ($history as $entry)
+                        @php
+                            $dots = ['created' => 'bg-success', 'updated' => 'bg-info', 'deleted' => 'bg-destructive', 'restored' => 'bg-warning'];
+                        @endphp
+                        <li class="mb-4 ms-6">
+                            <span class="absolute -start-[7px] mt-1.5 h-3.5 w-3.5 rounded-full ring-4 ring-background {{ $dots[$entry->event()] ?? 'bg-muted-foreground' }}"></span>
+                            <div class="rounded-xl border border-border bg-card p-4 shadow-xs">
+                                <div class="flex items-center justify-between gap-3 flex-wrap">
+                                    <div class="flex items-center gap-2 min-w-0">
+                                        @include('audit-log::partials.event-badge', ['event' => $entry->event()])
+                                        @include('audit-log::partials.actor-badge', ['type' => $entry->actorType(), 'label' => $entry->actorLabel()])
+                                    </div>
+                                    <span class="text-[11px] font-mono text-muted-foreground whitespace-nowrap">{{ $entry->occurredAt('Y-m-d H:i:s') }}</span>
+                                </div>
+                                @if ($entry->changeCount() > 0)
+                                    <div class="mt-2 flex flex-wrap gap-x-4 gap-y-1 text-xs font-mono">
+                                        @foreach ($entry->changes() as $change)
+                                            <span class="break-all">
+                                                <span class="text-foreground font-medium">{{ $change['field'] }}:</span>
+                                                <span class="text-destructive">{{ $change['old'] }}</span>
+                                                <i data-lucide="arrow-right" class="inline text-[11px] text-muted-foreground"></i>
+                                                <span class="text-success">{{ $change['new'] }}</span>
+                                            </span>
+                                        @endforeach
+                                    </div>
+                                @endif
+                            </div>
+                        </li>
+                    @endforeach
+                </ol>
+            </div>
+        @endif
     @endif
 @endsection

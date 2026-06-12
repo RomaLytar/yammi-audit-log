@@ -246,6 +246,7 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
     private function matches(AuditRecord $record, AuditCriteria $criteria): bool
     {
         return $this->same($criteria->auditableType, $record->auditable()->type)
+            && $this->same($criteria->auditableId, $record->auditable()->id)
             && $this->same($criteria->event, $record->event())
             && $this->same($criteria->actorType, $record->actor()->type)
             && $this->contains($criteria->actorLabel, $record->actor()->displayLabel())

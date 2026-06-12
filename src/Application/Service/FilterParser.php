@@ -32,7 +32,7 @@ final class FilterParser
     ) {}
 
     /**
-     * Recognised keys: model, event, actor_type, actor, from, to, search, page.
+     * Recognised keys: model, event, actor_type, actor, id, from, to, search, page.
      *
      * @param  array<string, mixed>  $filters
      */
@@ -53,6 +53,7 @@ final class FilterParser
             page: $this->page($filters['page'] ?? null),
             search: $this->text($filters['search'] ?? null),
             defaultRange: $rawFrom === '' && $rawTo === '',
+            auditableId: $this->identifier($filters['id'] ?? null),
         );
     }
 
@@ -99,6 +100,15 @@ final class FilterParser
     private function text(mixed $value): string
     {
         return is_string($value) ? mb_substr($value, 0, self::MAX_TEXT) : '';
+    }
+
+    private function identifier(mixed $value): string
+    {
+        if (is_int($value)) {
+            $value = (string) $value;
+        }
+
+        return is_string($value) ? mb_substr(trim($value), 0, 64) : '';
     }
 
     /**

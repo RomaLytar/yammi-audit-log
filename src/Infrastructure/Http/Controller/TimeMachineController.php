@@ -4,17 +4,24 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Http\Controller;
 
+use DateInterval;
+use DateTimeImmutable;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
+use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
 use Yammi\AuditLog\Infrastructure\Support\AuditTimezone;
+use Yammi\AuditLog\Presentation\ViewModel\TimelineEntryViewModel;
 use Yammi\AuditLog\Presentation\ViewModel\TimeMachineViewModel;
 
 /** @internal */
 final class TimeMachineController
 {
+    private const HISTORY_DISPLAY_LIMIT = 100;
+
     public function __construct(
         private readonly ViewFactory $view,
         private readonly AuditLogManager $manager,
@@ -34,9 +41,21 @@ final class TimeMachineController
         $id = trim((string) ($validated['id'] ?? ''));
         $at = trim((string) ($validated['at'] ?? ''));
 
-        $state = $type !== '' && $id !== ''
-            ? new TimeMachineViewModel($this->manager->stateAt($type, $id, $at === '' ? null : $at), $this->timezone->name())
-            : null;
+        $state = null;
+        $history = [];
+        $rangeFrom = null;
+        $rangeTo = null;
+
+        if ($type !== '' && $id !== '') {
+            $stateData = $this->manager->stateAt($type, $id, $at === '' ? null : $at);
+            $state = new TimeMachineViewModel($stateData, $this->timezone->name());
+
+            $moment = new DateTimeImmutable($stateData->at);
+            $rangeTo = $moment->format('Y-m-d');
+            $rangeFrom = $moment->sub(new DateInterval('P364D'))->format('Y-m-d');
+
+            $history = $this->history($type, $id, $moment);
+        }
 
         return $this->view->make('audit-log::time-machine', [
             'models' => $this->query->distinctModels(),
@@ -44,6 +63,34 @@ final class TimeMachineController
             'type' => $type,
             'id' => $id,
             'at' => $at,
+            'history' => $history,
+            'rangeFrom' => $rangeFrom,
+            'rangeTo' => $rangeTo,
         ]);
+    }
+
+    /**
+     * @return list<TimelineEntryViewModel>
+     */
+    private function history(string $type, string $id, DateTimeImmutable $until): array
+    {
+        $entries = [];
+
+        $records = $this->query->historyFor(
+            AuditableReference::to($type, $id),
+            $until,
+            self::HISTORY_DISPLAY_LIMIT,
+        );
+
+        foreach ($records as $record) {
+            $entries[] = new TimelineEntryViewModel(
+                TimelineEntryData::fromRecord($record),
+                0,
+                null,
+                $this->timezone->name(),
+            );
+        }
+
+        return $entries;
     }
 }

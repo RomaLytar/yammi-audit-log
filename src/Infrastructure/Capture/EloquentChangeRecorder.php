@@ -9,6 +9,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Action\RecordChangeAction;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
+use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
 
 /** @internal */
 final class EloquentChangeRecorder
@@ -18,6 +19,7 @@ final class EloquentChangeRecorder
         private readonly ChangeDataFactory $factory,
         private readonly AuditableGuard $guard,
         private readonly LoggerInterface $logger,
+        private readonly AlertDispatcher $alerts,
     ) {}
 
     /**
@@ -38,7 +40,11 @@ final class EloquentChangeRecorder
         }
 
         try {
-            ($this->action)($this->factory->make($model, $type));
+            $record = ($this->action)($this->factory->make($model, $type));
+
+            if ($record !== null) {
+                $this->alerts->inspect($record);
+            }
         } catch (Throwable $exception) {
             $this->logger->error(
                 'Audit capture failed: '.$exception->getMessage(),

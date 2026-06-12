@@ -66,6 +66,14 @@ final class TimelineEntryViewModel
         return $this->entry->isNoise;
     }
 
+    /**
+     * @return array<string, string>
+     */
+    public function requestContext(): array
+    {
+        return $this->entry->context;
+    }
+
     public function correlationId(): ?string
     {
         return $this->entry->correlationId;

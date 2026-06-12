@@ -12,6 +12,9 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 /** @internal */
 final class RecordChangeContext
 {
+    /**
+     * @param  array<string, string>  $requestContext
+     */
     public function __construct(
         public readonly ChangeData $change,
         public readonly Diff $diff,
@@ -19,6 +22,7 @@ final class RecordChangeContext
         public readonly ?Actor $origin,
         public readonly LabelSnapshot $labels,
         public readonly bool $isNoise = false,
+        public readonly array $requestContext = [],
     ) {}
 
     public static function start(ChangeData $change): self
@@ -28,21 +32,29 @@ final class RecordChangeContext
 
     public function withDiff(Diff $diff): self
     {
-        return new self($this->change, $diff, $this->actor, $this->origin, $this->labels, $this->isNoise);
+        return new self($this->change, $diff, $this->actor, $this->origin, $this->labels, $this->isNoise, $this->requestContext);
     }
 
     public function withNoise(bool $isNoise): self
     {
-        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $isNoise);
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $isNoise, $this->requestContext);
     }
 
     public function withActor(Actor $actor, ?Actor $origin): self
     {
-        return new self($this->change, $this->diff, $actor, $origin, $this->labels, $this->isNoise);
+        return new self($this->change, $this->diff, $actor, $origin, $this->labels, $this->isNoise, $this->requestContext);
     }
 
     public function withLabels(LabelSnapshot $labels): self
     {
-        return new self($this->change, $this->diff, $this->actor, $this->origin, $labels, $this->isNoise);
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $labels, $this->isNoise, $this->requestContext);
+    }
+
+    /**
+     * @param  array<string, string>  $requestContext
+     */
+    public function withRequestContext(array $requestContext): self
+    {
+        return new self($this->change, $this->diff, $this->actor, $this->origin, $this->labels, $this->isNoise, $requestContext);
     }
 }

@@ -16,6 +16,7 @@ final class AuditRecordRow
     /**
      * @param  array<string, array{old: scalar|array<array-key, mixed>|null, new: scalar|array<array-key, mixed>|null}>  $changes
      * @param  array<string, string>  $labels
+     * @param  array<string, string>  $context
      */
     public function __construct(
         public readonly string $auditableType,
@@ -32,6 +33,7 @@ final class AuditRecordRow
         public readonly ?string $correlationId,
         public readonly bool $isNoise,
         public readonly string $occurredAt,
+        public readonly array $context = [],
     ) {}
 
     /**
@@ -55,6 +57,7 @@ final class AuditRecordRow
             'is_noise' => $this->isNoise,
             'occurred_at' => $this->occurredAt,
             'created_at' => $this->occurredAt,
+            'context' => $this->context,
         ];
     }
 }

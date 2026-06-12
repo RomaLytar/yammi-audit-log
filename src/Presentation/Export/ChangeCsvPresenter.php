@@ -83,6 +83,7 @@ final class ChangeCsvPresenter
             'is_noise' => $entry->isNoise,
             'changes' => $entry->changes,
             'labels' => $entry->labels,
+            'context' => $entry->context,
         ];
     }
 }

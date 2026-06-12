@@ -119,6 +119,13 @@
                                     </span>
                                 </div>
                             @endif
+                            @if ($entry->requestContext() !== [])
+                                <div class="mb-3 flex flex-wrap items-center gap-x-4 gap-y-1 text-[11px] text-muted-foreground font-mono">
+                                    @foreach ($entry->requestContext() as $contextKey => $contextValue)
+                                        <span class="break-all"><span class="text-foreground/70 font-sans font-medium">{{ $contextKey }}:</span> {{ $contextValue }}</span>
+                                    @endforeach
+                                </div>
+                            @endif
                             @if ($entry->changeCount() === 0)
                                 <p class="text-xs text-muted-foreground">No field-level changes recorded.</p>
                             @else

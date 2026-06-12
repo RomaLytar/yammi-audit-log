@@ -117,6 +117,15 @@ final class SettingRegistry
                 description: 'Comma-separated attributes dropped from every diff. An update touching only these is flagged as noise.',
             ),
             new SettingDefinitionData(
+                group: self::GROUP_CAPTURE,
+                key: 'request_context',
+                configPath: 'audit-log.capture.request_context',
+                type: SettingType::Boolean,
+                default: false,
+                label: 'Request metadata',
+                description: 'Attach ip, url, method and user agent to changes captured during HTTP requests. This is PII — retention applies to it like to everything else.',
+            ),
+            new SettingDefinitionData(
                 group: self::GROUP_REDACTION,
                 key: 'redaction_keys',
                 configPath: 'audit-log.redaction.keys',

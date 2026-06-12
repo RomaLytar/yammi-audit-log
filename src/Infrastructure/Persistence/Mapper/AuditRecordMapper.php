@@ -36,6 +36,7 @@ final class AuditRecordMapper
             correlationId: $record->correlationId(),
             isNoise: $record->isNoise(),
             occurredAt: $record->occurredAt()->format('Y-m-d H:i:s'),
+            context: $record->context(),
         );
     }
 
@@ -72,6 +73,7 @@ final class AuditRecordMapper
             correlationId: $this->nullableString($model->getAttribute('correlation_id')),
             isNoise: (bool) $model->getAttribute('is_noise'),
             id: (int) $model->getAttribute('id'),
+            context: $this->stringMap($model->getAttribute('context')),
         );
     }
 
@@ -91,6 +93,26 @@ final class AuditRecordMapper
         }
 
         return Diff::fromFields($fields);
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function stringMap(mixed $values): array
+    {
+        if (! is_array($values)) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($values as $key => $value) {
+            if (is_string($value) && $value !== '') {
+                $out[(string) $key] = $value;
+            }
+        }
+
+        return $out;
     }
 
     private function labels(mixed $labels): LabelSnapshot

@@ -27,6 +27,7 @@ use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveActorStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
+use Yammi\AuditLog\Application\Pipeline\Stage\ResolveRequestContextStage;
 use Yammi\AuditLog\Application\Playground\MethodCatalog;
 use Yammi\AuditLog\Application\Service\CriteriaFactory;
 use Yammi\AuditLog\Application\Service\FilterParser;
@@ -49,6 +50,7 @@ use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
 use Yammi\AuditLog\Infrastructure\Console\ToggleUiCommand;
 use Yammi\AuditLog\Infrastructure\Console\TransferAuditDataCommand;
 use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
+use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
@@ -112,6 +114,7 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->app->singleton(ActorContext::class);
         $this->app->singleton(CorrelationContext::class);
+        $this->app->singleton(RequestContextHolder::class);
         $this->app->singleton(CorrelationResolver::class, ContextCorrelationResolver::class);
 
         foreach ([
@@ -192,6 +195,7 @@ final class AuditLogServiceProvider extends ServiceProvider
                 $this->app->make(ComputeDiffStage::class),
                 $this->app->make(ResolveActorStage::class),
                 $this->app->make(ResolveLabelsStage::class),
+                $this->app->make(ResolveRequestContextStage::class),
             ]);
         });
     }

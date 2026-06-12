@@ -7,9 +7,9 @@
 [![Tested on](https://img.shields.io/badge/tests-PHP%208.1%20%7C%208.2%20%7C%208.3-777BB4?logo=php&logoColor=white)](https://github.com/RomaLytar/yammi-audit-Log/actions/workflows/ci.yml)
 [![License](https://img.shields.io/packagist/l/romalytar/yammi-audit-log-laravel.svg)](https://packagist.org/packages/romalytar/yammi-audit-log-laravel)
 
-**The audit log that answers not only *what* changed, but *who* really changed it — and why.** Every Eloquent create/update/delete/restore is recorded with a real actor (user, queued job, Artisan command, scheduler), the person who *started* the cascade, field-level diffs with secret redaction, and a correlation id that ties a whole request → job → job chain together. The only Laravel audit log with **verifiable history integrity**: hash-chain every record and prove nobody edited the past.
+**The audit log that answers not only *what* changed, but *who* really changed it, and why.** Every Eloquent create/update/delete/restore is recorded with a real actor (user, queued job, Artisan command, scheduler), the person who *started* the cascade, field-level diffs with secret redaction, and a correlation id that ties a whole request → job → job chain together. The only Laravel audit log with **verifiable history integrity**: hash-chain every record and prove nobody edited the past.
 
-Zero per-model setup. Install, migrate, done — the dashboard is optional and off by default.
+Zero per-model setup. Install, migrate, done, the dashboard is optional and off by default.
 
 ![Audit log dashboard](screenshots/dashboard.png)
 
@@ -19,11 +19,11 @@ Zero per-model setup. Install, migrate, done — the dashboard is optional and o
 composer require romalytar/yammi-audit-log-laravel
 php artisan migrate
 
-# optional — only if you want the bundled admin dashboard at /audit-log:
+# optional, only if you want the bundled admin dashboard at /audit-log:
 php artisan audit-log:ui enable
 ```
 
-That's it — changes are being recorded. **No publishing needed:** the package config and migrations are auto-discovered and loaded automatically; defaults are safe (UI off, 180-day retention, secrets redacted). Run `vendor:publish` only when you want to customize the config or the views — see [Publishing assets](#publishing-assets).
+That's it, changes are being recorded. **No publishing needed:** the package config and migrations are auto-discovered and loaded automatically; defaults are safe (UI off, 180-day retention, secrets redacted). Run `vendor:publish` only when you want to customize the config or the views, see [Publishing assets](#publishing-assets).
 
 ## Requirements
 
@@ -33,18 +33,18 @@ That's it — changes are being recorded. **No publishing needed:** the package 
 
 ## Features
 
-- [Actor attribution & change chains](#actor-attribution--change-chains) — the moat: who did it, even through the queue
-- [Record view](#record-view) — one page per record: history + everything connected to it
-- [Time machine](#time-machine) — the exact state a record had at any past moment
-- [Noise diagnostics](#noise-diagnostics) — double writes flagged, not hidden
-- [Statistics](#statistics) — volume, breakdowns, 30-day activity heatmap
-- [Anomaly detection](#anomaly-detection) — change bursts, mass deletions, off-hours activity
-- [Alerts: Slack, webhook, mail](#alerts-slack-webhook-mail) — hear about sensitive changes instantly
-- [GDPR & compliance](#gdpr--compliance) — subject access reports, retention, archive, redaction
-- [Tamper evidence](#tamper-evidence) — hash-chained history, `audit-log:verify`
-- [Multi-tenancy](#multi-tenancy) — tenant isolation out of the box
-- [Embed it your way](#embed-it-your-way) — facades for everything, JSON API, playground
-- [Settings UI](#settings-ui) — tune the package without a redeploy
+- [Actor attribution & change chains](#actor-attribution--change-chains), the moat: who did it, even through the queue
+- [Record view](#record-view), one page per record: history + everything connected to it
+- [Time machine](#time-machine), the exact state a record had at any past moment
+- [Noise diagnostics](#noise-diagnostics), double writes flagged, not hidden
+- [Statistics](#statistics), volume, breakdowns, 30-day activity heatmap
+- [Anomaly detection](#anomaly-detection), change bursts, mass deletions, off-hours activity
+- [Alerts: Slack, webhook, mail](#alerts-slack-webhook-mail), hear about sensitive changes instantly
+- [GDPR & compliance](#gdpr--compliance), subject access reports, retention, archive, redaction
+- [Tamper evidence](#tamper-evidence), hash-chained history, `audit-log:verify`
+- [Multi-tenancy](#multi-tenancy), tenant isolation out of the box
+- [Embed it your way](#embed-it-your-way), facades for everything, JSON API, playground
+- [Settings UI](#settings-ui), tune the package without a redeploy
 
 ---
 
@@ -52,8 +52,8 @@ That's it — changes are being recorded. **No publishing needed:** the package 
 
 Most audit packages collapse a status flip by a queued job, a command or the scheduler into an anonymous `null`. Here attribution is first-class:
 
-- **Actor types:** `user`, `job`, `command`, `scheduler`, `system` — resolved by a chain of providers you can extend.
-- **Origin survives the queue.** A job dispatched by a user keeps that user attached — serialized into the queue payload, proven by tests against a real database queue worker.
+- **Actor types:** `user`, `job`, `command`, `scheduler`, `system`, resolved by a chain of providers you can extend.
+- **Origin survives the queue.** A job dispatched by a user keeps that user attached, serialized into the queue payload, proven by tests against a real database queue worker.
 - **Correlation per unit of work.** Every change made by one request, command or job cascade shares one id; the trace page draws the cascade as a ladder, indented by job nesting depth. Coming from a record? The entry you came from is highlighted and scrolled into view.
 - **Impersonation-proof.** When an admin works as another user (login-as), the label names both: `Jane Doe (impersonated by Support Admin)`. Works with lab404/laravel-impersonate out of the box; session keys are configurable.
 
@@ -63,7 +63,7 @@ Most audit packages collapse a status flip by a queued job, a command or the sch
 
 ## Record view
 
-One page per record: its full history on the left, every *connected* change on the right — records changed by the **same action** (correlation chains) and diffs of other models whose `<model>_id` **points at this record**. Honest data only: no guessed relationships.
+One page per record: its full history on the left, every *connected* change on the right, records changed by the **same action** (correlation chains) and diffs of other models whose `<model>_id` **points at this record**. Honest data only: no guessed relationships.
 
 ```php
 $view = AuditLog::recordView(Order::class, 42);
@@ -75,7 +75,7 @@ $view = AuditLog::recordView(Order::class, 42);
 
 ## Time machine
 
-Pick a record and a date — see the exact attribute state it had at that moment, folded from its recorded diffs, with the applied history underneath. Strictly read-only: this package shows real history, it never restores or rewrites anything.
+Pick a record and a date, see the exact attribute state it had at that moment, folded from its recorded diffs, with the applied history underneath. Strictly read-only: this package shows real history, it never restores or rewrites anything.
 
 ```php
 $state = AuditLog::stateAt(Order::class, 42, '2026-03-03');
@@ -91,7 +91,7 @@ if ($state->existed) {
 
 ## Noise diagnostics
 
-An update that changed nothing real — only ignored attributes such as timestamps — is recorded and flagged as a no-op. These usually mean the same record is saved twice. The Noise page lists them and the nav badge counts them, so double writes are easy to hunt down instead of silently inflating your log.
+An update that changed nothing real, only ignored attributes such as timestamps, is recorded and flagged as a no-op. These usually mean the same record is saved twice. The Noise page lists them and the nav badge counts them, so double writes are easy to hunt down instead of silently inflating your log.
 
 ![Noise page](screenshots/noise.png)
 
@@ -121,7 +121,7 @@ Run on demand from the **Anomalies** page (1 hour – 30 days window), from the 
 
 ## Alerts: Slack, webhook, mail
 
-Declare rules — model, optionally attributes and events — and a matching change fires everywhere at once:
+Declare rules, model, optionally attributes and events, and a matching change fires everywhere at once:
 
 - **Slack** incoming webhook: Block Kit message with the diff summary and a deep link to the filtered feed.
 - **Generic JSON webhook** for incident routers and automation hubs, signed with HMAC-SHA256 (`X-Audit-Log-Signature`) so receivers can verify authenticity. One retry on 5xx.
@@ -146,22 +146,22 @@ Every channel is fail-soft: a dead webhook never breaks the write path it piggyb
 
 ## GDPR & compliance
 
-- **Subject access reports** (GDPR Art. 15) in one command — every change made *to* the record plus every change made *by* it:
+- **Subject access reports** (GDPR Art. 15) in one command, every change made *to* the record plus every change made *by* it:
 
   ```bash
   php artisan audit-log:subject-report "App\Models\User" 5 --format=html
   ```
 
-- **Retention** on by default (180 days, clamped 7–9999) with a scheduled prune — audit data is PII.
+- **Retention** on by default (180 days, clamped 7–9999) with a scheduled prune, audit data is PII.
 - **Archive before delete:** `audit-log:archive --then-prune` writes expiring records as NDJSON to any filesystem disk (S3 included).
-- **Recursive secret redaction** before anything touches the database: `password`, `token`, `api_key`, … — including inside nested JSON values. Configurable patterns and placeholder.
+- **Recursive secret redaction** before anything touches the database: `password`, `token`, `api_key`, …, including inside nested JSON values. Configurable patterns and placeholder.
 - **Export** of any filtered view as CSV/JSON, capped by rows and a one-year range, with CSV-injection protection.
 
 ---
 
 ## Tamper evidence
 
-Turn on `AUDIT_LOG_INTEGRITY=true` and every record is hash-chained (SHA-256) to the previous one inside a locked transaction — concurrent writers cannot fork the chain.
+Turn on `AUDIT_LOG_INTEGRITY=true` and every record is hash-chained (SHA-256) to the previous one inside a locked transaction, concurrent writers cannot fork the chain.
 
 ```bash
 php artisan audit-log:verify
@@ -189,7 +189,7 @@ final class CurrentTenantResolver implements \Yammi\AuditLog\Application\Contrac
 'tenancy' => ['resolver' => CurrentTenantResolver::class],
 ```
 
-Every new record is stamped with the tenant **at capture time** (it survives the queue), and every read — dashboard, facades, JSON API, exports — is scoped to the current tenant automatically. Retention, archive and integrity verification always run across all tenants. Returning `null` means single-tenant: nothing changes.
+Every new record is stamped with the tenant **at capture time** (it survives the queue), and every read, dashboard, facades, JSON API, exports, is scoped to the current tenant automatically. Retention, archive and integrity verification always run across all tenants. Returning `null` means single-tenant: nothing changes.
 
 ---
 
@@ -218,7 +218,7 @@ AuditLog::record(...);                    // manual write for mass updates / raw
 
 ## Settings UI
 
-Operational config lives in the database so operators can tune the package without a redeploy: capture toggle, retention and prune schedule, async writes, integrity, ignored attributes, redaction, alert channels, anomaly thresholds, display timezone and more — across 7 groups, with built-in documentation covering every feature.
+Operational config lives in the database so operators can tune the package without a redeploy: capture toggle, retention and prune schedule, async writes, integrity, ignored attributes, redaction, alert channels, anomaly thresholds, display timezone and more, across 7 groups, with built-in documentation covering every feature.
 
 Resolution order: **DB row → config value → package default**. Bootstrap-critical values (database connection, route path, middleware, gate) and secrets stay in `config`/`.env` on purpose.
 
@@ -244,7 +244,7 @@ class Order extends Model implements \Yammi\AuditLog\Contracts\ShouldAudit {}
 
 ### Honest limitations
 
-Eloquent events never fire for mass `Query Builder ->update()`, raw SQL or pivot `sync()` — no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):
+Eloquent events never fire for mass `Query Builder ->update()`, raw SQL or pivot `sync()`, no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):
 
 ```php
 Order::where('status', 'pending')->update(['status' => 'cancelled']);
@@ -328,13 +328,13 @@ php artisan vendor:publish --tag=audit-log-migrations
 
 ## Security
 
-- **Secrets never reach the database.** Recursive redaction runs before the diff is stored; changed secret values are still audited — as `[redacted]`.
+- **Secrets never reach the database.** Recursive redaction runs before the diff is stored; changed secret values are still audited, as `[redacted]`.
 - **Fail-closed write path.** If the audit insert fails, the error goes to your log and your request continues untouched.
 - **UI off by default**, behind configurable middleware (`web`, `auth`), an optional Gate and a rate limit.
 - **Read-only JSON API**, off by default, with host-chosen auth; the one write method (`record()`) is deliberately PHP-only.
 - **Signed outbound webhooks** (HMAC-SHA256) so receivers can verify alerts are genuine.
 - **Strict input parsing** everywhere: filters validated and bounded (max one-year range), LIKE patterns escaped, route params constrained, CSV export neutralises formula injection.
-- **Retention is on by default** — audit data is PII.
+- **Retention is on by default**, audit data is PII.
 
 ---
 

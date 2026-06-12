@@ -46,6 +46,19 @@ final class TimelineEntryViewModel
         return $this->entry->auditableId;
     }
 
+    public function recordId(): ?int
+    {
+        return $this->entry->id;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public function changedFieldNames(): array
+    {
+        return array_map(strval(...), array_keys($this->entry->changes));
+    }
+
     public function event(): string
     {
         return $this->entry->event;

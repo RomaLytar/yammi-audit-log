@@ -2,8 +2,10 @@
 
 [![Latest Version on Packagist](https://img.shields.io/packagist/v/romalytar/yammi-audit-log-laravel.svg)](https://packagist.org/packages/romalytar/yammi-audit-log-laravel)
 [![Total Downloads](https://img.shields.io/packagist/dt/romalytar/yammi-audit-log-laravel.svg)](https://packagist.org/packages/romalytar/yammi-audit-log-laravel)
+[![CI](https://github.com/RomaLytar/yammi-audit-Log/actions/workflows/ci.yml/badge.svg?branch=dev)](https://github.com/RomaLytar/yammi-audit-Log/actions/workflows/ci.yml)
+[![Coverage](https://img.shields.io/badge/coverage-95.5%25-brightgreen)](https://github.com/RomaLytar/yammi-audit-Log/actions/workflows/ci.yml)
+[![Tested on](https://img.shields.io/badge/tests-PHP%208.1%20%7C%208.2%20%7C%208.3-777BB4?logo=php&logoColor=white)](https://github.com/RomaLytar/yammi-audit-Log/actions/workflows/ci.yml)
 [![License](https://img.shields.io/packagist/l/romalytar/yammi-audit-log-laravel.svg)](https://packagist.org/packages/romalytar/yammi-audit-log-laravel)
-[![PHP Version](https://img.shields.io/packagist/php-v/romalytar/yammi-audit-log-laravel.svg)](https://packagist.org/packages/romalytar/yammi-audit-log-laravel)
 
 **The audit log that answers not only *what* changed, but *who* really changed it — and why.** Every Eloquent create/update/delete/restore is recorded with a real actor (user, queued job, Artisan command, scheduler), the person who *started* the cascade, field-level diffs with secret redaction, and a correlation id that ties a whole request → job → job chain together. The only Laravel audit log with **verifiable history integrity**: hash-chain every record and prove nobody edited the past.
 
@@ -16,15 +18,12 @@ Zero per-model setup. Install, migrate, done — the dashboard is optional and o
 ```bash
 composer require romalytar/yammi-audit-log-laravel
 php artisan migrate
+
+# optional — only if you want the bundled admin dashboard at /audit-log:
+php artisan audit-log:ui enable
 ```
 
-That's it — changes are being recorded. Want the bundled dashboard?
-
-```bash
-php artisan audit-log:ui enable   # serves /audit-log (behind web + auth)
-```
-
-Config is optional; defaults are safe (UI off, 180-day retention, secrets redacted).
+That's it — changes are being recorded. **No publishing needed:** the package config and migrations are auto-discovered and loaded automatically; defaults are safe (UI off, 180-day retention, secrets redacted). Run `vendor:publish` only when you want to customize the config or the views — see [Publishing assets](#publishing-assets).
 
 ## Requirements
 

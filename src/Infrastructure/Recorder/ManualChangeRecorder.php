@@ -10,6 +10,7 @@ use Yammi\AuditLog\Application\DTO\ChangeData;
 use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
+use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
 
 /**
  * Records a change that Eloquent events cannot see — mass updates, raw SQL,
@@ -22,6 +23,7 @@ final class ManualChangeRecorder
 {
     public function __construct(
         private readonly RecordChangeAction $action,
+        private readonly AlertDispatcher $alerts,
     ) {}
 
     /**
@@ -47,6 +49,12 @@ final class ManualChangeRecorder
 
         $record = ($this->action)(new ChangeData($class, $key, $type, $before, $after));
 
-        return $record === null ? null : TimelineEntryData::fromRecord($record);
+        if ($record === null) {
+            return null;
+        }
+
+        $this->alerts->inspect($record);
+
+        return TimelineEntryData::fromRecord($record);
     }
 }

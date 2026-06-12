@@ -5,12 +5,16 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Capture;
 
 use DateTimeImmutable;
+use Illuminate\Contracts\Events\Dispatcher;
+use Illuminate\Contracts\Mail\Mailer;
 use PHPUnit\Framework\TestCase;
 use Yammi\AuditLog\Application\Action\RecordChangeAction;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
+use Yammi\AuditLog\Application\Service\AlertRuleMatcher;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
+use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\ChangeDataFactory;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
@@ -102,7 +106,13 @@ final class EloquentChangeRecorderTest extends TestCase
             new FixedCorrelationResolver,
         );
 
-        return new EloquentChangeRecorder($action, new ChangeDataFactory, new AuditableGuard([]), $this->logger);
+        $alerts = new AlertDispatcher(
+            new AlertRuleMatcher,
+            $this->createStub(Dispatcher::class),
+            $this->createStub(Mailer::class),
+        );
+
+        return new EloquentChangeRecorder($action, new ChangeDataFactory, new AuditableGuard([]), $this->logger, $alerts);
     }
 
     private function changedPost(): Post

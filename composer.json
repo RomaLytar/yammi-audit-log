@@ -16,6 +16,7 @@
         "versioning",
         "eloquent",
         "compliance",
+        "gdpr",
         "dashboard"
     ],
     "homepage": "https://github.com/RomaLytar/yammi-audit-Log",

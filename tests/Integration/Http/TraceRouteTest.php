@@ -81,6 +81,8 @@ final class TraceRouteTest extends TestCase
         $response->assertOk();
         $response->assertSee('al-trace-diff-0');
         $response->assertSee('Click an entry to see its field-level changes');
+        $response->assertSee('Expand all');
+        $response->assertSee('__alTraceToggleAll', false);
     }
 
     public function test_an_unknown_correlation_returns_404(): void

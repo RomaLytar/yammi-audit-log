@@ -149,6 +149,26 @@ return [
         'mail_to' => [],
     ],
 
+    'anomalies' => [
+        // Look-back window in minutes for audit-log:detect-anomalies.
+        'window_minutes' => 60,
+
+        // Flag an actor with more changes than this inside the window. 0 = rule off.
+        'rate_threshold' => 200,
+
+        // Flag an actor deleting more records than this inside the window. 0 = rule off.
+        'delete_threshold' => 25,
+
+        // Flag user changes recorded between these hours (inclusive, 0-23),
+        // e.g. [0, 5] for night activity; [22, 5] wraps midnight. Empty = rule off.
+        'off_hours' => [],
+
+        // Cron expression to run the scan automatically, e.g. '0 * * * *'.
+        // Findings fire the AnomalyDetected event and mail alerts.mail_to.
+        // Empty = run the command yourself.
+        'cron' => env('AUDIT_LOG_ANOMALY_CRON'),
+    ],
+
     'integrity' => [
         // Chain every stored record to the previous one with a sha256 hash, so
         // audit-log:verify can prove the history was not edited or thinned out.

@@ -47,12 +47,14 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\ImpersonationAwareUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
 use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
+use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
 use Yammi\AuditLog\Infrastructure\Capture\ChangeDataFactory;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
 use Yammi\AuditLog\Infrastructure\Console\ArchiveAuditLogCommand;
+use Yammi\AuditLog\Infrastructure\Console\DetectAnomaliesCommand;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
 use Yammi\AuditLog\Infrastructure\Console\SubjectReportCommand;
 use Yammi\AuditLog\Infrastructure\Console\ToggleUiCommand;
@@ -212,6 +214,17 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->singleton(AnomalyScanner::class, function (): AnomalyScanner {
+            $config = $this->config();
+
+            return new AnomalyScanner(
+                $this->app->make(Clock::class),
+                max(0, (int) $config->get('audit-log.anomalies.rate_threshold', 200)),
+                max(0, (int) $config->get('audit-log.anomalies.delete_threshold', 25)),
+                $this->hourRange($config->get('audit-log.anomalies.off_hours', [])),
+            );
+        });
+
         $this->app->singleton(AuditRowWriter::class, function (): AuditRowWriter {
             return new AuditRowWriter(
                 new IntegrityHasher,
@@ -259,7 +272,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->loadViewsFrom(self::VIEWS_PATH, 'audit-log');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class, VerifyIntegrityCommand::class, ArchiveAuditLogCommand::class, SubjectReportCommand::class]);
+            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class, VerifyIntegrityCommand::class, ArchiveAuditLogCommand::class, SubjectReportCommand::class, DetectAnomaliesCommand::class]);
 
             $this->publishes(
                 [self::CONFIG_PATH => config_path('audit-log.php')],
@@ -291,6 +304,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         }
 
         $this->registerRetention($config);
+        $this->registerAnomalyScan($config);
 
         if (! (bool) $config->get('audit-log.enabled', true)) {
             return;
@@ -313,6 +327,22 @@ final class AuditLogServiceProvider extends ServiceProvider
             $schedule->command(PruneAuditLogCommand::class)
                 ->cron((string) $config->get('audit-log.retention.schedule.cron', '0 3 * * *'))
                 ->name('audit-log:prune')
+                ->withoutOverlapping();
+        });
+    }
+
+    private function registerAnomalyScan(ConfigRepository $config): void
+    {
+        $cron = $config->get('audit-log.anomalies.cron');
+
+        if (! is_string($cron) || trim($cron) === '') {
+            return;
+        }
+
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($cron): void {
+            $schedule->command(DetectAnomaliesCommand::class)
+                ->cron(trim($cron))
+                ->name('audit-log:detect-anomalies')
                 ->withoutOverlapping();
         });
     }
@@ -398,6 +428,27 @@ final class AuditLogServiceProvider extends ServiceProvider
         }
 
         return $out;
+    }
+
+    /**
+     * @return list<int>
+     */
+    private function hourRange(mixed $value): array
+    {
+        if (! is_array($value) || count($value) !== 2) {
+            return [];
+        }
+
+        $hours = array_values($value);
+
+        if (! is_numeric($hours[0]) || ! is_numeric($hours[1])) {
+            return [];
+        }
+
+        $from = (int) $hours[0];
+        $to = (int) $hours[1];
+
+        return $from >= 0 && $from <= 23 && $to >= 0 && $to <= 23 ? [$from, $to] : [];
     }
 
     /**

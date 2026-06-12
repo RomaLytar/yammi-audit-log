@@ -7,6 +7,13 @@ namespace Yammi\AuditLog\Tests\Integration\Http;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
+use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
+use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
+use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
+use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
+use Yammi\AuditLog\Domain\Audit\ValueObject\Diff;
+use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 use Yammi\AuditLog\Tests\TestCase;
 
@@ -62,6 +69,27 @@ final class ExportRouteTest extends TestCase
         $response->assertJsonPath('count', 2);
         $response->assertJsonPath('data.0.event', 'updated');
         $response->assertJsonPath('data.0.changes.status.new', 'published');
+    }
+
+    public function test_the_export_never_sweeps_beyond_the_bounded_range(): void
+    {
+        $this->app->make(AuditRecordRepository::class)->save(
+            new AuditRecord(
+                auditable: AuditableReference::to('App\\Models\\Order', 1),
+                event: ChangeType::Created,
+                diff: Diff::between([], ['status' => 'ancient-history']),
+                actor: Actor::system(),
+                origin: null,
+                labels: LabelSnapshot::empty(),
+                occurredAt: new \DateTimeImmutable('-2 years'),
+            ),
+        );
+        Post::create(['title' => 'Hello', 'status' => 'fresh-row']);
+
+        $csv = $this->get('audit-log/export')->streamedContent();
+
+        $this->assertStringContainsString('fresh-row', $csv);
+        $this->assertStringNotContainsString('ancient-history', $csv);
     }
 
     public function test_the_dashboard_links_to_the_export(): void

@@ -31,6 +31,12 @@ final class SettingsHubViewModel
                 'route' => 'audit-log.settings.database',
             ],
             [
+                'name' => 'Documentation',
+                'description' => 'What gets recorded, how every feature works and how to use it — capture, attribution, integrity, alerts, export, API.',
+                'enabled' => true,
+                'route' => 'audit-log.settings.docs',
+            ],
+            [
                 'name' => 'Facade Playground',
                 'description' => 'Every public facade method with a real example — browse the catalog, run a call, see the JSON result.',
                 'enabled' => true,

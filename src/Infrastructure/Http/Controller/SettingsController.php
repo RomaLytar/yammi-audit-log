@@ -44,6 +44,11 @@ final class SettingsController
         ]);
     }
 
+    public function docs(): View
+    {
+        return $this->view->make('audit-log::settings-docs');
+    }
+
     public function update(
         UpdateSettingsRequest $request,
         UpdateSettingsAction $update,

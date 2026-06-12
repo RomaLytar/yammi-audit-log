@@ -22,6 +22,7 @@ Route::get('/trace/{correlation}', TraceController::class)
     ->name('audit-log.trace');
 Route::get('/settings', [SettingsController::class, 'index'])->name('audit-log.settings');
 Route::get('/settings/general', [SettingsController::class, 'general'])->name('audit-log.settings.general');
+Route::get('/settings/docs', [SettingsController::class, 'docs'])->name('audit-log.settings.docs');
 Route::post('/settings/general', [SettingsController::class, 'update'])->name('audit-log.settings.update');
 Route::post('/settings/general/reset', [SettingsController::class, 'reset'])->name('audit-log.settings.reset');
 Route::get('/settings/database', DatabaseSettingsController::class)->name('audit-log.settings.database');

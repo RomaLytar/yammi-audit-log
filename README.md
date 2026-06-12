@@ -8,7 +8,7 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 
 ## Features
 
-- Zero-config capture of Eloquent create/update/delete/restore (opt-out per model).
+- Zero-config capture of Eloquent create/update/delete/restore — or `capture.mode = opt_in` to audit only models implementing `ShouldAudit`. Models narrow their own surface with `public array $auditInclude` / `$auditExclude`.
 - Multi-level actor attribution (user / job / command / scheduler / system) with an immediate-parent origin, so a nested `job → job → job` chain shows who spawned each step.
 - Correlation id per unit of work (request, command or job and the jobs it dispatches), drawn as a cross-model change chain.
 - Field-level diffs with secret redaction; timestamp-only "no-op" writes are recorded but flagged as noise.

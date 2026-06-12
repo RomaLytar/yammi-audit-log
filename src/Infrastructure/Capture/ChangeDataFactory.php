@@ -28,9 +28,43 @@ final class ChangeDataFactory
             auditableType: $model->getMorphClass(),
             auditableId: (string) $model->getKey(),
             event: $event,
-            before: $before,
-            after: $after,
+            before: $this->scopeToModel($model, $before),
+            after: $this->scopeToModel($model, $after),
         );
+    }
+
+    /**
+     * Models narrow their own audit surface: $auditInclude keeps only the
+     * listed attributes, $auditExclude drops the listed ones entirely.
+     *
+     * @param  array<string, scalar|array<array-key, mixed>|null>  $attributes
+     * @return array<string, scalar|array<array-key, mixed>|null>
+     */
+    private function scopeToModel(Model $model, array $attributes): array
+    {
+        $include = $this->stringList($model, 'auditInclude');
+
+        if ($include !== []) {
+            $attributes = array_intersect_key($attributes, array_flip($include));
+        }
+
+        $exclude = $this->stringList($model, 'auditExclude');
+
+        if ($exclude !== []) {
+            $attributes = array_diff_key($attributes, array_flip($exclude));
+        }
+
+        return $attributes;
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function stringList(Model $model, string $property): array
+    {
+        $values = property_exists($model, $property) ? $model->{$property} : [];
+
+        return is_array($values) ? array_values(array_filter($values, is_string(...))) : [];
     }
 
     /**

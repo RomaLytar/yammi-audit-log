@@ -172,8 +172,11 @@ final class AuditLogServiceProvider extends ServiceProvider
         });
 
         $this->app->singleton(AuditableGuard::class, function (): AuditableGuard {
+            $mode = $this->config()->get('audit-log.capture.mode', AuditableGuard::MODE_ALL);
+
             return new AuditableGuard(
                 $this->stringList($this->config()->get('audit-log.capture.exclude', [])),
+                $mode === AuditableGuard::MODE_OPT_IN ? AuditableGuard::MODE_OPT_IN : AuditableGuard::MODE_ALL,
             );
         });
 

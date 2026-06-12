@@ -15,6 +15,7 @@ Existing audit packages answer *what* changed but rarely *who* really changed it
 - Human-readable FK labels snapshotted at event time ("John Doe → Jane Smith" next to `user_id: 5 → 7`), surviving later edits or deletion of the referenced row — map columns in `audit-log.labels.map`, optionally expose `getAuditLabel()` on the model.
 - Optional dashboard (off by default — enable with `php artisan audit-log:ui enable`): filters (model, event, actor, date), full-text search across change values, a noise page, statistics and a chain/trace view. Everything it shows is also available as facade data for your own admin.
 - CSV/JSON export of the current filter result (first 10000 rows) for compliance hand-offs.
+- `audit-log:archive` writes expiring records to an NDJSON file on any filesystem disk (S3 included) before retention deletes them — `--then-prune` does both in one go.
 - Automatic retention pruning, on by default (180 days, configurable 7–9999; audit data is PII), plus a configurable Gate and rate limit on the UI.
 - Sensitive-change alerts: declare rules (model + attributes + events) and the package fires `SensitiveChangeRecorded` and mails the configured recipients when, say, a user's role changes.
 - Optional tamper evidence (`AUDIT_LOG_INTEGRITY=true`): every record is hash-chained to the previous one and `php artisan audit-log:verify` names the first edited row; pruning stores a chain anchor so verification stays strict.

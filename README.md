@@ -138,6 +138,9 @@ AuditLog::for(Order::class, 42);          // timeline of one record
 AuditLog::chain($correlationId);          // the full cascade
 AuditLog::changes(['event' => 'updated', 'actor_type' => 'job']);
 AuditLog::record(...);                    // manual write for mass updates / raw SQL
+
+// Or the same query as a fluent builder (sugar over changes(), same results):
+AuditLog::query()->field('status')->from('pending')->to('paid')->actorType('job')->get();
 ```
 
 The full surface (`stateAt`, `noise`, `stats`, `recordView`, `subjectReport`, `anomalies`, …) and the JSON API endpoints are listed in the in-app docs at `/audit-log/settings/docs`.

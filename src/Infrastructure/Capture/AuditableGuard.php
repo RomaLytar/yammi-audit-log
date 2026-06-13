@@ -8,6 +8,7 @@ use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Contracts\ShouldAudit;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChainStateModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
 
 /** @internal */
 final class AuditableGuard
@@ -22,6 +23,7 @@ final class AuditableGuard
     public function __construct(
         private readonly array $excluded,
         private readonly string $mode = self::MODE_ALL,
+        private readonly AuditPolicyRegistry $policies = new AuditPolicyRegistry,
     ) {}
 
     public function shouldAudit(Model $model): bool
@@ -44,6 +46,8 @@ final class AuditableGuard
             }
         }
 
-        return true;
+        $policy = $this->policies->for($model);
+
+        return $policy === null || $policy->allows($model);
     }
 }

@@ -9,10 +9,15 @@ use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
 
 /** @internal */
 final class ChangeDataFactory
 {
+    public function __construct(
+        private readonly AuditPolicyRegistry $policies = new AuditPolicyRegistry,
+    ) {}
+
     public function make(Model $model, ChangeType $event): ChangeData
     {
         [$before, $after] = match ($event) {
@@ -52,6 +57,12 @@ final class ChangeDataFactory
 
         if ($exclude !== []) {
             $attributes = array_diff_key($attributes, array_flip($exclude));
+        }
+
+        $policyIgnored = $this->policies->for($model)?->ignoredFields() ?? [];
+
+        if ($policyIgnored !== []) {
+            $attributes = array_diff_key($attributes, array_flip($policyIgnored));
         }
 
         return $attributes;

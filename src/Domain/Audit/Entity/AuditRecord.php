@@ -29,6 +29,7 @@ final class AuditRecord
         private readonly ?int $id = null,
         private readonly array $context = [],
         private readonly int $chainDepth = 0,
+        private readonly ?string $reason = null,
     ) {}
 
     public function id(): ?int
@@ -107,5 +108,13 @@ final class AuditRecord
     public function hasIdentifiedActor(): bool
     {
         return ! $this->actor->isAnonymous();
+    }
+
+    /**
+     * The "why" behind the change, if the host supplied one (AuditLog::withReason).
+     */
+    public function reason(): ?string
+    {
+        return $this->reason;
     }
 }

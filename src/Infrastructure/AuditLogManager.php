@@ -25,6 +25,7 @@ use Yammi\AuditLog\Application\Service\FilterParser;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
+use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Recorder\ManualChangeRecorder;
 
@@ -46,6 +47,7 @@ final class AuditLogManager
         private readonly ConfigRepository $config,
         private readonly Clock $clock,
         private readonly AnomalyScanner $anomalyScanner,
+        private readonly ChangeReasonContext $reasonContext = new ChangeReasonContext,
     ) {}
 
     public function for(Model|string $auditable, int|string|null $id = null, int $limit = 50): TimelineData
@@ -167,6 +169,26 @@ final class AuditLogManager
     public function recordAccess(Model|string $auditable, int|string|null $id = null): ?TimelineEntryData
     {
         return $this->recorder->recordAccess($auditable, $id);
+    }
+
+    /**
+     * Attaches a reason ("why") to every change recorded inside the callback —
+     * the audit answer the README promises alongside what, who and when.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public function withReason(string $reason, callable $callback): mixed
+    {
+        $this->reasonContext->push(mb_substr(trim($reason), 0, 1000));
+
+        try {
+            return $callback();
+        } finally {
+            $this->reasonContext->pop();
+        }
     }
 
     private function resolveMoment(DateTimeImmutable|string|null $at): DateTimeImmutable

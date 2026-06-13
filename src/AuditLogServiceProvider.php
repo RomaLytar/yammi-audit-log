@@ -27,6 +27,7 @@ use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\LabelResolver;
+use Yammi\AuditLog\Application\Contract\ReasonResolver;
 use Yammi\AuditLog\Application\Contract\RequestContextResolver;
 use Yammi\AuditLog\Application\Contract\TenantResolver;
 use Yammi\AuditLog\Application\Contract\ValueRedactor;
@@ -68,6 +69,8 @@ use Yammi\AuditLog\Infrastructure\Console\SubjectReportCommand;
 use Yammi\AuditLog\Infrastructure\Console\ToggleUiCommand;
 use Yammi\AuditLog\Infrastructure\Console\TransferAuditDataCommand;
 use Yammi\AuditLog\Infrastructure\Console\VerifyIntegrityCommand;
+use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
+use Yammi\AuditLog\Infrastructure\Context\ContextReasonResolver;
 use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
 use Yammi\AuditLog\Infrastructure\Context\HttpRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
@@ -141,8 +144,10 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->app->singleton(ActorContext::class);
         $this->app->singleton(CorrelationContext::class);
+        $this->app->singleton(ChangeReasonContext::class);
         $this->app->singleton(RequestContextHolder::class);
         $this->app->singleton(CorrelationResolver::class, ContextCorrelationResolver::class);
+        $this->app->singleton(ReasonResolver::class, ContextReasonResolver::class);
 
         $this->app->singleton(RequestContextResolver::class, function (): RequestContextResolver {
             if (! (bool) $this->config()->get('audit-log.capture.request_context', false)) {

@@ -100,6 +100,25 @@ final class AuditRecordMapperTest extends TestCase
         $this->assertSame('2026-01-01 10:00:00', $record->occurredAt()->format('Y-m-d H:i:s'));
     }
 
+    public function test_to_row_and_to_domain_carry_the_reason(): void
+    {
+        $row = $this->mapper->toRow(new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 7),
+            event: ChangeType::Updated,
+            diff: Diff::between(['status' => 'a'], ['status' => 'b']),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
+            reason: 'ticket #4521',
+        ));
+
+        $this->assertSame('ticket #4521', $row->reason);
+
+        $record = $this->mapper->toDomain($this->model(['reason' => 'ticket #4521']));
+        $this->assertSame('ticket #4521', $record->reason());
+    }
+
     public function test_to_domain_without_an_origin(): void
     {
         $record = $this->mapper->toDomain($this->model([

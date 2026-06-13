@@ -6,9 +6,11 @@ namespace Yammi\AuditLog\Application\Action;
 
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
+use Yammi\AuditLog\Application\Contract\ReasonResolver;
 use Yammi\AuditLog\Application\DTO\ChangeData;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
+use Yammi\AuditLog\Application\Service\NullReasonResolver;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
@@ -22,6 +24,7 @@ final class RecordChangeAction
         private readonly AuditRecordRepository $repository,
         private readonly Clock $clock,
         private readonly CorrelationResolver $correlation,
+        private readonly ReasonResolver $reason = new NullReasonResolver,
     ) {}
 
     public function __invoke(ChangeData $change): ?AuditRecord
@@ -44,6 +47,7 @@ final class RecordChangeAction
             isNoise: $context->isNoise,
             context: $context->requestContext,
             chainDepth: $context->depth,
+            reason: $this->reason->resolve(),
         );
 
         $this->repository->save($record);

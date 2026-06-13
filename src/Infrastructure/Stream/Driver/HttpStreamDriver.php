@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Stream\Driver;
 
-use Yammi\AuditLog\Application\Contract\LogStreamDriver;
+use Yammi\AuditLog\Application\Contract\Stream\LogStreamDriver;
 
 /**
  * Generic HTTP/JSON sink for any system that accepts a POSTed JSON event with

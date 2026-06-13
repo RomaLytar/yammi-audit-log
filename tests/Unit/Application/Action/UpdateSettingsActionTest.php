@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Application\Action;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\ResetSettingsAction;
-use Yammi\AuditLog\Application\Action\UpdateSettingsAction;
+use Yammi\AuditLog\Application\Action\Settings\ResetSettingsAction;
+use Yammi\AuditLog\Application\Action\Settings\UpdateSettingsAction;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
 use Yammi\AuditLog\Tests\Support\InMemoryGeneralSettingRepository;
 

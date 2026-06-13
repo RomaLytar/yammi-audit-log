@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\Export;
 
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 
 /** @internal */
 final class ChangeCsvPresenter

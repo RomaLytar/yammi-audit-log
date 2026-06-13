@@ -6,8 +6,8 @@ namespace Yammi\AuditLog\Tests\Unit\Application\Action;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\ListChangesAction;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\Action\Read\ListChangesAction;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
 use Yammi\AuditLog\Application\Service\CriteriaFactory;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;

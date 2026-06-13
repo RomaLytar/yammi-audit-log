@@ -7,7 +7,7 @@ namespace Yammi\AuditLog\Application\Service;
 use DateInterval;
 use DateTimeImmutable;
 use Yammi\AuditLog\Application\Contract\Clock;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 

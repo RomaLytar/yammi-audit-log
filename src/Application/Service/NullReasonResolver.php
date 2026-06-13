@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Service;
 
-use Yammi\AuditLog\Application\Contract\ReasonResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\ReasonResolver;
 
 /** @internal */
 final class NullReasonResolver implements ReasonResolver

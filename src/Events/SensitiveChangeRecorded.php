@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Events;
 
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 
 /**
  * Fired when a recorded change matches one of the audit-log.alerts.rules.

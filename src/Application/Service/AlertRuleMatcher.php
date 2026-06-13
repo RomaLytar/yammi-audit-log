@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Service;
 
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 
 /**
  * Matches a recorded change against the configured alert rules. A rule names

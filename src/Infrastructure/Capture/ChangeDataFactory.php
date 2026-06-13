@@ -7,7 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Capture;
 use BackedEnum;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Model;
-use Yammi\AuditLog\Application\DTO\ChangeData;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 
 /** @internal */

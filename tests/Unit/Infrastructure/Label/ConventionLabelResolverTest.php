@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Label;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\ChangeData;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
 

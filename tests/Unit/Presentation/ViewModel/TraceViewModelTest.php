@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Presentation\ViewModel;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\ChainData;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\ChainData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Presentation\ViewModel\TraceViewModel;
 
 final class TraceViewModelTest extends TestCase

@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Support;
 
 use DateTimeImmutable;
-use Yammi\AuditLog\Application\Contract\AuditLogQuery;
-use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
+use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
+use Yammi\AuditLog\Application\Contract\Query\AuditStatsQuery;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;

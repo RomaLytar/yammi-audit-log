@@ -16,7 +16,7 @@ use Illuminate\Queue\Events\JobProcessed;
 use Illuminate\Queue\Events\JobProcessing;
 use Illuminate\Support\Facades\Queue;
 use Illuminate\Support\Str;
-use Yammi\AuditLog\Application\Contract\ActorResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\ActorResolver;
 use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
 use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;

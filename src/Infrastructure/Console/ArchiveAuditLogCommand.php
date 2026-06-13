@@ -8,7 +8,7 @@ use DateInterval;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Filesystem\Factory as FilesystemFactory;
-use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
+use Yammi\AuditLog\Application\Action\Retention\PruneAuditLogAction;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Infrastructure\Console\Support\ArchiveDisk;
 use Yammi\AuditLog\Infrastructure\Console\Support\RetentionWindow;

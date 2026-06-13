@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Presentation\ViewModel;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
-use Yammi\AuditLog\Application\DTO\ChangeListData;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeListData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Presentation\ViewModel\DashboardViewModel;
 
 final class DashboardViewModelTest extends TestCase

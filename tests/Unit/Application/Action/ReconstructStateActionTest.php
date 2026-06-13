@@ -6,8 +6,8 @@ namespace Yammi\AuditLog\Tests\Unit\Application\Action;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\ReconstructStateAction;
-use Yammi\AuditLog\Application\DTO\StateData;
+use Yammi\AuditLog\Application\Action\Read\ReconstructStateAction;
+use Yammi\AuditLog\Application\DTO\Audit\StateData;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;

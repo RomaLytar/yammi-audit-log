@@ -8,7 +8,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Support\Collection;
 use Yammi\AuditLog\Application\Contract\AuditDataTransferrer;
-use Yammi\AuditLog\Application\DTO\TransferResultData;
+use Yammi\AuditLog\Application\DTO\Transfer\TransferResultData;
 
 /** @internal */
 final class EloquentAuditDataTransferrer implements AuditDataTransferrer

@@ -8,7 +8,7 @@ use DateInterval;
 use DateTimeImmutable;
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
-use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
+use Yammi\AuditLog\Application\Contract\Query\AuditStatsQuery;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 

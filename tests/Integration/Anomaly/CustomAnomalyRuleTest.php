@@ -6,7 +6,7 @@ namespace Yammi\AuditLog\Tests\Integration\Anomaly;
 
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Yammi\AuditLog\Application\DTO\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;

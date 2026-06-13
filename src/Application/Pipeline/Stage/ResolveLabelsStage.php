@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Pipeline\Stage;
 
-use Yammi\AuditLog\Application\Contract\LabelResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\LabelResolver;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeStage;
 

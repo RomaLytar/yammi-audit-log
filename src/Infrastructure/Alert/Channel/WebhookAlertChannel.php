@@ -8,8 +8,8 @@ use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Client\Factory as HttpFactory;
 use Illuminate\Http\Client\Response;
 use RuntimeException;
-use Yammi\AuditLog\Application\Contract\AlertChannel;
-use Yammi\AuditLog\Application\DTO\AlertMessageData;
+use Yammi\AuditLog\Application\Contract\Alert\AlertChannel;
+use Yammi\AuditLog\Application\DTO\Alert\AlertMessageData;
 
 /**
  * Generic signed-webhook delivery for systems that speak plain JSON

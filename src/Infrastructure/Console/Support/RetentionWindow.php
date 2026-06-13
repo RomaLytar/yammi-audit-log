@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Console\Support;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
+use Yammi\AuditLog\Application\Action\Retention\PruneAuditLogAction;
 
 /**
  * Resolves the retention window shared by the prune and archive commands: a

@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Tests\Support;
 
-use Yammi\AuditLog\Application\Contract\TenantResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\TenantResolver;
 
 final class FixedTenantResolver implements TenantResolver
 {

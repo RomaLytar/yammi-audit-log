@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Contract;
 
-use Yammi\AuditLog\Application\DTO\TransferResultData;
+use Yammi\AuditLog\Application\DTO\Transfer\TransferResultData;
 
 /**
  * Moves audit rows between two configured database connections, so a host can

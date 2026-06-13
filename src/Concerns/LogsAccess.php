@@ -7,7 +7,7 @@ namespace Yammi\AuditLog\Concerns;
 use Illuminate\Database\Eloquent\Model;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
 
 /**

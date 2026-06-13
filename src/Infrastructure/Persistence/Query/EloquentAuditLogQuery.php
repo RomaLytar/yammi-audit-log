@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Persistence\Query;
 
 use DateTimeImmutable;
-use Yammi\AuditLog\Application\Contract\AuditLogQuery;
+use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
 use Yammi\AuditLog\Domain\Audit\Query\PagedRecords;

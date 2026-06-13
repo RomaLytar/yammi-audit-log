@@ -8,7 +8,7 @@ use DateTimeImmutable;
 use Illuminate\Contracts\Events\Dispatcher;
 use Illuminate\Contracts\Mail\Mailer;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\RecordChangeAction;
+use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
 use Yammi\AuditLog\Application\Service\AlertRuleMatcher;

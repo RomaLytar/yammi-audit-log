@@ -5,9 +5,9 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Recorder;
 
 use Illuminate\Database\Eloquent\Model;
-use Yammi\AuditLog\Application\Action\RecordChangeAction;
-use Yammi\AuditLog\Application\DTO\ChangeData;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;

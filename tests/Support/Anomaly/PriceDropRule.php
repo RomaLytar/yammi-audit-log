@@ -6,8 +6,8 @@ namespace Yammi\AuditLog\Tests\Support\Anomaly;
 
 use DateTimeInterface;
 use Yammi\AuditLog\Application\Contract\AnomalyRule;
-use Yammi\AuditLog\Application\DTO\AnomalyData;
-use Yammi\AuditLog\Application\DTO\AnomalyWindow;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyWindow;
 
 final class PriceDropRule implements AnomalyRule
 {

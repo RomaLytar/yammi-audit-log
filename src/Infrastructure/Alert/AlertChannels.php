@@ -6,8 +6,8 @@ namespace Yammi\AuditLog\Infrastructure\Alert;
 
 use Psr\Log\LoggerInterface;
 use Throwable;
-use Yammi\AuditLog\Application\Contract\AlertChannel;
-use Yammi\AuditLog\Application\DTO\AlertMessageData;
+use Yammi\AuditLog\Application\Contract\Alert\AlertChannel;
+use Yammi\AuditLog\Application\DTO\Alert\AlertMessageData;
 
 /**
  * Fans one alert out to every configured channel, fail-soft per channel:

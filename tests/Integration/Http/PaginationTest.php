@@ -21,7 +21,7 @@ final class PaginationTest extends TestCase
 
     public function test_multiple_pages_render_numbered_links_and_a_jump_input(): void
     {
-        $this->seed(26);
+        $this->seedRecords(26);
 
         $response = $this->get('audit-log');
 
@@ -34,14 +34,14 @@ final class PaginationTest extends TestCase
 
     public function test_a_single_page_has_no_pagination_controls(): void
     {
-        $this->seed(3);
+        $this->seedRecords(3);
 
         $this->get('audit-log')
             ->assertOk()
             ->assertDontSee('aria-label="Pagination"', false);
     }
 
-    private function seed(int $count): void
+    private function seedRecords(int $count): void
     {
         $repository = $this->app->make(AuditRecordRepository::class);
 

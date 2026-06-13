@@ -72,6 +72,34 @@
         </div>
     </div>
 
+    <div class="rounded-xl border border-border bg-card p-5 shadow-xs mb-6">
+        <h2 class="text-sm font-semibold flex items-center gap-2 mb-1">
+            <i data-lucide="git-fork" class="text-brand text-[15px]"></i> Top cascades
+        </h2>
+        <p class="text-xs text-muted-foreground mb-4">The heaviest root actions in this range — one request, command or job chain that wrote across many models. Click to trace.</p>
+        @if ($stats->cascadeRows() === [])
+            <p class="text-xs text-muted-foreground">No correlated changes for these filters.</p>
+        @else
+            <div class="space-y-2.5">
+                @foreach ($stats->cascadeRows() as $row)
+                    <a href="{{ route('audit-log.trace', $row['id']) }}" class="block group">
+                        <div class="flex items-center justify-between text-xs mb-1">
+                            <span class="font-mono text-muted-foreground group-hover:text-brand truncate min-w-0">{{ $row['short'] }}</span>
+                            <span class="text-muted-foreground tabular-nums shrink-0 ml-2">
+                                <span class="font-semibold text-foreground">{{ number_format($row['writes']) }}</span> writes
+                                · {{ $row['models'] }} {{ \Illuminate\Support\Str::plural('model', $row['models']) }}
+                                · depth {{ $row['depth'] }}
+                            </span>
+                        </div>
+                        <div class="h-1.5 rounded-full bg-muted overflow-hidden">
+                            <div class="h-full rounded-full bg-brand/70 group-hover:bg-brand" style="width: {{ max(2, $row['percent']) }}%"></div>
+                        </div>
+                    </a>
+                @endforeach
+            </div>
+        @endif
+    </div>
+
     <div class="grid gap-6 lg:grid-cols-3">
         @foreach ([['By event', 'tag', $stats->eventRows()], ['By actor type', 'users', $stats->actorTypeRows()], ['Top models', 'boxes', $stats->modelRows()]] as [$title, $icon, $rows])
             <div class="rounded-xl border border-border bg-card p-5 shadow-xs">

@@ -24,6 +24,8 @@ final class BuildStatsAction
 
     private const MODEL_LIMIT = 10;
 
+    private const CASCADE_LIMIT = 8;
+
     public function __construct(
         private readonly AuditStatsQuery $stats,
         private readonly AuditLogQuery $query,
@@ -61,6 +63,7 @@ final class BuildStatsAction
             models: $this->query->distinctModels(),
             actorTypes: $this->query->distinctActorTypes(),
             events: ChangeType::values(),
+            topCascades: $this->stats->topCascades($criteria, self::CASCADE_LIMIT),
         );
     }
 

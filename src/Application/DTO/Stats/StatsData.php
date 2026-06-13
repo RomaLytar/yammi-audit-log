@@ -16,6 +16,7 @@ final class StatsData
      * @param  list<string>  $models
      * @param  list<string>  $actorTypes
      * @param  list<string>  $events
+     * @param  list<array{correlation_id: string, writes: int, models: int, depth: int}>  $topCascades
      */
     public function __construct(
         public readonly int $total,
@@ -30,5 +31,6 @@ final class StatsData
         public readonly array $models = [],
         public readonly array $actorTypes = [],
         public readonly array $events = [],
+        public readonly array $topCascades = [],
     ) {}
 }

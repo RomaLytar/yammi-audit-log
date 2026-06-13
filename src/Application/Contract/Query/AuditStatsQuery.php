@@ -31,6 +31,15 @@ interface AuditStatsQuery
     public function modelBreakdown(AuditCriteria $criteria, int $limit = 10): array;
 
     /**
+     * The heaviest correlation chains in the window: one root action that wrote
+     * many records across many models. Built from data already captured, so it
+     * surfaces write-amplification without a profiler.
+     *
+     * @return list<array{correlation_id: string, writes: int, models: int, depth: int}>
+     */
+    public function topCascades(AuditCriteria $criteria, int $limit = 10): array;
+
+    /**
      * @return array<string, int> Y-m-d => count for every day in the window,
      *                            zero-filled, oldest first
      */

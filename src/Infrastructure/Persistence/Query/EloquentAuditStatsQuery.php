@@ -39,6 +39,35 @@ final class EloquentAuditStatsQuery implements AuditStatsQuery
         return $this->breakdown('auditable_type', $criteria, $limit);
     }
 
+    public function topCascades(AuditCriteria $criteria, int $limit = 10): array
+    {
+        $rows = $this->query($criteria)
+            ->whereNotNull('correlation_id')
+            ->selectRaw('correlation_id, count(*) as writes, count(distinct auditable_type) as models, max(chain_depth) as depth')
+            ->groupBy('correlation_id')
+            ->orderByDesc('writes')
+            ->orderByDesc('models')
+            ->limit($limit)
+            ->get();
+
+        $out = [];
+
+        foreach ($rows as $row) {
+            $correlation = $row->getAttribute('correlation_id');
+
+            if (is_string($correlation) && $correlation !== '') {
+                $out[] = [
+                    'correlation_id' => $correlation,
+                    'writes' => (int) $row->getAttribute('writes'),
+                    'models' => (int) $row->getAttribute('models'),
+                    'depth' => (int) $row->getAttribute('depth'),
+                ];
+            }
+        }
+
+        return $out;
+    }
+
     public function dailyCounts(AuditCriteria $criteria, DateTimeImmutable $from, int $days): array
     {
         $start = $from->setTime(0, 0);

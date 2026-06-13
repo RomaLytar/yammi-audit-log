@@ -362,6 +362,24 @@ The reason rides through the same pipeline, is stored per record, surfaces on ti
 
 > Note: making a reason *mandatory* for specific models (refusing the host write without one) is a planned follow-up; the write path is sacred, so that enforcement will be an explicit host-side opt-in rather than a silent capture failure.
 
+### Stream to your SIEM
+
+Ship every recorded change to Splunk, Datadog, Elastic or any JSON endpoint — off the request path, queued and fail-soft, so a slow or dead sink never touches the host write:
+
+```php
+// config/audit-log.php → 'stream'
+'enabled'  => true,
+'driver'   => 'splunk',                                   // splunk | datadog | elastic | http
+'endpoint' => 'https://splunk.example:8088/services/collector/event',
+'token'    => env('AUDIT_LOG_STREAM_TOKEN'),              // HEC token / DD-API-KEY / Elastic ApiKey / bearer
+'source'   => 'orders-api',
+'headers'  => ['X-Proxy-Auth' => '...'],                  // merged into every request
+```
+
+The normalized event (model, id, actor, changes, reason, correlation id, timestamp) is built once and wrapped in each platform's envelope: Splunk HEC `{"event": …}`, Datadog `ddsource`/`service`, Elastic `_doc`, or passed through verbatim for the generic `http` driver. Delivery is a queued job with one retry on 5xx.
+
+> Note: per-event delivery today; batching/NDJSON bulk and a persisted stream health status (Active/Error) + a "send test event" button are planned follow-ups.
+
 ### Honest limitations
 
 Eloquent events never fire for mass `Query Builder ->update()` or raw SQL either, no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):

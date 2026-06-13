@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Console;
 use Illuminate\Console\Command;
 use Throwable;
 use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
+use Yammi\AuditLog\Infrastructure\Integrity\DigestVerifier;
 use Yammi\AuditLog\Infrastructure\Integrity\IntegrityHasher;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
@@ -19,7 +20,7 @@ final class VerifyIntegrityCommand extends Command
 
     protected $description = 'Verify the audit hash chain and name the first tampered record';
 
-    public function handle(IntegrityHasher $hasher, GeneralSettingRepository $settings): int
+    public function handle(IntegrityHasher $hasher, GeneralSettingRepository $settings, DigestVerifier $digests): int
     {
         $previous = $this->anchor($settings);
         $verified = 0;
@@ -60,6 +61,33 @@ final class VerifyIntegrityCommand extends Command
         }
 
         $this->info("Integrity OK: {$verified} hashed record(s) verified, {$unhashed} recorded without hashing.");
+
+        return $this->verifyDigest($digests);
+    }
+
+    private function verifyDigest(DigestVerifier $digests): int
+    {
+        $result = $digests->verifyLatest();
+
+        if ($result === null) {
+            return self::SUCCESS;
+        }
+
+        if (! $result->headPresent) {
+            $this->error("Digest FAILED: the chain head signed at {$result->generatedAt} is gone — records were deleted.");
+
+            return self::FAILURE;
+        }
+
+        if ($result->signatureValid === false) {
+            $this->error("Digest FAILED: the signature recorded at {$result->generatedAt} does not verify.");
+
+            return self::FAILURE;
+        }
+
+        $this->info($result->signed
+            ? "Digest OK: signed digest from {$result->generatedAt} verified."
+            : "Digest present from {$result->generatedAt} (unsigned).");
 
         return self::SUCCESS;
     }

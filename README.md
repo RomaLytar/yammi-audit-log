@@ -362,6 +362,20 @@ The reason rides through the same pipeline, is stored per record, surfaces on ti
 
 > Note: making a reason *mandatory* for specific models (refusing the host write without one) is a planned follow-up; the write path is sacred, so that enforcement will be an explicit host-side opt-in rather than a silent capture failure.
 
+### Signed integrity digests
+
+The hash chain catches edits to stored rows. A **signed digest** goes further — it proves the chain head, record count and time span at a moment in time, signed with your asymmetric key, so deleting whole segments (or the entire table) is detectable and an archived digest verifies independently of the database (CloudTrail-style).
+
+```bash
+# config/audit-log.php → integrity.signing.private_key / public_key (PEM or path)
+php artisan audit-log:digest    # record a signed snapshot (schedule via integrity.digest_cron)
+php artisan audit-log:verify    # checks the chain AND the latest signed digest
+```
+
+`audit-log:verify` now fails if the signed chain head has since been deleted, or if the signature doesn't verify against the public key. With no signing key the digest is still recorded (unsigned) and head-deletion is still caught.
+
+> Note: an S3 Object Lock (WORM) flag on the archiver is a planned follow-up — it needs the archive written as a single locked object rather than the current chunked append, so it ships separately.
+
 ### Detection as code
 
 The built-in scan covers change bursts, mass deletions and off-hours activity. For anything domain-specific, write a rule class — version it in git, unit-test it in isolation — and it runs alongside the built-ins over the same window, computing its own severity:

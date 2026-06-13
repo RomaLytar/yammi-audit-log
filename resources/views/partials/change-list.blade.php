@@ -179,19 +179,5 @@
         </table>
     </div>
 
-    <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Page {{ $list->page() }} of {{ $list->lastPage() }}</span>
-        <div class="flex gap-2">
-            @if ($list->page() > 1)
-                <a href="{{ request()->fullUrlWithQuery(['page' => $list->page() - 1]) }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
-                    <i data-lucide="chevron-left" class="text-[14px]"></i> Prev
-                </a>
-            @endif
-            @if ($list->page() < $list->lastPage())
-                <a href="{{ request()->fullUrlWithQuery(['page' => $list->page() + 1]) }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
-                    Next <i data-lucide="chevron-right" class="text-[14px]"></i>
-                </a>
-            @endif
-        </div>
-    </div>
+    @include('audit-log::components.pagination', ['page' => $list->page(), 'lastPage' => $list->lastPage()])
 @endif

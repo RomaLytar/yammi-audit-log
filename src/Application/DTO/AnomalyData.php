@@ -12,6 +12,12 @@ final class AnomalyData
 
     public const RULE_OFF_HOURS = 'off_hours';
 
+    public const SEVERITY_LOW = 'low';
+
+    public const SEVERITY_MEDIUM = 'medium';
+
+    public const SEVERITY_HIGH = 'high';
+
     public function __construct(
         public readonly string $rule,
         public readonly string $actorType,
@@ -20,5 +26,6 @@ final class AnomalyData
         public readonly string $windowStart,
         public readonly string $windowEnd,
         public readonly string $description,
+        public readonly string $severity = self::SEVERITY_MEDIUM,
     ) {}
 }

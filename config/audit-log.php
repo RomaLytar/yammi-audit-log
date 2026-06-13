@@ -214,6 +214,14 @@ return [
         // Findings fire the AnomalyDetected event and mail alerts.mail_to.
         // Empty = run the command yourself.
         'cron' => env('AUDIT_LOG_ANOMALY_CRON'),
+
+        // Detection-as-code: your own rule classes implementing
+        // Yammi\AuditLog\Application\Contract\AnomalyRule. They run alongside
+        // the built-in checks over the same window and can set their own
+        // severity. Version them in git, unit-test them in isolation.
+        //
+        //   App\Audit\HighValueRefundRule::class,
+        'rules' => [],
     ],
 
     'integrity' => [

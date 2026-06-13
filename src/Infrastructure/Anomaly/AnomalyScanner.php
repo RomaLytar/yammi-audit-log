@@ -8,11 +8,16 @@ use DateInterval;
 use DateTimeImmutable;
 use DateTimeInterface;
 use Illuminate\Database\Eloquent\Builder;
+use Throwable;
+use Yammi\AuditLog\Application\Contract\AnomalyRule;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\DTO\AnomalyData;
+use Yammi\AuditLog\Application\DTO\AnomalyWindow;
+use Yammi\AuditLog\Application\DTO\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
+use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 
 /**
  * Scans a recent window of the audit log for suspicious patterns: a burst
@@ -24,14 +29,19 @@ final class AnomalyScanner
 {
     private const OFF_HOURS_SAMPLE = 5000;
 
+    private const RULE_SAMPLE = 5000;
+
     /**
      * @param  list<int>  $offHours  inclusive [from, to] hour range, wrapping midnight when from > to
+     * @param  list<AnomalyRule>  $rules  host-defined detection-as-code rules
      */
     public function __construct(
         private readonly Clock $clock,
         private readonly int $rateThreshold = 200,
         private readonly int $deleteThreshold = 25,
         private readonly array $offHours = [],
+        private readonly array $rules = [],
+        private readonly AuditRecordMapper $mapper = new AuditRecordMapper,
     ) {}
 
     /**
@@ -46,7 +56,38 @@ final class AnomalyScanner
             $this->burstFindings($start, $end, null, $this->rateThreshold, AnomalyData::RULE_RATE_SPIKE, 'changes'),
             $this->burstFindings($start, $end, ChangeType::Deleted, $this->deleteThreshold, AnomalyData::RULE_MASS_DELETE, 'deletions'),
             $this->offHoursFindings($start, $end),
+            $this->customFindings($start, $end),
         );
+    }
+
+    /**
+     * @return list<AnomalyData>
+     */
+    private function customFindings(DateTimeImmutable $start, DateTimeImmutable $end): array
+    {
+        if ($this->rules === []) {
+            return [];
+        }
+
+        $entries = [];
+
+        foreach ($this->windowQuery($start, $end)->orderBy('id')->limit(self::RULE_SAMPLE)->get() as $model) {
+            $entries[] = TimelineEntryData::fromRecord($this->mapper->toDomain($model));
+        }
+
+        $window = new AnomalyWindow($start, $end);
+        $findings = [];
+
+        foreach ($this->rules as $rule) {
+            try {
+                foreach ($rule->evaluate($entries, $window) as $finding) {
+                    $findings[] = $finding;
+                }
+            } catch (Throwable) {
+            }
+        }
+
+        return $findings;
     }
 
     /**
@@ -191,6 +232,10 @@ final class AnomalyScanner
             windowStart: $start->format(DateTimeInterface::ATOM),
             windowEnd: $end->format(DateTimeInterface::ATOM),
             description: $description,
+            severity: match ($rule) {
+                AnomalyData::RULE_MASS_DELETE, AnomalyData::RULE_RATE_SPIKE => AnomalyData::SEVERITY_HIGH,
+                default => AnomalyData::SEVERITY_MEDIUM,
+            },
         );
     }
 }

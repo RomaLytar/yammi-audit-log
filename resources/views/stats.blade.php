@@ -101,7 +101,7 @@
     </div>
 
     <div class="grid gap-6 lg:grid-cols-3">
-        @foreach ([['By event', 'tag', $stats->eventRows()], ['By actor type', 'users', $stats->actorTypeRows()], ['Top models', 'boxes', $stats->modelRows()]] as [$title, $icon, $rows])
+        @foreach ([['By event', 'tag', $stats->eventRows()], ['By actor type', 'users', $stats->actorTypeRows()], ['Top models', 'boxes', $stats->modelRows()], ['Top fields', 'list', $stats->fieldRows()]] as [$title, $icon, $rows])
             <div class="rounded-xl border border-border bg-card p-5 shadow-xs">
                 <h2 class="text-sm font-semibold flex items-center gap-2 mb-4">
                     <i data-lucide="{{ $icon }}" class="text-brand text-[15px]"></i> {{ $title }}

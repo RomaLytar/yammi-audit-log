@@ -24,6 +24,8 @@ final class BuildStatsAction
 
     private const MODEL_LIMIT = 10;
 
+    private const FIELD_LIMIT = 10;
+
     private const CASCADE_LIMIT = 8;
 
     public function __construct(
@@ -64,6 +66,7 @@ final class BuildStatsAction
             actorTypes: $this->query->distinctActorTypes(),
             events: ChangeType::values(),
             topCascades: $this->stats->topCascades($criteria, self::CASCADE_LIMIT),
+            byField: $this->stats->fieldBreakdown($criteria, self::FIELD_LIMIT),
         );
     }
 

@@ -96,6 +96,14 @@ final class StatsViewModel
     }
 
     /**
+     * @return list<array{label: string, count: int, percent: int}>
+     */
+    public function fieldRows(): array
+    {
+        return $this->rows($this->stats->byField);
+    }
+
+    /**
      * The heaviest correlation chains, each linkable to its trace.
      *
      * @return list<array{id: string, short: string, writes: int, models: int, depth: int, percent: int}>

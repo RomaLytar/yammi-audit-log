@@ -82,9 +82,40 @@ final class EloquentAuditStatsQueryTest extends TestCase
         $this->assertSame(1, $cascades[1]['writes']);
     }
 
+    public function test_field_breakdown_counts_records_per_changed_field(): void
+    {
+        $this->saveDiff(['status' => 'a', 'title' => 'x'], ['status' => 'b', 'title' => 'y']);
+        $this->saveDiff(['status' => 'a'], ['status' => 'c']);
+        $this->saveDiff(['price' => '1'], ['price' => '2']);
+
+        $fields = $this->stats()->fieldBreakdown(new AuditCriteria, 10);
+
+        $this->assertSame('status', array_key_first($fields));
+        $this->assertSame(2, $fields['status']);
+        $this->assertSame(1, $fields['title']);
+        $this->assertSame(1, $fields['price']);
+    }
+
     private function stats(): AuditStatsQuery
     {
         return $this->app->make(AuditStatsQuery::class);
+    }
+
+    /**
+     * @param  array<string, scalar>  $before
+     * @param  array<string, scalar>  $after
+     */
+    private function saveDiff(array $before, array $after): void
+    {
+        $this->app->make(AuditRecordRepository::class)->save(new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 1),
+            event: ChangeType::Updated,
+            diff: Diff::between($before, $after),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
+        ));
     }
 
     private function saveRecord(

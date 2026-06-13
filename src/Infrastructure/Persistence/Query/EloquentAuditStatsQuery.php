@@ -10,6 +10,7 @@ use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
 use Yammi\AuditLog\Application\Contract\Query\AuditStatsQuery;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChangedKeyModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
 /** @internal */
@@ -37,6 +38,32 @@ final class EloquentAuditStatsQuery implements AuditStatsQuery
     public function modelBreakdown(AuditCriteria $criteria, int $limit = 10): array
     {
         return $this->breakdown('auditable_type', $criteria, $limit);
+    }
+
+    public function fieldBreakdown(AuditCriteria $criteria, int $limit = 10): array
+    {
+        $recordsTable = (new AuditRecordModel)->getTable();
+        $keysTable = (new AuditChangedKeyModel)->getTable();
+
+        $rows = $this->query($criteria)
+            ->join($keysTable, $keysTable.'.audit_id', '=', $recordsTable.'.id')
+            ->selectRaw($keysTable.'.key as field, count(*) as total')
+            ->groupBy($keysTable.'.key')
+            ->orderByDesc('total')
+            ->limit($limit)
+            ->get();
+
+        $out = [];
+
+        foreach ($rows as $row) {
+            $field = $row->getAttribute('field');
+
+            if (is_string($field) && $field !== '') {
+                $out[$field] = (int) $row->getAttribute('total');
+            }
+        }
+
+        return $out;
     }
 
     public function topCascades(AuditCriteria $criteria, int $limit = 10): array

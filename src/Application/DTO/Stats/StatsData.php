@@ -12,6 +12,7 @@ final class StatsData
      * @param  array<string, int>  $byEvent
      * @param  array<string, int>  $byActorType
      * @param  array<string, int>  $byModel
+     * @param  array<string, int>  $byField
      * @param  array<string, int>  $byDay
      * @param  list<string>  $models
      * @param  list<string>  $actorTypes
@@ -32,5 +33,6 @@ final class StatsData
         public readonly array $actorTypes = [],
         public readonly array $events = [],
         public readonly array $topCascades = [],
+        public readonly array $byField = [],
     ) {}
 }

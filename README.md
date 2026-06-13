@@ -332,6 +332,22 @@ AuditLog::recordAccess(Patient::class, $id);       // or without the trait
 
 An access carries no diff; the viewer and request metadata are attributed through the same pipeline. The `accessed` event filters on the dashboard and API. Reads are high-volume — keep `retention_days` tight when you enable this.
 
+### Find a specific value transition
+
+"Who moved an order to `cancelled`?" is one filter, not a scan of every diff. `changes()` (and the JSON API) take `field`, `value_from` and `value_to`:
+
+```php
+AuditLog::changes([
+    'field'      => 'status',
+    'value_from' => 'pending',     // optional
+    'value_to'   => 'cancelled',   // optional
+]);
+```
+
+`field` alone returns every record that touched that attribute; add `value_from` / `value_to` to pin the exact transition. Field names are validated to `[A-Za-z0-9_]` so the JSON path is injection-safe.
+
+> Note: this currently filters via JSON extraction on the `changes` column. A dedicated indexed `changed_keys` column for true index-hit lookups on large tables is a planned follow-up.
+
 ### Honest limitations
 
 Eloquent events never fire for mass `Query Builder ->update()` or raw SQL either, no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):

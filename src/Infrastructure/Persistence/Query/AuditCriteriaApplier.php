@@ -47,6 +47,19 @@ final class AuditCriteriaApplier
             });
         }
 
+        if ($criteria->field !== null && preg_match('/^[A-Za-z0-9_]{1,64}$/', $criteria->field) === 1) {
+            $path = 'changes->'.$criteria->field;
+            $query->whereNotNull($path);
+
+            if ($criteria->valueFrom !== null) {
+                $query->where($path.'->old', $criteria->valueFrom);
+            }
+
+            if ($criteria->valueTo !== null) {
+                $query->where($path.'->new', $criteria->valueTo);
+            }
+        }
+
         if ($criteria->from !== null) {
             $query->where('occurred_at', '>=', $criteria->from->setTime(0, 0)->format('Y-m-d H:i:s'));
         }

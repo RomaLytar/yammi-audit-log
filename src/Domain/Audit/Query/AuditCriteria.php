@@ -20,5 +20,8 @@ final class AuditCriteria
         public readonly ?bool $onlyNoise = null,
         public readonly ?string $search = null,
         public readonly ?string $auditableId = null,
+        public readonly ?string $field = null,
+        public readonly ?string $valueFrom = null,
+        public readonly ?string $valueTo = null,
     ) {}
 }

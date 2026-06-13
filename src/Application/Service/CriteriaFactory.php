@@ -33,6 +33,9 @@ final class CriteriaFactory
             onlyNoise: $onlyNoise,
             search: $filters->search !== '' ? $filters->search : null,
             auditableId: $filters->auditableId !== '' ? $filters->auditableId : null,
+            field: $filters->field !== '' ? $filters->field : null,
+            valueFrom: $filters->valueFrom !== '' ? $filters->valueFrom : null,
+            valueTo: $filters->valueTo !== '' ? $filters->valueTo : null,
         );
     }
 

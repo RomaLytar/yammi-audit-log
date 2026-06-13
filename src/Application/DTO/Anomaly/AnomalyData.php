@@ -12,6 +12,8 @@ final class AnomalyData
 
     public const RULE_OFF_HOURS = 'off_hours';
 
+    public const RULE_CASCADE = 'cascade_weight';
+
     public const SEVERITY_LOW = 'low';
 
     public const SEVERITY_MEDIUM = 'medium';

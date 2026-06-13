@@ -111,7 +111,14 @@ php artisan audit-log:verify
 
 ### Anomaly detection and alerts
 
-The log watches itself for change bursts, mass deletions and off-hours activity, on demand or on a cron. Findings go to Slack, a signed webhook or mail.
+The log watches itself, on demand or on a cron, and findings go to Slack, a signed webhook or mail. Built-in rules:
+
+- **Change burst**: one actor making more than N changes in the window.
+- **Mass delete**: one actor deleting more than N records.
+- **Off-hours**: user activity inside a configured hour range.
+- **Cascade weight**: one correlation (a single request → job → job chain) that produced an unusually large number of changes across many models. Because the audit log already knows the full execution chain, this surfaces likely write-amplification or N+1-style cascades as a side-effect signal, no profiler required.
+
+You can also add your own rules as code (see the Enterprise section), and tune every threshold from the Settings UI.
 
 ### GDPR and compliance
 

@@ -83,10 +83,11 @@
             'id' => 'anomalies',
             'icon' => 'siren',
             'title' => 'Anomaly detection',
-            'intro' => 'The audit log watches itself: bursts of changes, mass deletions and off-hours activity are flagged.',
+            'intro' => 'The audit log watches itself: bursts of changes, mass deletions, off-hours activity and oversized cascades are flagged.',
             'points' => [
                 'The Anomalies page in the nav runs the scan on demand for a chosen window (hour to 30 days).',
-                'Three rules, tunable in Settings → General → Anomaly detection: change-burst threshold, mass-delete threshold and an off-hours range (e.g. 0,5).',
+                'Four rules, tunable in Settings → General → Anomaly detection: change-burst threshold, mass-delete threshold, an off-hours range (e.g. 0,5), and a cascade-weight threshold.',
+                'Cascade weight flags one correlation (a single request to job chain) that produced an unusually large number of changes, a possible write-amplification or N+1-style cascade surfaced from the execution chain itself.',
                 'Each finding fires the AnomalyDetected event, mails alerts.mail_to and goes to the configured Slack / webhook channels (Settings → General → Alerts).',
                 'Set the automatic scan cron there too (or anomalies.cron in the config), or run it yourself:',
             ],

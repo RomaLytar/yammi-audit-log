@@ -39,6 +39,7 @@ final class AnomalyScanner
         private readonly Clock $clock,
         private readonly int $rateThreshold = 200,
         private readonly int $deleteThreshold = 25,
+        private readonly int $cascadeThreshold = 150,
         private readonly array $offHours = [],
         private readonly array $rules = [],
         private readonly AuditRecordMapper $mapper = new AuditRecordMapper,
@@ -55,6 +56,7 @@ final class AnomalyScanner
         return array_merge(
             $this->burstFindings($start, $end, null, $this->rateThreshold, AnomalyData::RULE_RATE_SPIKE, 'changes'),
             $this->burstFindings($start, $end, ChangeType::Deleted, $this->deleteThreshold, AnomalyData::RULE_MASS_DELETE, 'deletions'),
+            $this->cascadeFindings($start, $end),
             $this->offHoursFindings($start, $end),
             $this->customFindings($start, $end),
         );
@@ -128,6 +130,53 @@ final class AnomalyScanner
                 $start,
                 $end,
                 sprintf('%d %s by %s in the last window (threshold %d).', $count, $unit, $label, $threshold),
+            );
+        }
+
+        return $findings;
+    }
+
+    /**
+     * One unit of work (a single correlation) that produced an unusually large
+     * number of changes across many models, a possible write-amplification or
+     * N+1-style cascade rather than a security event.
+     *
+     * @return list<AnomalyData>
+     */
+    private function cascadeFindings(DateTimeImmutable $start, DateTimeImmutable $end): array
+    {
+        if ($this->cascadeThreshold <= 0) {
+            return [];
+        }
+
+        $rows = $this->windowQuery($start, $end)
+            ->whereNotNull('correlation_id')
+            ->groupBy('correlation_id')
+            ->selectRaw('correlation_id, count(*) as total, count(distinct auditable_type) as models')
+            ->havingRaw('count(*) > ?', [$this->cascadeThreshold])
+            ->get();
+
+        $findings = [];
+
+        foreach ($rows as $row) {
+            $total = (int) $row->getAttribute('total');
+            $models = (int) $row->getAttribute('models');
+            $chain = substr((string) $row->getAttribute('correlation_id'), 0, 8);
+
+            $findings[] = $this->finding(
+                AnomalyData::RULE_CASCADE,
+                ActorType::System->value,
+                'chain '.$chain,
+                $total,
+                $start,
+                $end,
+                sprintf(
+                    'One action (chain %s) produced %d changes across %d model(s), over the threshold of %d. Possible write-amplification or N+1-style cascade.',
+                    $chain,
+                    $total,
+                    $models,
+                    $this->cascadeThreshold,
+                ),
             );
         }
 

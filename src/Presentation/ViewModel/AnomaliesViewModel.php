@@ -18,6 +18,7 @@ final class AnomaliesViewModel
         AnomalyData::RULE_RATE_SPIKE => ['Change burst', 'warning', 'trending-up'],
         AnomalyData::RULE_MASS_DELETE => ['Mass delete', 'destructive', 'trash-2'],
         AnomalyData::RULE_OFF_HOURS => ['Off hours', 'info', 'moon'],
+        AnomalyData::RULE_CASCADE => ['Cascade', 'info', 'git-fork'],
     ];
 
     /**

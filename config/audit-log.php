@@ -206,6 +206,11 @@ return [
         // Flag an actor deleting more records than this inside the window. 0 = rule off.
         'delete_threshold' => 25,
 
+        // Flag a single correlation (one request -> job -> job chain) that
+        // produced more than this many changes, a possible write-amplification
+        // or N+1-style cascade. 0 = rule off.
+        'cascade_threshold' => 150,
+
         // Flag user changes recorded between these hours (inclusive, 0-23),
         // e.g. [0, 5] for night activity; [22, 5] wraps midnight. Empty = rule off.
         'off_hours' => [],

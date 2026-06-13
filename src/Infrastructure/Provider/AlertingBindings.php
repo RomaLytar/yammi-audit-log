@@ -99,6 +99,7 @@ final class AlertingBindings extends BindingRegistrar
                 $this->app->make(Clock::class),
                 max(0, (int) $config->get('audit-log.anomalies.rate_threshold', 200)),
                 max(0, (int) $config->get('audit-log.anomalies.delete_threshold', 25)),
+                max(0, (int) $config->get('audit-log.anomalies.cascade_threshold', 150)),
                 $this->hourRange($config->get('audit-log.anomalies.off_hours', [])),
                 $this->anomalyRules($config->get('audit-log.anomalies.rules', [])),
                 $this->app->make(AuditRecordMapper::class),

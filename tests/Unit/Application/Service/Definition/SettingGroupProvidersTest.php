@@ -27,7 +27,7 @@ final class SettingGroupProvidersTest extends TestCase
         yield 'capture' => [new CaptureSettings, SettingRegistry::GROUP_CAPTURE, 2];
         yield 'redaction' => [new RedactionSettings, SettingRegistry::GROUP_REDACTION, 2];
         yield 'alerts' => [new AlertSettings, SettingRegistry::GROUP_ALERTS, 3];
-        yield 'anomalies' => [new AnomalySettings, SettingRegistry::GROUP_ANOMALIES, 4];
+        yield 'anomalies' => [new AnomalySettings, SettingRegistry::GROUP_ANOMALIES, 5];
         yield 'ui' => [new UiSettings, SettingRegistry::GROUP_UI, 4];
     }
 

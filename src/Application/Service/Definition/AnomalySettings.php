@@ -40,6 +40,18 @@ final class AnomalySettings implements SettingGroupProvider
             ),
             new SettingDefinitionData(
                 group: SettingRegistry::GROUP_ANOMALIES,
+                key: 'anomalies_cascade_threshold',
+                configPath: 'audit-log.anomalies.cascade_threshold',
+                type: SettingType::Integer,
+                default: 150,
+                label: 'Cascade-weight threshold',
+                description: 'Flag a single correlation (one request to job chain) that produced more changes than this, a possible write-amplification or N+1-style cascade. 0 turns the rule off.',
+                min: 0,
+                max: 1000000,
+                suffix: 'changes',
+            ),
+            new SettingDefinitionData(
+                group: SettingRegistry::GROUP_ANOMALIES,
                 key: 'anomalies_off_hours',
                 configPath: 'audit-log.anomalies.off_hours',
                 type: SettingType::CsvList,

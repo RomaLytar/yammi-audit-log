@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Console;
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
+use Yammi\AuditLog\Infrastructure\Console\Support\RetentionWindow;
 
 /** @internal */
 final class PruneAuditLogCommand extends Command
@@ -18,7 +19,7 @@ final class PruneAuditLogCommand extends Command
 
     public function handle(PruneAuditLogAction $prune, ConfigRepository $config): int
     {
-        $days = $this->resolveDays($config);
+        $days = (new RetentionWindow)->days($this->option('days'), $config);
 
         if ($days <= 0) {
             $this->info('Audit retention is disabled (retention days = 0); nothing pruned.');
@@ -33,18 +34,5 @@ final class PruneAuditLogCommand extends Command
         $this->info("Pruned {$deleted} audit record(s) older than {$effective} day(s).");
 
         return self::SUCCESS;
-    }
-
-    private function resolveDays(ConfigRepository $config): int
-    {
-        $override = $this->option('days');
-
-        if (is_numeric($override)) {
-            return (int) $override;
-        }
-
-        $configured = $config->get('audit-log.retention.days', PruneAuditLogAction::DEFAULT_DAYS);
-
-        return is_numeric($configured) ? (int) $configured : PruneAuditLogAction::DEFAULT_DAYS;
     }
 }

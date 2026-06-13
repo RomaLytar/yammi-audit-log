@@ -64,4 +64,12 @@ final class ChangeTypeTest extends TestCase
         $this->assertSame('Detached', ChangeType::Detached->label());
         $this->assertSame('Synced', ChangeType::Synced->label());
     }
+
+    public function test_it_lists_every_backing_value(): void
+    {
+        $this->assertSame(
+            ['created', 'updated', 'deleted', 'restored', 'attached', 'detached', 'synced', 'accessed'],
+            ChangeType::values(),
+        );
+    }
 }

@@ -47,7 +47,7 @@ final class ListChangesAction
             lastPage: $paged->lastPage(),
             models: $this->query->distinctModels(),
             actorTypes: $this->query->distinctActorTypes(),
-            events: array_map(static fn (ChangeType $type): string => $type->value, ChangeType::cases()),
+            events: ChangeType::values(),
             filters: $filters,
             correlationSizes: $this->query->chainSizes(array_keys($correlationIds)),
         );

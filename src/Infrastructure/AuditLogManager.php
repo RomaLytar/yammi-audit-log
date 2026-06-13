@@ -27,6 +27,8 @@ use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
 use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicy;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Recorder\ManualChangeRecorder;
 
@@ -50,7 +52,19 @@ final class AuditLogManager
         private readonly AnomalyScanner $anomalyScanner,
         private readonly UrlGenerator $url,
         private readonly ChangeReasonContext $reasonContext = new ChangeReasonContext,
+        private readonly AuditPolicyRegistry $policies = new AuditPolicyRegistry,
     ) {}
+
+    /**
+     * Declare what is audited for a model, on top of the safe capture-all
+     * default: AuditLog::policy(Order::class)->ignore(['updated_at'])->when(...).
+     *
+     * @param  class-string  $model
+     */
+    public function policy(string $model): AuditPolicy
+    {
+        return $this->policies->policy($model);
+    }
 
     public function for(Model|string $auditable, int|string|null $id = null, int $limit = 50): TimelineData
     {

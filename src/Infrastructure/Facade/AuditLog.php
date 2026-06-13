@@ -18,8 +18,10 @@ use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Application\DTO\Stats\StatsData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Infrastructure\AuditLogManager;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicy;
 
 /**
+ * @method static AuditPolicy policy(string $model)
  * @method static TimelineData for(Model|string $auditable, int|string|null $id = null, int $limit = 50)
  * @method static StateData stateAt(Model|string $auditable, int|string|null $id = null, DateTimeImmutable|string|null $at = null)
  * @method static ChangeListData changes(array $filters = [])

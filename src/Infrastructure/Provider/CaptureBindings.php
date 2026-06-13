@@ -30,6 +30,7 @@ use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
 
 /**
@@ -92,12 +93,15 @@ final class CaptureBindings extends BindingRegistrar
             );
         });
 
+        $this->app->singleton(AuditPolicyRegistry::class);
+
         $this->app->singleton(AuditableGuard::class, function (): AuditableGuard {
             $mode = $this->config()->get('audit-log.capture.mode', AuditableGuard::MODE_ALL);
 
             return new AuditableGuard(
                 $this->stringList($this->config()->get('audit-log.capture.exclude', [])),
                 $mode === AuditableGuard::MODE_OPT_IN ? AuditableGuard::MODE_OPT_IN : AuditableGuard::MODE_ALL,
+                $this->app->make(AuditPolicyRegistry::class),
             );
         });
 

@@ -4,23 +4,28 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Provider;
 
+use Closure;
 use Illuminate\Console\Scheduling\Schedule;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Illuminate\Contracts\Foundation\Application;
 use Yammi\AuditLog\Infrastructure\Console\DetectAnomaliesCommand;
 use Yammi\AuditLog\Infrastructure\Console\GenerateDigestCommand;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
 
 /**
- * Registers the package's scheduled commands (prune, anomaly scan, digest) via
- * callAfterResolving so they attach to the application's Schedule singleton.
+ * Registers the package's scheduled commands (prune, anomaly scan, digest).
+ * The provider hands in its own callAfterResolving so the callbacks attach to
+ * the application's Schedule singleton at the right moment, even on the older
+ * Laravel versions where booting and resolving order differs.
  *
  * @internal
  */
 final class ScheduleRegistrar
 {
+    /**
+     * @param  Closure(string, callable): void  $callAfterResolving
+     */
     public function __construct(
-        private readonly Application $app,
+        private readonly Closure $callAfterResolving,
     ) {}
 
     public function register(ConfigRepository $config): void
@@ -38,12 +43,11 @@ final class ScheduleRegistrar
             return;
         }
 
-        $this->app->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($config): void {
-            $schedule->command(PruneAuditLogCommand::class)
-                ->cron((string) $config->get('audit-log.retention.schedule.cron', '0 3 * * *'))
-                ->name('audit-log:prune')
-                ->withoutOverlapping();
-        });
+        $this->schedule(
+            PruneAuditLogCommand::class,
+            (string) $config->get('audit-log.retention.schedule.cron', '0 3 * * *'),
+            'audit-log:prune',
+        );
     }
 
     private function registerAnomalyScan(ConfigRepository $config): void
@@ -54,12 +58,7 @@ final class ScheduleRegistrar
             return;
         }
 
-        $this->app->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($cron): void {
-            $schedule->command(DetectAnomaliesCommand::class)
-                ->cron(trim($cron))
-                ->name('audit-log:detect-anomalies')
-                ->withoutOverlapping();
-        });
+        $this->schedule(DetectAnomaliesCommand::class, trim($cron), 'audit-log:detect-anomalies');
     }
 
     private function registerDigest(ConfigRepository $config): void
@@ -70,10 +69,15 @@ final class ScheduleRegistrar
             return;
         }
 
-        $this->app->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($cron): void {
-            $schedule->command(GenerateDigestCommand::class)
-                ->cron(trim($cron))
-                ->name('audit-log:digest')
+        $this->schedule(GenerateDigestCommand::class, trim($cron), 'audit-log:digest');
+    }
+
+    private function schedule(string $command, string $cron, string $name): void
+    {
+        ($this->callAfterResolving)(Schedule::class, static function (Schedule $schedule) use ($command, $cron, $name): void {
+            $schedule->command($command)
+                ->cron($cron)
+                ->name($name)
                 ->withoutOverlapping();
         });
     }

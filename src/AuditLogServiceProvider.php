@@ -107,7 +107,9 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->registerTenantScope();
 
         (new HttpRegistrar($this->app, self::ROUTES_PATH, self::API_ROUTES_PATH))->register($config);
-        (new ScheduleRegistrar($this->app))->register($config);
+        (new ScheduleRegistrar(
+            fn (string $abstract, callable $callback) => $this->callAfterResolving($abstract, $callback),
+        ))->register($config);
 
         if (! (bool) $config->get('audit-log.enabled', true)) {
             return;

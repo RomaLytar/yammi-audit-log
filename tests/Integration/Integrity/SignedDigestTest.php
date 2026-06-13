@@ -53,8 +53,10 @@ final class SignedDigestTest extends TestCase
 
         $this->artisan('audit-log:digest')->assertSuccessful();
 
-        $headId = AuditRecordModel::query()->orderByDesc('id')->value('id');
-        AuditRecordModel::query()->whereKey($headId)->delete();
+        $head = AuditDigestModel::query()->value('chain_head');
+        $this->assertIsString($head);
+
+        AuditRecordModel::query()->withoutGlobalScopes()->delete();
 
         $this->artisan('audit-log:verify')->assertFailed();
     }

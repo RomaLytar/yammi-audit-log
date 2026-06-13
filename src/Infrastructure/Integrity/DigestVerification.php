@@ -13,9 +13,4 @@ final class DigestVerification
         public readonly ?bool $signatureValid,
         public readonly bool $headPresent,
     ) {}
-
-    public function passed(): bool
-    {
-        return $this->signatureValid !== false && $this->headPresent;
-    }
 }

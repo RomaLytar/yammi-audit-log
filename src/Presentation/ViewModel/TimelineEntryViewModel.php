@@ -84,6 +84,11 @@ final class TimelineEntryViewModel
         return $this->entry->isNoise;
     }
 
+    public function reason(): ?string
+    {
+        return $this->entry->reason;
+    }
+
     public function chainDepth(): int
     {
         return min(6, $this->entry->chainDepth);

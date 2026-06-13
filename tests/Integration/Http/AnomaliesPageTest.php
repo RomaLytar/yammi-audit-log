@@ -56,6 +56,8 @@ final class AnomaliesPageTest extends TestCase
             ->assertOk()
             ->assertSee('1 finding')
             ->assertSee('Change burst')
+            ->assertSee('Severity')
+            ->assertSee('high')
             ->assertSee('burst-job')
             ->assertSee('Tune thresholds');
     }

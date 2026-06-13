@@ -4,63 +4,16 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog;
 
-use Illuminate\Console\Scheduling\Schedule;
-use Illuminate\Contracts\Auth\Factory as AuthFactory;
-use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Illuminate\Contracts\Events\Dispatcher as EventDispatcher;
-use Illuminate\Contracts\Mail\Mailer;
-use Illuminate\Contracts\View\Factory as ViewFactory;
-use Illuminate\Contracts\View\View;
-use Illuminate\Database\ConnectionResolverInterface;
 use Illuminate\Database\Eloquent\Builder as EloquentBuilder;
-use Illuminate\Http\Client\Factory as HttpFactory;
-use Illuminate\Routing\Router;
 use Illuminate\Support\ServiceProvider;
-use Psr\Log\LoggerInterface;
-use Throwable;
 use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
-use Yammi\AuditLog\Application\Contract\AnomalyRule;
-use Yammi\AuditLog\Application\Contract\AuditDataTransferrer;
-use Yammi\AuditLog\Application\Contract\Clock;
-use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
-use Yammi\AuditLog\Application\Contract\Query\AuditStatsQuery;
-use Yammi\AuditLog\Application\Contract\Resolver\ActorResolver;
-use Yammi\AuditLog\Application\Contract\Resolver\CorrelationResolver;
-use Yammi\AuditLog\Application\Contract\Resolver\LabelResolver;
-use Yammi\AuditLog\Application\Contract\Resolver\ReasonResolver;
-use Yammi\AuditLog\Application\Contract\Resolver\RequestContextResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\TenantResolver;
-use Yammi\AuditLog\Application\Contract\Stream\LogStreamDriver;
-use Yammi\AuditLog\Application\Contract\ValueRedactor;
-use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
-use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
-use Yammi\AuditLog\Application\Pipeline\Stage\ResolveActorStage;
-use Yammi\AuditLog\Application\Pipeline\Stage\ResolveLabelsStage;
-use Yammi\AuditLog\Application\Pipeline\Stage\ResolveRequestContextStage;
 use Yammi\AuditLog\Application\Playground\MethodCatalog;
-use Yammi\AuditLog\Application\Service\AlertRuleMatcher;
 use Yammi\AuditLog\Application\Service\CriteriaFactory;
 use Yammi\AuditLog\Application\Service\FilterParser;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
-use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
-use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
-use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
-use Yammi\AuditLog\Infrastructure\Actor\ActorResolverChain;
 use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
-use Yammi\AuditLog\Infrastructure\Actor\Provider\AuthenticatedUserProvider;
-use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
-use Yammi\AuditLog\Infrastructure\Actor\Provider\ImpersonationAwareUserProvider;
-use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
-use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
-use Yammi\AuditLog\Infrastructure\Alert\AlertChannels;
-use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
-use Yammi\AuditLog\Infrastructure\Alert\AlertLinker;
-use Yammi\AuditLog\Infrastructure\Alert\Channel\SlackAlertChannel;
-use Yammi\AuditLog\Infrastructure\Alert\Channel\WebhookAlertChannel;
-use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
-use Yammi\AuditLog\Infrastructure\AuditLogManager;
-use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
 use Yammi\AuditLog\Infrastructure\Capture\ChangeDataFactory;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
@@ -72,41 +25,19 @@ use Yammi\AuditLog\Infrastructure\Console\SubjectReportCommand;
 use Yammi\AuditLog\Infrastructure\Console\ToggleUiCommand;
 use Yammi\AuditLog\Infrastructure\Console\TransferAuditDataCommand;
 use Yammi\AuditLog\Infrastructure\Console\VerifyIntegrityCommand;
-use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
-use Yammi\AuditLog\Infrastructure\Context\ContextReasonResolver;
 use Yammi\AuditLog\Infrastructure\Context\ContextRegistrar;
-use Yammi\AuditLog\Infrastructure\Context\HttpRequestContextResolver;
-use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
-use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
-use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
-use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
-use Yammi\AuditLog\Infrastructure\Http\AuthGuardDetector;
-use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\ScopedActivityController;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
-use Yammi\AuditLog\Infrastructure\Integrity\IntegrityHasher;
-use Yammi\AuditLog\Infrastructure\Integrity\IntegritySigner;
-use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
-use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditLogQuery;
-use Yammi\AuditLog\Infrastructure\Persistence\Query\EloquentAuditStatsQuery;
-use Yammi\AuditLog\Infrastructure\Persistence\Repository\AuditRowWriter;
-use Yammi\AuditLog\Infrastructure\Persistence\Repository\EloquentAuditRecordRepository;
-use Yammi\AuditLog\Infrastructure\Persistence\Repository\QueuedAuditRecordRepository;
-use Yammi\AuditLog\Infrastructure\Persistence\Transfer\EloquentAuditDataTransferrer;
-use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
-use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
-use Yammi\AuditLog\Infrastructure\Settings\Persistence\Repository\EloquentGeneralSettingRepository;
+use Yammi\AuditLog\Infrastructure\Provider\AlertingBindings;
+use Yammi\AuditLog\Infrastructure\Provider\CaptureBindings;
+use Yammi\AuditLog\Infrastructure\Provider\HttpRegistrar;
+use Yammi\AuditLog\Infrastructure\Provider\IntegrityBindings;
+use Yammi\AuditLog\Infrastructure\Provider\ReadModelBindings;
+use Yammi\AuditLog\Infrastructure\Provider\ScheduleRegistrar;
+use Yammi\AuditLog\Infrastructure\Provider\TenancyBindings;
 use Yammi\AuditLog\Infrastructure\Settings\StoredSettingsApplier;
-use Yammi\AuditLog\Infrastructure\Stream\ChangeStreamer;
-use Yammi\AuditLog\Infrastructure\Stream\Driver\DatadogLogsDriver;
-use Yammi\AuditLog\Infrastructure\Stream\Driver\ElasticDriver;
-use Yammi\AuditLog\Infrastructure\Stream\Driver\HttpStreamDriver;
-use Yammi\AuditLog\Infrastructure\Stream\Driver\SplunkHecDriver;
-use Yammi\AuditLog\Infrastructure\Support\SystemClock;
-use Yammi\AuditLog\Infrastructure\Tenancy\NullTenantResolver;
-use Yammi\AuditLog\Infrastructure\Transfer\ConnectionStatusInspector;
 
 final class AuditLogServiceProvider extends ServiceProvider
 {
@@ -124,49 +55,11 @@ final class AuditLogServiceProvider extends ServiceProvider
     {
         $this->mergeConfigFrom(self::CONFIG_PATH, 'audit-log');
 
-        $this->app->singleton(AuditRecordRepository::class, function (): AuditRecordRepository {
-            $config = $this->config();
-            $inner = $this->app->make(EloquentAuditRecordRepository::class);
-
-            if (! (bool) $config->get('audit-log.write.async', false)) {
-                return $inner;
-            }
-
-            $queue = $config->get('audit-log.write.queue');
-
-            return new QueuedAuditRecordRepository(
-                $inner,
-                $this->app->make(AuditRecordMapper::class),
-                $this->app->make(BusDispatcher::class),
-                is_string($queue) && $queue !== '' ? $queue : null,
-            );
-        });
-        $this->app->singleton(AuditLogQuery::class, EloquentAuditLogQuery::class);
-        $this->app->singleton(AuditStatsQuery::class, EloquentAuditStatsQuery::class);
-        $this->app->singleton(Clock::class, SystemClock::class);
-
-        $this->app->singleton(LabelResolver::class, function (): LabelResolver {
-            return new ConventionLabelResolver(
-                $this->classMap($this->config()->get('audit-log.labels.map', [])),
-            );
-        });
-        $this->app->singleton(AuditReader::class);
-        $this->app->singleton(AuditLogManager::class);
-
-        $this->app->singleton(ActorContext::class);
-        $this->app->singleton(CorrelationContext::class);
-        $this->app->singleton(ChangeReasonContext::class);
-        $this->app->singleton(RequestContextHolder::class);
-        $this->app->singleton(CorrelationResolver::class, ContextCorrelationResolver::class);
-        $this->app->singleton(ReasonResolver::class, ContextReasonResolver::class);
-
-        $this->app->singleton(RequestContextResolver::class, function (): RequestContextResolver {
-            if (! (bool) $this->config()->get('audit-log.capture.request_context', false)) {
-                return new NullRequestContextResolver;
-            }
-
-            return new HttpRequestContextResolver($this->app->make(RequestContextHolder::class));
-        });
+        (new ReadModelBindings($this->app))->register();
+        (new CaptureBindings($this->app))->register();
+        (new AlertingBindings($this->app))->register();
+        (new IntegrityBindings($this->app))->register();
+        (new TenancyBindings($this->app))->register();
 
         foreach ([
             EloquentChangeRecorder::class,
@@ -182,183 +75,6 @@ final class AuditLogServiceProvider extends ServiceProvider
         ] as $stateless) {
             $this->app->singleton($stateless);
         }
-
-        $this->app->singleton(AuthenticatedUserProvider::class, function (): AuthenticatedUserProvider {
-            return new AuthenticatedUserProvider(
-                $this->app->make(AuthFactory::class),
-                $this->stringList($this->config()->get('audit-log.actor.guards', [])),
-            );
-        });
-
-        $this->app->singleton(ImpersonationAwareUserProvider::class, function (): ImpersonationAwareUserProvider {
-            return new ImpersonationAwareUserProvider(
-                $this->app->make(AuthenticatedUserProvider::class),
-                $this->app->make(RequestContextHolder::class),
-                $this->app->make(AuthFactory::class),
-                $this->stringList($this->config()->get('audit-log.actor.impersonation_keys', ['impersonated_by'])),
-                $this->stringList($this->config()->get('audit-log.actor.guards', [])),
-            );
-        });
-
-        $this->app->singleton(ActorResolver::class, function (): ActorResolver {
-            return new ActorResolverChain([
-                $this->app->make(QueuedJobActorProvider::class),
-                $this->app->make(SchedulerActorProvider::class),
-                $this->app->make(ConsoleActorProvider::class),
-                $this->app->make(ImpersonationAwareUserProvider::class),
-            ], $this->app->make(ActorContext::class));
-        });
-
-        $this->app->singleton(ValueRedactor::class, function (): ValueRedactor {
-            $config = $this->config();
-
-            return new ConfigValueRedactor(
-                $this->stringList($config->get('audit-log.redaction.keys', [])),
-                (string) $config->get('audit-log.redaction.placeholder', '[redacted]'),
-            );
-        });
-
-        $this->app->singleton(AuditDataTransferrer::class, function (): AuditDataTransferrer {
-            return new EloquentAuditDataTransferrer(
-                $this->app->make(ConnectionResolverInterface::class),
-                $this->auditTable(),
-            );
-        });
-
-        $this->app->singleton(GeneralSettingRepository::class, EloquentGeneralSettingRepository::class);
-
-        $this->app->singleton(AlertChannels::class, function (): AlertChannels {
-            $config = $this->config();
-            $appName = $config->get('app.name');
-            $source = is_string($appName) && $appName !== '' ? $appName : null;
-
-            $channels = [];
-
-            $slackUrl = $config->get('audit-log.alerts.slack_webhook_url');
-
-            if (is_string($slackUrl) && trim($slackUrl) !== '') {
-                $channels[] = new SlackAlertChannel($this->app->make(HttpFactory::class), trim($slackUrl), $source);
-            }
-
-            $webhookUrl = $config->get('audit-log.alerts.webhook.url');
-            $secret = $config->get('audit-log.alerts.webhook.secret');
-
-            if (is_string($webhookUrl) && trim($webhookUrl) !== '') {
-                $channels[] = new WebhookAlertChannel(
-                    $this->app->make(HttpFactory::class),
-                    trim($webhookUrl),
-                    is_string($secret) && $secret !== '' ? $secret : null,
-                    $source,
-                );
-            }
-
-            return new AlertChannels($this->app->make(LoggerInterface::class), $channels);
-        });
-
-        $this->app->singleton(AlertDispatcher::class, function (): AlertDispatcher {
-            $config = $this->config();
-            $rules = $config->get('audit-log.alerts.rules', []);
-
-            return new AlertDispatcher(
-                new AlertRuleMatcher,
-                $this->app->make(EventDispatcher::class),
-                $this->app->make(Mailer::class),
-                is_array($rules) ? array_values(array_filter($rules, is_array(...))) : [],
-                $this->stringList($config->get('audit-log.alerts.mail_to', [])),
-                $this->app->make(AlertChannels::class),
-                $this->app->make(AlertLinker::class),
-            );
-        });
-
-        $this->app->singleton(ChangeStreamer::class, function (): ChangeStreamer {
-            $config = $this->config();
-            $queue = $config->get('audit-log.stream.queue');
-
-            return new ChangeStreamer(
-                (bool) $config->get('audit-log.stream.enabled', false) ? $this->makeStreamDriver($config) : null,
-                $this->app->make(BusDispatcher::class),
-                $this->app->make(LoggerInterface::class),
-                is_string($queue) && $queue !== '' ? $queue : null,
-            );
-        });
-
-        $this->app->singleton(TenantResolver::class, function (): TenantResolver {
-            $resolver = $this->config()->get('audit-log.tenancy.resolver');
-
-            if (is_string($resolver) && is_subclass_of($resolver, TenantResolver::class)) {
-                $instance = $this->app->make($resolver);
-
-                if ($instance instanceof TenantResolver) {
-                    return $instance;
-                }
-            }
-
-            return new NullTenantResolver;
-        });
-
-        $this->app->singleton(AnomalyScanner::class, function (): AnomalyScanner {
-            $config = $this->config();
-
-            return new AnomalyScanner(
-                $this->app->make(Clock::class),
-                max(0, (int) $config->get('audit-log.anomalies.rate_threshold', 200)),
-                max(0, (int) $config->get('audit-log.anomalies.delete_threshold', 25)),
-                $this->hourRange($config->get('audit-log.anomalies.off_hours', [])),
-                $this->anomalyRules($config->get('audit-log.anomalies.rules', [])),
-                $this->app->make(AuditRecordMapper::class),
-            );
-        });
-
-        $this->app->singleton(AuditRowWriter::class, function (): AuditRowWriter {
-            return new AuditRowWriter(
-                new IntegrityHasher,
-                (bool) $this->config()->get('audit-log.integrity.enabled', false),
-            );
-        });
-
-        $this->app->singleton(IntegritySigner::class, function (): IntegritySigner {
-            $config = $this->config();
-            $private = $config->get('audit-log.integrity.signing.private_key');
-            $public = $config->get('audit-log.integrity.signing.public_key');
-
-            return new IntegritySigner(
-                is_string($private) && $private !== '' ? $private : null,
-                is_string($public) && $public !== '' ? $public : null,
-            );
-        });
-
-        $this->app->singleton(ConnectionStatusInspector::class, function (): ConnectionStatusInspector {
-            return new ConnectionStatusInspector(
-                $this->app->make(ConnectionResolverInterface::class),
-                $this->config(),
-                $this->auditTable(),
-            );
-        });
-
-        $this->app->singleton(AuditableGuard::class, function (): AuditableGuard {
-            $mode = $this->config()->get('audit-log.capture.mode', AuditableGuard::MODE_ALL);
-
-            return new AuditableGuard(
-                $this->stringList($this->config()->get('audit-log.capture.exclude', [])),
-                $mode === AuditableGuard::MODE_OPT_IN ? AuditableGuard::MODE_OPT_IN : AuditableGuard::MODE_ALL,
-            );
-        });
-
-        $this->app->singleton(ComputeDiffStage::class, function (): ComputeDiffStage {
-            return new ComputeDiffStage(
-                $this->app->make(ValueRedactor::class),
-                $this->stringList($this->config()->get('audit-log.capture.ignore_attributes', [])),
-            );
-        });
-
-        $this->app->singleton(RecordChangePipeline::class, function (): RecordChangePipeline {
-            return new RecordChangePipeline([
-                $this->app->make(ComputeDiffStage::class),
-                $this->app->make(ResolveActorStage::class),
-                $this->app->make(ResolveLabelsStage::class),
-                $this->app->make(ResolveRequestContextStage::class),
-            ]);
-        });
     }
 
     public function boot(): void
@@ -390,19 +106,10 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->app->make(StoredSettingsApplier::class)->apply();
         $this->registerTenantScope();
 
-        if ((bool) $config->get('audit-log.ui.enabled', true)) {
-            $this->registerRoutes($config);
-            $this->registerActivityRoute($config);
-            $this->registerNavComposer();
-        }
-
-        if ((bool) $config->get('audit-log.api.enabled', false)) {
-            $this->registerApiRoutes($config);
-        }
-
-        $this->registerRetention($config);
-        $this->registerAnomalyScan($config);
-        $this->registerDigestSchedule($config);
+        (new HttpRegistrar($this->app, self::ROUTES_PATH, self::API_ROUTES_PATH))->register($config);
+        (new ScheduleRegistrar(
+            fn (string $abstract, callable $callback) => $this->callAfterResolving($abstract, $callback),
+        ))->register($config);
 
         if (! (bool) $config->get('audit-log.enabled', true)) {
             return;
@@ -411,22 +118,6 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->app->make(CaptureRegistrar::class)->register();
         $this->app->make(ContextRegistrar::class)->register();
         $this->app->make(CorrelationMiddlewareRegistrar::class)->register();
-    }
-
-    private function registerRetention(ConfigRepository $config): void
-    {
-        $days = (int) $config->get('audit-log.retention.days', 0);
-
-        if ($days <= 0 || ! (bool) $config->get('audit-log.retention.schedule.enabled', true)) {
-            return;
-        }
-
-        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($config): void {
-            $schedule->command(PruneAuditLogCommand::class)
-                ->cron((string) $config->get('audit-log.retention.schedule.cron', '0 3 * * *'))
-                ->name('audit-log:prune')
-                ->withoutOverlapping();
-        });
     }
 
     private function registerTenantScope(): void
@@ -444,251 +135,8 @@ final class AuditLogServiceProvider extends ServiceProvider
         );
     }
 
-    private function registerAnomalyScan(ConfigRepository $config): void
-    {
-        $cron = $config->get('audit-log.anomalies.cron');
-
-        if (! is_string($cron) || trim($cron) === '') {
-            return;
-        }
-
-        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($cron): void {
-            $schedule->command(DetectAnomaliesCommand::class)
-                ->cron(trim($cron))
-                ->name('audit-log:detect-anomalies')
-                ->withoutOverlapping();
-        });
-    }
-
-    private function registerDigestSchedule(ConfigRepository $config): void
-    {
-        $cron = $config->get('audit-log.integrity.digest_cron');
-
-        if (! is_string($cron) || trim($cron) === '') {
-            return;
-        }
-
-        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($cron): void {
-            $schedule->command(GenerateDigestCommand::class)
-                ->cron(trim($cron))
-                ->name('audit-log:digest')
-                ->withoutOverlapping();
-        });
-    }
-
-    private function registerApiRoutes(ConfigRepository $config): void
-    {
-        $path = $config->get('audit-log.api.path', 'audit-log/api');
-        $configured = $config->get('audit-log.api.middleware', ['api']);
-        $middleware = is_array($configured) ? array_values($configured) : ['api'];
-
-        if (! (bool) $config->get('audit-log.api.allow_unauthenticated', false)
-            && ! (new AuthGuardDetector)->hasGuard($middleware)) {
-            $this->app->make(LoggerInterface::class)->error(
-                'audit-log API routes were not registered: audit-log.api.middleware carries no authentication guard. '
-                .'Add an auth guard (e.g. "auth:sanctum"), or set audit-log.api.allow_unauthenticated=true to override.',
-            );
-
-            return;
-        }
-
-        $this->app->make(Router::class)->group([
-            'prefix' => is_string($path) ? $path : 'audit-log/api',
-            'middleware' => $middleware,
-        ], function (): void {
-            $this->loadRoutesFrom(self::API_ROUTES_PATH);
-        });
-    }
-
-    private function registerNavComposer(): void
-    {
-        $this->app->make(ViewFactory::class)->composer(
-            'audit-log::layouts.app',
-            function (View $view): void {
-                try {
-                    $view->with('auditNoiseCount', $this->app->make(AuditLogQuery::class)->countNoise());
-                } catch (Throwable) {
-                    $view->with('auditNoiseCount', 0);
-                }
-            },
-        );
-    }
-
-    private function registerActivityRoute(ConfigRepository $config): void
-    {
-        $path = $config->get('audit-log.ui.path', 'audit-log');
-        $router = $this->app->make(Router::class);
-
-        $router->group([
-            'prefix' => is_string($path) ? $path : 'audit-log',
-            'middleware' => ['signed'],
-        ], static function () use ($router): void {
-            $router->get('activity', ScopedActivityController::class)->name('audit-log.activity');
-        });
-    }
-
-    private function registerRoutes(ConfigRepository $config): void
-    {
-        $path = $config->get('audit-log.ui.path', 'audit-log');
-        $configured = $config->get('audit-log.ui.middleware', ['web']);
-        $middleware = is_array($configured) ? array_values($configured) : ['web'];
-
-        $throttle = $config->get('audit-log.ui.throttle');
-        if (is_string($throttle) && $throttle !== '') {
-            $middleware[] = 'throttle:'.$throttle;
-        }
-
-        $gate = $config->get('audit-log.ui.gate');
-        if (is_string($gate) && $gate !== '') {
-            $middleware[] = 'can:'.$gate;
-        }
-
-        $this->app->make(Router::class)->group([
-            'prefix' => is_string($path) ? $path : 'audit-log',
-            'middleware' => $middleware,
-        ], function (): void {
-            $this->loadRoutesFrom(self::ROUTES_PATH);
-        });
-    }
-
     private function config(): ConfigRepository
     {
         return $this->app->make(ConfigRepository::class);
-    }
-
-    private function auditTable(): string
-    {
-        $table = $this->config()->get('audit-log.database.table', 'audit_log');
-
-        return is_string($table) ? $table : 'audit_log';
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function classMap(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        $out = [];
-
-        foreach ($value as $field => $class) {
-            if (is_string($field) && $field !== '' && is_string($class) && $class !== '') {
-                $out[$field] = $class;
-            }
-        }
-
-        return $out;
-    }
-
-    private function makeStreamDriver(ConfigRepository $config): ?LogStreamDriver
-    {
-        $endpoint = $config->get('audit-log.stream.endpoint');
-
-        if (! is_string($endpoint) || trim($endpoint) === '') {
-            return null;
-        }
-
-        $endpoint = trim($endpoint);
-        $token = $config->get('audit-log.stream.token');
-        $token = is_string($token) ? $token : '';
-        $source = $config->get('audit-log.stream.source');
-        $source = is_string($source) && $source !== '' ? $source : 'audit-log';
-        $headers = $this->stringMap($config->get('audit-log.stream.headers', []));
-        $driver = $config->get('audit-log.stream.driver');
-
-        return match (is_string($driver) ? $driver : 'http') {
-            'splunk' => new SplunkHecDriver($endpoint, $token, $source, $headers),
-            'datadog' => new DatadogLogsDriver($endpoint, $token, $source, $headers),
-            'elastic' => new ElasticDriver($endpoint, $token !== '' ? $token : null, $headers),
-            default => new HttpStreamDriver($endpoint, $token !== '' ? $token : null, $headers),
-        };
-    }
-
-    /**
-     * @return list<AnomalyRule>
-     */
-    private function anomalyRules(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        $rules = [];
-
-        foreach ($value as $class) {
-            if (is_string($class) && is_subclass_of($class, AnomalyRule::class)) {
-                $instance = $this->app->make($class);
-
-                if ($instance instanceof AnomalyRule) {
-                    $rules[] = $instance;
-                }
-            }
-        }
-
-        return $rules;
-    }
-
-    /**
-     * @return array<string, string>
-     */
-    private function stringMap(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        $out = [];
-
-        foreach ($value as $key => $item) {
-            if (is_string($key) && $key !== '' && is_scalar($item)) {
-                $out[$key] = (string) $item;
-            }
-        }
-
-        return $out;
-    }
-
-    /**
-     * @return list<int>
-     */
-    private function hourRange(mixed $value): array
-    {
-        if (! is_array($value) || count($value) !== 2) {
-            return [];
-        }
-
-        $hours = array_values($value);
-
-        if (! is_numeric($hours[0]) || ! is_numeric($hours[1])) {
-            return [];
-        }
-
-        $from = (int) $hours[0];
-        $to = (int) $hours[1];
-
-        return $from >= 0 && $from <= 23 && $to >= 0 && $to <= 23 ? [$from, $to] : [];
-    }
-
-    /**
-     * @return list<string>
-     */
-    private function stringList(mixed $value): array
-    {
-        if (! is_array($value)) {
-            return [];
-        }
-
-        $out = [];
-
-        foreach ($value as $item) {
-            if (is_string($item)) {
-                $out[] = $item;
-            }
-        }
-
-        return $out;
     }
 }

@@ -57,4 +57,9 @@ final class ManualChangeRecorder
 
         return TimelineEntryData::fromRecord($record);
     }
+
+    public function recordAccess(Model|string $auditable, int|string|null $id = null): ?TimelineEntryData
+    {
+        return $this->record($auditable, $id, ChangeType::Accessed);
+    }
 }

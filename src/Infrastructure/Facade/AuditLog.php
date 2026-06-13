@@ -30,6 +30,7 @@ use Yammi\AuditLog\Infrastructure\AuditLogManager;
  * @method static SubjectReportData subjectReport(Model|string $auditable, int|string|null $id = null)
  * @method static RecordViewData recordView(Model|string $auditable, int|string|null $id = null)
  * @method static TimelineEntryData|null record(Model|string $auditable, int|string|null $id, ChangeType|string $event, array $before = [], array $after = [])
+ * @method static TimelineEntryData|null recordAccess(Model|string $auditable, int|string|null $id = null)
  *
  * @see AuditLogManager
  */

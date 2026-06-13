@@ -316,6 +316,22 @@ $user->auditSync('roles', [$a, $c]);           // event: synced
 
 Each wrapper is a drop-in for the underlying relation method (same return value), records only when the set actually changes, and rejects a relation that is not many-to-many. The new `attached` / `detached` / `synced` events filter on the dashboard and API like any other.
 
+### Access log (who viewed a record)
+
+A read is an event too — under HIPAA/GDPR, *who looked at this PII* matters as much as who changed it. Opt in per model with the `LogsAccess` trait, or record from anywhere through the facade:
+
+```php
+use Yammi\AuditLog\Concerns\LogsAccess;
+
+class Patient extends Model { use LogsAccess; }
+
+$patient->recordAccess();                          // event: accessed, attributed to the viewer
+
+AuditLog::recordAccess(Patient::class, $id);       // or without the trait
+```
+
+An access carries no diff; the viewer and request metadata are attributed through the same pipeline. The `accessed` event filters on the dashboard and API. Reads are high-volume — keep `retention_days` tight when you enable this.
+
 ### Honest limitations
 
 Eloquent events never fire for mass `Query Builder ->update()` or raw SQL either, no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):

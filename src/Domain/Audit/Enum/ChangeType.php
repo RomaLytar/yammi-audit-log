@@ -13,6 +13,7 @@ enum ChangeType: string
     case Attached = 'attached';
     case Detached = 'detached';
     case Synced = 'synced';
+    case Accessed = 'accessed';
 
     public function isCreation(): bool
     {
@@ -29,6 +30,11 @@ enum ChangeType: string
         return $this === self::Attached
             || $this === self::Detached
             || $this === self::Synced;
+    }
+
+    public function isAccess(): bool
+    {
+        return $this === self::Accessed;
     }
 
     public function label(): string

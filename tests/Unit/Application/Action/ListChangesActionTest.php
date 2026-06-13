@@ -37,7 +37,7 @@ final class ListChangesActionTest extends TestCase
         $this->assertCount(3, $list->entries);
         $this->assertContains('App\\Models\\Order', $list->models);
         $this->assertContains('job', $list->actorTypes);
-        $this->assertSame(['created', 'updated', 'deleted', 'restored', 'attached', 'detached', 'synced'], $list->events);
+        $this->assertSame(['created', 'updated', 'deleted', 'restored', 'attached', 'detached', 'synced', 'accessed'], $list->events);
     }
 
     public function test_it_filters_by_event(): void

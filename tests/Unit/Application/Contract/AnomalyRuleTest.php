@@ -6,9 +6,9 @@ namespace Yammi\AuditLog\Tests\Unit\Application\Contract;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\AnomalyData;
-use Yammi\AuditLog\Application\DTO\AnomalyWindow;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyWindow;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Tests\Support\Anomaly\PriceDropRule;
 
 final class AnomalyRuleTest extends TestCase

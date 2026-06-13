@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Persistence\Mapper;
 
 use DateTimeImmutable;
-use Yammi\AuditLog\Application\Contract\TenantResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\TenantResolver;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Actor;
 
-use Yammi\AuditLog\Application\Contract\ActorProvider;
-use Yammi\AuditLog\Application\Contract\ActorResolver;
+use Yammi\AuditLog\Application\Contract\Actor\ActorProvider;
+use Yammi\AuditLog\Application\Contract\Resolver\ActorResolver;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 
 /** @internal */

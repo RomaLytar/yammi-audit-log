@@ -6,7 +6,7 @@ namespace Yammi\AuditLog\Tests\Integration\Persistence;
 
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
-use Yammi\AuditLog\Application\Contract\AuditLogQuery;
+use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;

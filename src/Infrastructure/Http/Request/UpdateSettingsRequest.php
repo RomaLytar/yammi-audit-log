@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Http\Request;
 
 use Illuminate\Foundation\Http\FormRequest;
-use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
+use Yammi\AuditLog\Application\Action\Retention\PruneAuditLogAction;
 
 /** @internal */
 final class UpdateSettingsRequest extends FormRequest

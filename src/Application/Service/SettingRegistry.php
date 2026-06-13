@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Service;
 
-use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
-use Yammi\AuditLog\Application\DTO\SettingDefinitionData;
+use Yammi\AuditLog\Application\Action\Retention\PruneAuditLogAction;
+use Yammi\AuditLog\Application\DTO\Settings\SettingDefinitionData;
 use Yammi\AuditLog\Domain\Settings\Enum\SettingType;
 
 /**

@@ -4,9 +4,9 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Application\Contract;
 
-use Yammi\AuditLog\Application\DTO\AnomalyData;
-use Yammi\AuditLog\Application\DTO\AnomalyWindow;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyWindow;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 
 /**
  * A host-defined anomaly rule: detection as code. Rules are plain classes —

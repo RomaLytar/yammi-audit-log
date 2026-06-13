@@ -7,7 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Capture;
 use Illuminate\Database\Eloquent\Model;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use Yammi\AuditLog\Application\Action\RecordChangeAction;
+use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
 use Yammi\AuditLog\Infrastructure\Stream\ChangeStreamer;

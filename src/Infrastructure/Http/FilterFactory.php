@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Http;
 
 use Illuminate\Http\Request;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
 use Yammi\AuditLog\Application\Service\FilterParser;
 
 /**

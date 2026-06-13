@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\ChainData;
+use Yammi\AuditLog\Application\DTO\Audit\ChainData;
 
 /** @internal */
 final class TraceViewModel

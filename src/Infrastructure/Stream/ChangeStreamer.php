@@ -7,8 +7,8 @@ namespace Yammi\AuditLog\Infrastructure\Stream;
 use Illuminate\Contracts\Bus\Dispatcher as BusDispatcher;
 use Psr\Log\LoggerInterface;
 use Throwable;
-use Yammi\AuditLog\Application\Contract\LogStreamDriver;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\Contract\Stream\LogStreamDriver;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Infrastructure\Job\StreamAuditEventJob;
 

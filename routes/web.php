@@ -3,18 +3,18 @@
 declare(strict_types=1);
 
 use Illuminate\Support\Facades\Route;
-use Yammi\AuditLog\Infrastructure\Http\Controller\AnomaliesController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\DashboardController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\DatabaseSettingsController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\DatabaseTransferController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\ExportController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\NoiseController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\PlaygroundController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\RecordController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\SettingsController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\StatsController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\TimeMachineController;
-use Yammi\AuditLog\Infrastructure\Http\Controller\TraceController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Settings\DatabaseSettingsController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Settings\DatabaseTransferController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Settings\PlaygroundController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Settings\SettingsController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\AnomaliesController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\DashboardController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\ExportController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\NoiseController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\RecordController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\StatsController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\TimeMachineController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\TraceController;
 
 Route::get('/', DashboardController::class)->name('audit-log.dashboard');
 Route::get('/export', ExportController::class)->name('audit-log.export');

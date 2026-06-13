@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
 
 /**
  * Presents the anomaly scan for the UI: badge styles per rule, the window

@@ -6,7 +6,7 @@ namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Console\Support;
 
 use Illuminate\Config\Repository;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
+use Yammi\AuditLog\Application\Action\Retention\PruneAuditLogAction;
 use Yammi\AuditLog\Infrastructure\Console\Support\RetentionWindow;
 
 final class RetentionWindowTest extends TestCase

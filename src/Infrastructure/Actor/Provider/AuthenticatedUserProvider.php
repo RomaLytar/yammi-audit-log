@@ -7,7 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Actor\Provider;
 use Illuminate\Contracts\Auth\Authenticatable;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Database\Eloquent\Model;
-use Yammi\AuditLog\Application\Contract\ActorProvider;
+use Yammi\AuditLog\Application\Contract\Actor\ActorProvider;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 
 /** @internal */

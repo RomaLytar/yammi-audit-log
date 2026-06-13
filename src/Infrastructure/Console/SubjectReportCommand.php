@@ -8,9 +8,9 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Filesystem\Factory as FilesystemFactory;
 use Illuminate\Contracts\View\Factory as ViewFactory;
-use Yammi\AuditLog\Application\Action\BuildSubjectReportAction;
+use Yammi\AuditLog\Application\Action\Read\BuildSubjectReportAction;
 use Yammi\AuditLog\Application\Contract\Clock;
-use Yammi\AuditLog\Application\DTO\SubjectReportData;
+use Yammi\AuditLog\Application\DTO\Audit\SubjectReportData;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Infrastructure\Console\Support\ArchiveDisk;
 

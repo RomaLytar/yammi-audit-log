@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Application\DTO;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
 
 final class AuditFilterDataTest extends TestCase
 {

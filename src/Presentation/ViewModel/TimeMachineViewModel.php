@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\StateData;
+use Yammi\AuditLog\Application\DTO\Audit\StateData;
 use Yammi\AuditLog\Presentation\ViewModel\Support\MomentFormatter;
 use Yammi\AuditLog\Presentation\ViewModel\Support\ValuePresenter;
 

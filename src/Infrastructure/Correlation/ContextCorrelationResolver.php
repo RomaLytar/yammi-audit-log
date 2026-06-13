@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Correlation;
 
-use Yammi\AuditLog\Application\Contract\CorrelationResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\CorrelationResolver;
 
 /** @internal */
 final class ContextCorrelationResolver implements CorrelationResolver

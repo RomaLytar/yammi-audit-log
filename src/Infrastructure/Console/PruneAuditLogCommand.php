@@ -6,7 +6,7 @@ namespace Yammi\AuditLog\Infrastructure\Console;
 
 use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
+use Yammi\AuditLog\Application\Action\Retention\PruneAuditLogAction;
 use Yammi\AuditLog\Infrastructure\Console\Support\RetentionWindow;
 
 /** @internal */

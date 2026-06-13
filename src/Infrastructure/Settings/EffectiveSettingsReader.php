@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Settings;
 
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
-use Yammi\AuditLog\Application\DTO\ResolvedSettingData;
-use Yammi\AuditLog\Application\DTO\SettingDefinitionData;
+use Yammi\AuditLog\Application\DTO\Settings\ResolvedSettingData;
+use Yammi\AuditLog\Application\DTO\Settings\SettingDefinitionData;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
 use Yammi\AuditLog\Infrastructure\Support\AuditTimezone;
 

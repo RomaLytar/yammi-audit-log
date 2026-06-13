@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Presentation\ViewModel;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
-use Yammi\AuditLog\Application\DTO\StatsData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Stats\StatsData;
 use Yammi\AuditLog\Presentation\ViewModel\StatsViewModel;
 
 final class StatsViewModelTest extends TestCase

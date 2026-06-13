@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Support;
 
 use Yammi\AuditLog\Application\Contract\AuditDataTransferrer;
-use Yammi\AuditLog\Application\DTO\TransferResultData;
+use Yammi\AuditLog\Application\DTO\Transfer\TransferResultData;
 
 final class FakeAuditDataTransferrer implements AuditDataTransferrer
 {

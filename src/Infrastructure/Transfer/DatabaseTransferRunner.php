@@ -9,7 +9,7 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Console\Kernel as ConsoleKernel;
 use Illuminate\Database\ConnectionResolverInterface;
 use PDO;
-use Yammi\AuditLog\Application\Action\TransferAuditDataAction;
+use Yammi\AuditLog\Application\Action\Transfer\TransferAuditDataAction;
 
 /**
  * The full transfer workflow shared by the artisan command and the dashboard:

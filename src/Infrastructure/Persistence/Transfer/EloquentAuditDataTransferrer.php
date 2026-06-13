@@ -17,6 +17,8 @@ final class EloquentAuditDataTransferrer implements AuditDataTransferrer
 
     private const SETTINGS_TABLE = 'audit_log_settings';
 
+    private const CHAIN_STATE_TABLE = 'audit_log_chain_state';
+
     public function __construct(
         private readonly ConnectionResolverInterface $db,
         private readonly string $table,
@@ -26,9 +28,11 @@ final class EloquentAuditDataTransferrer implements AuditDataTransferrer
     {
         $rowsMoved = 0;
 
-        foreach ($this->tables() as $table) {
+        foreach ($this->appendTables() as $table) {
             $rowsMoved += $this->moveTable($table, $from, $to);
         }
+
+        $rowsMoved += $this->moveChainState($from, $to);
 
         if ($deleteSource) {
             $this->dropSource($from);
@@ -38,18 +42,32 @@ final class EloquentAuditDataTransferrer implements AuditDataTransferrer
     }
 
     /**
+     * Tables whose rows are appended to the freshly migrated (empty)
+     * destination with insertOrIgnore.
+     *
      * @return list<string>
      */
-    private function tables(): array
+    private function appendTables(): array
     {
-        return [$this->table, self::SETTINGS_TABLE];
+        return [$this->table, self::SETTINGS_TABLE, $this->digestsTable()];
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function allTables(): array
+    {
+        return [...$this->appendTables(), self::CHAIN_STATE_TABLE];
+    }
+
+    private function digestsTable(): string
+    {
+        return $this->table.'_digests';
     }
 
     private function moveTable(string $table, string $from, string $to): int
     {
-        $source = $this->db->connection($from);
-
-        if ($source instanceof Connection && ! $source->getSchemaBuilder()->hasTable($table)) {
+        if (! $this->sourceHasTable($from, $table)) {
             return 0;
         }
 
@@ -72,6 +90,45 @@ final class EloquentAuditDataTransferrer implements AuditDataTransferrer
         return $moved;
     }
 
+    /**
+     * The chain head is a single fixed-id row that the destination migration
+     * already seeded with a null hash, so insertOrIgnore would skip it and
+     * leave the chain forked. Upsert it instead, carrying the source head over.
+     */
+    private function moveChainState(string $from, string $to): int
+    {
+        if (! $this->sourceHasTable($from, self::CHAIN_STATE_TABLE)) {
+            return 0;
+        }
+
+        $moved = 0;
+
+        $this->db->connection($from)
+            ->table(self::CHAIN_STATE_TABLE)
+            ->orderBy('id')
+            ->chunk(self::CHUNK, function (Collection $rows) use ($to, &$moved): void {
+                foreach ($rows as $row) {
+                    $data = (array) $row;
+                    $id = $data['id'] ?? null;
+                    unset($data['id']);
+
+                    $this->db->connection($to)
+                        ->table(self::CHAIN_STATE_TABLE)
+                        ->updateOrInsert(['id' => $id], $data);
+                    $moved++;
+                }
+            });
+
+        return $moved;
+    }
+
+    private function sourceHasTable(string $from, string $table): bool
+    {
+        $source = $this->db->connection($from);
+
+        return ! $source instanceof Connection || $source->getSchemaBuilder()->hasTable($table);
+    }
+
     private function dropSource(string $from): void
     {
         $connection = $this->db->connection($from);
@@ -82,7 +139,7 @@ final class EloquentAuditDataTransferrer implements AuditDataTransferrer
 
         $schema = $connection->getSchemaBuilder();
 
-        foreach ($this->tables() as $table) {
+        foreach ($this->allTables() as $table) {
             $schema->dropIfExists($table);
         }
 

@@ -46,8 +46,8 @@ final class HttpRegistrar
     private function registerRoutes(ConfigRepository $config): void
     {
         $path = $config->get('audit-log.ui.path', 'audit-log');
-        $configured = $config->get('audit-log.ui.middleware', ['web']);
-        $middleware = is_array($configured) ? array_values($configured) : ['web'];
+        $configured = $config->get('audit-log.ui.middleware', ['web', 'auth']);
+        $middleware = is_array($configured) ? array_values($configured) : ['web', 'auth'];
 
         $throttle = $config->get('audit-log.ui.throttle');
         if (is_string($throttle) && $throttle !== '') {

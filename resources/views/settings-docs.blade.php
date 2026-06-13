@@ -29,6 +29,19 @@
             'code' => "use Yammi\\AuditLog\\Contracts\\ShouldAudit;\n\nclass Document extends Model implements ShouldAudit\n{\n    public array \$auditExclude = ['internal_notes'];\n    // or the inverse — only these attributes are audited:\n    public array \$auditInclude = ['status', 'price'];\n}",
         ],
         [
+            'id' => 'capture-policy',
+            'icon' => 'shield-check',
+            'title' => 'Capture policy & sampling',
+            'intro' => 'One opt-in place to govern what a model captures, on top of the safe capture-all default.',
+            'points' => [
+                'Declare a policy once (e.g. in a service provider): ignore fields, capture conditionally, or sample.',
+                'when() records a change only when the predicate returns true (by tenant, environment or model state).',
+                'sample(rate) keeps a fraction (0 to 1) of the changes for that model, for thinning high-churn models. The keep/drop decision is per correlation, so the full history of one record within a unit of work is kept or dropped together, never left with holes.',
+                'No policy means capture everything; this is additive to the per-model attribute lists above.',
+            ],
+            'code' => "AuditLog::policy(Order::class)\n    ->ignore(['updated_at'])\n    ->when(fn (\$order) => \$order->tenant_id === 'acme')\n    ->sample(0.1); // keep ~10%",
+        ],
+        [
             'id' => 'actors',
             'icon' => 'users',
             'title' => 'Actors, origins and chains',
@@ -177,6 +190,18 @@
             'code' => "# .env\nAUDIT_LOG_API_ENABLED=true\n\n// config/audit-log.php\n'api' => ['middleware' => ['api', 'auth:sanctum']],\n\nGET /audit-log/api/changes?event=updated&search=refund\nGET /audit-log/api/noise\nGET /audit-log/api/chain/{correlation-uuid}\nGET /audit-log/api/stats\nGET /audit-log/api/timeline?auditable_type=App\\Models\\Order&auditable_id=42\nGET /audit-log/api/state?auditable_type=App\\Models\\Order&auditable_id=42&at=2026-03-03\nGET /audit-log/api/record-view?auditable_type=App\\Models\\Order&auditable_id=42\nGET /audit-log/api/subject-report?auditable_type=App\\Models\\User&auditable_id=5\nGET /audit-log/api/anomalies?window=1440",
         ],
         [
+            'id' => 'event-version',
+            'icon' => 'tag',
+            'title' => 'Record schema version',
+            'intro' => 'Every record carries an event_version, so SIEM and export consumers can rely on its layout.',
+            'points' => [
+                'Stamped on write from AuditRecord::SCHEMA_VERSION (currently 1) and included in the JSON API and SIEM stream payloads.',
+                'Bumped only when the stored record shape changes, so a consumer can branch on the version.',
+                'The integrity hash covers a fixed field subset and is unaffected, so verify keeps working across versions.',
+            ],
+            'code' => "// every API / streamed record includes:\n{\n    \"event_version\": 1,\n    \"event\": \"updated\",\n    ...\n}",
+        ],
+        [
             'id' => 'retention',
             'icon' => 'database-zap',
             'title' => 'Retention, archive, dedicated DB',
@@ -282,6 +307,17 @@
                 'Field names are validated to [A-Za-z0-9_] so the JSON path is injection-safe.',
             ],
             'code' => "AuditLog::changes([\n    'field' => 'status',\n    'value_from' => 'pending',\n    'value_to' => 'cancelled',\n]);",
+        ],
+        [
+            'id' => 'query-builder',
+            'icon' => 'terminal',
+            'title' => 'Fluent query builder',
+            'intro' => 'A discoverable, chainable way to write the same query as changes([...]).',
+            'points' => [
+                'AuditLog::query() returns a builder that compiles to the same filter array and runs through the same parser, so there is no second query path or filter semantics.',
+                'from() / to() express a value transition (after field()); since() / until() are the date range. get() returns the same ChangeListData as changes().',
+            ],
+            'code' => "AuditLog::query()\n    ->field('status')->from('pending')->to('paid')\n    ->actorType('job')\n    ->since('2026-01-01')->until('2026-02-01')\n    ->get();",
         ],
         [
             'id' => 'change-reason',

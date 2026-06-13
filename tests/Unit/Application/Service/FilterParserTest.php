@@ -42,6 +42,42 @@ final class FilterParserTest extends TestCase
         $this->assertFalse($filters->defaultRange);
     }
 
+    public function test_the_field_and_value_transition_filters_are_parsed(): void
+    {
+        $filters = $this->parser->fromArray([
+            'field' => 'status',
+            'value_from' => 'pending',
+            'value_to' => 'cancelled',
+        ]);
+
+        $this->assertSame('status', $filters->field);
+        $this->assertSame('pending', $filters->valueFrom);
+        $this->assertSame('cancelled', $filters->valueTo);
+        $this->assertTrue($filters->isActive());
+    }
+
+    public function test_an_unsafe_field_name_is_dropped(): void
+    {
+        $filters = $this->parser->fromArray([
+            'field' => 'changes")) or 1=1 --',
+            'value_to' => 'cancelled',
+        ]);
+
+        $this->assertSame('', $filters->field);
+        $this->assertSame('', $filters->valueTo);
+    }
+
+    public function test_value_transition_is_ignored_without_a_field(): void
+    {
+        $filters = $this->parser->fromArray([
+            'value_from' => 'pending',
+            'value_to' => 'cancelled',
+        ]);
+
+        $this->assertSame('', $filters->valueFrom);
+        $this->assertSame('', $filters->valueTo);
+    }
+
     public function test_the_record_id_filter_is_parsed_and_bounded(): void
     {
         $this->assertSame('42', $this->parser->fromArray(['id' => ' 42 '])->auditableId);

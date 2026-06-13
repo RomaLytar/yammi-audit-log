@@ -17,6 +17,9 @@ final class AuditFilterData
         public readonly string $search = '',
         public readonly bool $defaultRange = false,
         public readonly string $auditableId = '',
+        public readonly string $field = '',
+        public readonly string $valueFrom = '',
+        public readonly string $valueTo = '',
     ) {}
 
     public function isActive(): bool
@@ -27,6 +30,7 @@ final class AuditFilterData
             || $this->actor !== ''
             || $this->search !== ''
             || $this->auditableId !== ''
+            || $this->field !== ''
             || (! $this->defaultRange && ($this->from !== '' || $this->to !== ''));
     }
 }

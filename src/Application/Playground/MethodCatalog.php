@@ -43,7 +43,7 @@ final class MethodCatalog
             new PlaygroundMethodData(
                 key: 'changes',
                 signature: 'AuditLog::changes(array $filters = []): ChangeListData',
-                summary: 'The dashboard list as data: filtered, paginated changes with totals, filter options and chain sizes — embed the audit log in your own admin. Filters: model, event, actor_type, actor, id, from, to, search, page.',
+                summary: 'The dashboard list as data: filtered, paginated changes with totals, filter options and chain sizes — embed the audit log in your own admin. Filters: model, event, actor_type, actor, id, from, to, search, page, field, value_from, value_to.',
                 example: "use Yammi\\AuditLog\\Infrastructure\\Facade\\AuditLog;\n\n\$list = AuditLog::changes([\n    'event' => 'updated',\n    'actor_type' => 'job',\n    'search' => 'refunded',\n]);\n\nforeach (\$list->entries as \$entry) {\n    echo \"{\$entry->occurredAt} {\$entry->actorLabel}: {\$entry->event}\";\n}",
                 arguments: [
                     new PlaygroundArgumentData('event', 'string', false, 'updated', 'created, updated, deleted or restored.'),

@@ -129,6 +129,38 @@ final class EloquentAuditLogQueryTest extends TestCase
         $this->assertSame(1, $this->query()->paginate(new AuditCriteria(search: '100%'))->total);
     }
 
+    public function test_the_field_filter_matches_records_that_changed_that_field(): void
+    {
+        $this->saveRecordWithDiff(['status' => 'pending'], ['status' => 'cancelled']);
+        $this->saveRecordWithDiff(['title' => 'a'], ['title' => 'b']);
+
+        $this->assertSame(1, $this->query()->paginate(new AuditCriteria(field: 'status'))->total);
+    }
+
+    public function test_the_value_transition_filter_matches_a_specific_from_and_to(): void
+    {
+        $this->saveRecordWithDiff(['status' => 'pending'], ['status' => 'cancelled']);
+        $this->saveRecordWithDiff(['status' => 'pending'], ['status' => 'approved']);
+        $this->saveRecordWithDiff(['status' => 'active'], ['status' => 'cancelled']);
+
+        $paged = $this->query()->paginate(new AuditCriteria(
+            field: 'status',
+            valueFrom: 'pending',
+            valueTo: 'cancelled',
+        ));
+
+        $this->assertSame(1, $paged->total);
+    }
+
+    public function test_the_value_transition_filter_can_match_the_destination_only(): void
+    {
+        $this->saveRecordWithDiff(['status' => 'pending'], ['status' => 'cancelled']);
+        $this->saveRecordWithDiff(['status' => 'active'], ['status' => 'cancelled']);
+        $this->saveRecordWithDiff(['status' => 'active'], ['status' => 'approved']);
+
+        $this->assertSame(2, $this->query()->paginate(new AuditCriteria(field: 'status', valueTo: 'cancelled'))->total);
+    }
+
     private function query(): AuditLogQuery
     {
         return $this->app->make(AuditLogQuery::class);

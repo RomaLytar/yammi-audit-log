@@ -32,6 +32,9 @@ final class FilterFactory
             'page' => $request->query('page'),
             'search' => $request->query('q'),
             'id' => $request->query('id'),
+            'field' => $request->query('field'),
+            'value_from' => $request->query('value_from'),
+            'value_to' => $request->query('value_to'),
         ]);
     }
 }

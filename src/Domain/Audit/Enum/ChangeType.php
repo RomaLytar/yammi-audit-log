@@ -10,6 +10,9 @@ enum ChangeType: string
     case Updated = 'updated';
     case Deleted = 'deleted';
     case Restored = 'restored';
+    case Attached = 'attached';
+    case Detached = 'detached';
+    case Synced = 'synced';
 
     public function isCreation(): bool
     {
@@ -19,6 +22,13 @@ enum ChangeType: string
     public function isDeletion(): bool
     {
         return $this === self::Deleted;
+    }
+
+    public function isPivot(): bool
+    {
+        return $this === self::Attached
+            || $this === self::Detached
+            || $this === self::Synced;
     }
 
     public function label(): string

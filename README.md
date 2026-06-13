@@ -362,6 +362,30 @@ The reason rides through the same pipeline, is stored per record, surfaces on ti
 
 > Note: making a reason *mandatory* for specific models (refusing the host write without one) is a planned follow-up; the write path is sacred, so that enforcement will be an explicit host-side opt-in rather than a silent capture failure.
 
+### Detection as code
+
+The built-in scan covers change bursts, mass deletions and off-hours activity. For anything domain-specific, write a rule class — version it in git, unit-test it in isolation — and it runs alongside the built-ins over the same window, computing its own severity:
+
+```php
+use Yammi\AuditLog\Application\Contract\AnomalyRule;
+use Yammi\AuditLog\Application\DTO\{AnomalyData, AnomalyWindow, TimelineEntryData};
+
+final class PriceDropRule implements AnomalyRule
+{
+    public function key(): string { return 'price_drop'; }
+
+    /** @param list<TimelineEntryData> $entries @return list<AnomalyData> */
+    public function evaluate(array $entries, AnomalyWindow $window): array
+    {
+        // inspect $entries, return AnomalyData findings with your own severity
+    }
+}
+
+// config/audit-log.php → 'anomalies' => ['rules' => [PriceDropRule::class]]
+```
+
+Rules receive the window's recorded changes as plain DTOs — no database, no framework — so a unit test is just `evaluate([...], $window)`. A throwing rule is isolated and never breaks the scan or the built-in checks. Findings now carry a `severity` (`low`/`medium`/`high`).
+
 ### Stream to your SIEM
 
 Ship every recorded change to Splunk, Datadog, Elastic or any JSON endpoint — off the request path, queued and fail-soft, so a slow or dead sink never touches the host write:

@@ -21,6 +21,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Action\RecordChangeAction;
 use Yammi\AuditLog\Application\Contract\ActorResolver;
+use Yammi\AuditLog\Application\Contract\AnomalyRule;
 use Yammi\AuditLog\Application\Contract\AuditDataTransferrer;
 use Yammi\AuditLog\Application\Contract\AuditLogQuery;
 use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
@@ -299,6 +300,8 @@ final class AuditLogServiceProvider extends ServiceProvider
                 max(0, (int) $config->get('audit-log.anomalies.rate_threshold', 200)),
                 max(0, (int) $config->get('audit-log.anomalies.delete_threshold', 25)),
                 $this->hourRange($config->get('audit-log.anomalies.off_hours', [])),
+                $this->anomalyRules($config->get('audit-log.anomalies.rules', [])),
+                $this->app->make(AuditRecordMapper::class),
             );
         });
 
@@ -545,6 +548,30 @@ final class AuditLogServiceProvider extends ServiceProvider
             'elastic' => new ElasticDriver($endpoint, $token !== '' ? $token : null, $headers),
             default => new HttpStreamDriver($endpoint, $token !== '' ? $token : null, $headers),
         };
+    }
+
+    /**
+     * @return list<AnomalyRule>
+     */
+    private function anomalyRules(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $rules = [];
+
+        foreach ($value as $class) {
+            if (is_string($class) && is_subclass_of($class, AnomalyRule::class)) {
+                $instance = $this->app->make($class);
+
+                if ($instance instanceof AnomalyRule) {
+                    $rules[] = $instance;
+                }
+            }
+        }
+
+        return $rules;
     }
 
     /**

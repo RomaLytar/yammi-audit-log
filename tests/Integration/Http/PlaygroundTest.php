@@ -86,6 +86,34 @@ final class PlaygroundTest extends TestCase
         $this->get('audit-log/settings')->assertSee('settings/playground');
     }
 
+    public function test_executing_record_access_logs_a_read(): void
+    {
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'recordAccess',
+            'args' => ['auditable_type' => 'App\\Models\\Order', 'auditable_id' => '42'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+        $response->assertJsonPath('result.event', 'accessed');
+    }
+
+    public function test_executing_activity_url_returns_a_signed_link(): void
+    {
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'activityUrl',
+            'args' => ['auditable_type' => 'App\\Models\\User', 'auditable_id' => '5', 'minutes' => '30'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+
+        $url = $response->json('result');
+        $this->assertIsString($url);
+        $this->assertStringContainsString('/audit-log/activity', $url);
+        $this->assertStringContainsString('signature=', $url);
+    }
+
     public function test_executing_for_returns_the_timeline(): void
     {
         $post = Post::create(['title' => 'Hello', 'status' => 'draft']);

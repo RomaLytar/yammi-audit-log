@@ -16,7 +16,7 @@ final class MethodCatalogTest extends TestCase
             (new MethodCatalog)->all(),
         );
 
-        $this->assertSame(['for', 'stateAt', 'changes', 'noise', 'chain', 'stats', 'anomalies', 'recordView', 'subjectReport', 'record'], $keys);
+        $this->assertSame(['for', 'stateAt', 'changes', 'noise', 'chain', 'stats', 'anomalies', 'recordView', 'subjectReport', 'record', 'recordAccess', 'activityUrl'], $keys);
     }
 
     public function test_each_method_carries_docs_and_a_real_example(): void
@@ -29,12 +29,14 @@ final class MethodCatalogTest extends TestCase
         }
     }
 
-    public function test_only_the_write_method_is_destructive(): void
+    public function test_write_methods_are_flagged_destructive(): void
     {
         $catalog = new MethodCatalog;
 
         $this->assertFalse($catalog->find('for')?->destructive);
+        $this->assertFalse($catalog->find('activityUrl')?->destructive);
         $this->assertTrue($catalog->find('record')?->destructive);
+        $this->assertTrue($catalog->find('recordAccess')?->destructive);
     }
 
     public function test_an_unknown_method_is_not_found(): void

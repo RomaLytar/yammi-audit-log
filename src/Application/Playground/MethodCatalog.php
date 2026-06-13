@@ -127,6 +127,28 @@ final class MethodCatalog
                 ],
                 destructive: true,
             ),
+            new PlaygroundMethodData(
+                key: 'recordAccess',
+                signature: 'AuditLog::recordAccess(Model|string $auditable, int|string|null $id = null): ?TimelineEntryData',
+                summary: 'Records a read — "who viewed this record", not just who changed it — through the same pipeline as captured changes (actor, request metadata, correlation). An access carries no diff; the accessed event filters like any other.',
+                example: "use Yammi\\AuditLog\\Infrastructure\\Facade\\AuditLog;\n\nAuditLog::recordAccess(Order::class, 42);",
+                arguments: [
+                    new PlaygroundArgumentData('auditable_type', 'string', true, 'App\\Models\\Order', 'Fully-qualified model class (or morph alias).'),
+                    new PlaygroundArgumentData('auditable_id', 'string', true, '42', 'The record key.'),
+                ],
+                destructive: true,
+            ),
+            new PlaygroundMethodData(
+                key: 'activityUrl',
+                signature: 'AuditLog::activityUrl(Model|string $auditable, int|string|null $id = null, int $minutes = 60): string',
+                summary: 'Mints a short-lived signed URL to one subject\'s read-only "Account activity" page — give a tenant or user their own feed without the admin dashboard. The signature is the access grant and it expires.',
+                example: "use Yammi\\AuditLog\\Infrastructure\\Facade\\AuditLog;\n\n\$url = AuditLog::activityUrl(User::class, 42, minutes: 30);",
+                arguments: [
+                    new PlaygroundArgumentData('auditable_type', 'string', true, 'App\\Models\\User', 'Fully-qualified model class (or morph alias).'),
+                    new PlaygroundArgumentData('auditable_id', 'string', true, '42', 'The record key.'),
+                    new PlaygroundArgumentData('minutes', 'int', false, '60', 'How long the link stays valid.'),
+                ],
+            ),
         ];
     }
 

@@ -159,6 +159,16 @@ final class AuditLogManager
         return $this->recorder->record($auditable, $id, $event, $before, $after);
     }
 
+    /**
+     * Records that a record was read — "who viewed this", not just who changed
+     * it. An access has no diff; the actor and request metadata are attributed
+     * through the same pipeline as any captured change.
+     */
+    public function recordAccess(Model|string $auditable, int|string|null $id = null): ?TimelineEntryData
+    {
+        return $this->recorder->recordAccess($auditable, $id);
+    }
+
     private function resolveMoment(DateTimeImmutable|string|null $at): DateTimeImmutable
     {
         if ($at instanceof DateTimeImmutable) {

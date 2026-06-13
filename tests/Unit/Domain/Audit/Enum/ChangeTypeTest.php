@@ -18,6 +18,7 @@ final class ChangeTypeTest extends TestCase
         $this->assertSame('attached', ChangeType::Attached->value);
         $this->assertSame('detached', ChangeType::Detached->value);
         $this->assertSame('synced', ChangeType::Synced->value);
+        $this->assertSame('accessed', ChangeType::Accessed->value);
     }
 
     public function test_it_recognises_creation_and_deletion(): void
@@ -37,6 +38,15 @@ final class ChangeTypeTest extends TestCase
 
         $this->assertFalse(ChangeType::Updated->isPivot());
         $this->assertFalse(ChangeType::Deleted->isPivot());
+        $this->assertFalse(ChangeType::Accessed->isPivot());
+    }
+
+    public function test_it_recognises_access_events(): void
+    {
+        $this->assertTrue(ChangeType::Accessed->isAccess());
+
+        $this->assertFalse(ChangeType::Updated->isAccess());
+        $this->assertFalse(ChangeType::Synced->isAccess());
     }
 
     public function test_pivot_events_are_neither_creation_nor_deletion(): void

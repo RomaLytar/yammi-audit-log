@@ -20,14 +20,14 @@
         })();
     </script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
     <script>
         tailwind.config = {
             darkMode: 'class',
             theme: {
                 extend: {
                     fontFamily: {
-                        sans: ['Inter var', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
+                        sans: ['Inter Variable', 'Inter var', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
                         mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
                     },
                     colors: {
@@ -73,9 +73,11 @@
         };
     </script>
 
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"
+            integrity="sha384-uTYyvsSSUZeaPhb5RbKlQa0zY/WpX/QHfvg2mczXyBQOpkWPEDy9lczyp+w7SKXu"
+            crossorigin="anonymous"></script>
+    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.1.0/index.min.css">
 
     <style>
         :root {
@@ -108,7 +110,7 @@
             --border: 240 3.7% 16%; --input: 240 3.7% 18%; --ring: 240 4.9% 83.9%;
             --brand: 263 75% 70%; --brand-foreground: 240 10% 4%;
         }
-        html, body { font-family: 'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
+        html, body { font-family: 'Inter Variable', 'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
         body { font-feature-settings: 'cv02','cv03','cv04','cv11'; -webkit-font-smoothing: antialiased; }
         *::-webkit-scrollbar { width: 10px; height: 10px; }
         *::-webkit-scrollbar-track { background: transparent; }

@@ -20,66 +20,20 @@
         })();
     </script>
 
-    <script src="https://cdn.tailwindcss.com/3.4.16"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter Variable', 'Inter var', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
-                    },
-                    colors: {
-                        border: 'hsl(var(--border))',
-                        input: 'hsl(var(--input))',
-                        ring: 'hsl(var(--ring))',
-                        background: 'hsl(var(--background))',
-                        foreground: 'hsl(var(--foreground))',
-                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
-                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
-                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
-                        success: { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
-                        warning: { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
-                        info: { DEFAULT: 'hsl(var(--info))', foreground: 'hsl(var(--info-foreground))' },
-                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
-                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
-                        popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
-                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
-                        brand: { DEFAULT: 'hsl(var(--brand))', foreground: 'hsl(var(--brand-foreground))' },
-                    },
-                    borderRadius: {
-                        xl: 'calc(var(--radius) + 4px)',
-                        lg: 'var(--radius)',
-                        md: 'calc(var(--radius) - 2px)',
-                        sm: 'calc(var(--radius) - 4px)',
-                    },
-                    boxShadow: {
-                        xs: '0 1px 2px 0 rgb(0 0 0 / 0.04)',
-                        glow: '0 0 0 1px hsl(var(--ring) / 0.15), 0 8px 24px -8px hsl(var(--ring) / 0.25)',
-                    },
-                    keyframes: {
-                        'fade-in': { from: { opacity: '0', transform: 'translateY(-2px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-                        'slide-down': { from: { opacity: '0', transform: 'translateY(-6px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-                        'pulse-soft': { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.55' } },
-                    },
-                    animation: {
-                        'fade-in': 'fade-in .2s ease-out',
-                        'slide-down': 'slide-down .22s ease-out',
-                        'pulse-soft': 'pulse-soft 1.8s ease-in-out infinite',
-                    },
-                },
-            },
-        };
-    </script>
-
-    <script src="https://unpkg.com/lucide@0.468.0/dist/umd/lucide.min.js"
-            integrity="sha384-uTYyvsSSUZeaPhb5RbKlQa0zY/WpX/QHfvg2mczXyBQOpkWPEDy9lczyp+w7SKXu"
-            crossorigin="anonymous"></script>
-    <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@fontsource-variable/inter@5.1.0/index.min.css">
+    <link rel="stylesheet" href="{{ route('audit-log.asset', 'dashboard.css') }}">
+    <script src="{{ route('audit-log.asset', 'lucide.js') }}"></script>
 
     <style>
+        @font-face {
+            font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900;
+            src: url('{{ route('audit-log.asset', 'inter-latin.woff2') }}') format('woff2-variations');
+            unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+        }
+        @font-face {
+            font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900;
+            src: url('{{ route('audit-log.asset', 'inter-latin-ext.woff2') }}') format('woff2-variations');
+            unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+        }
         :root {
             --background: 0 0% 100%; --foreground: 240 10% 3.9%;
             --card: 0 0% 100%; --card-foreground: 240 10% 3.9%;

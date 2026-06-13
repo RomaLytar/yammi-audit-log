@@ -14,6 +14,7 @@ use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Http\AuthGuardDetector;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\AssetController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\ScopedActivityController;
 
 /**
@@ -33,6 +34,7 @@ final class HttpRegistrar
     public function register(ConfigRepository $config): void
     {
         if ((bool) $config->get('audit-log.ui.enabled', true)) {
+            $this->registerAssetRoute($config);
             $this->registerRoutes($config);
             $this->registerActivityRoute($config);
             $this->registerNavComposer();
@@ -64,6 +66,20 @@ final class HttpRegistrar
             'middleware' => $middleware,
         ], function (): void {
             $this->loadRoutes($this->webRoutes);
+        });
+    }
+
+    private function registerAssetRoute(ConfigRepository $config): void
+    {
+        $path = $config->get('audit-log.ui.path', 'audit-log');
+        $router = $this->app->make(Router::class);
+
+        $router->group([
+            'prefix' => is_string($path) ? $path : 'audit-log',
+        ], static function () use ($router): void {
+            $router->get('assets/{asset}', AssetController::class)
+                ->where('asset', '[A-Za-z0-9._-]+')
+                ->name('audit-log.asset');
         });
     }
 

@@ -96,6 +96,35 @@ final class StatsViewModel
     }
 
     /**
+     * The heaviest correlation chains, each linkable to its trace.
+     *
+     * @return list<array{id: string, short: string, writes: int, models: int, depth: int, percent: int}>
+     */
+    public function cascadeRows(): array
+    {
+        $max = 1;
+
+        foreach ($this->stats->topCascades as $cascade) {
+            $max = max($max, $cascade['writes']);
+        }
+
+        $rows = [];
+
+        foreach ($this->stats->topCascades as $cascade) {
+            $rows[] = [
+                'id' => $cascade['correlation_id'],
+                'short' => substr($cascade['correlation_id'], 0, 8),
+                'writes' => $cascade['writes'],
+                'models' => $cascade['models'],
+                'depth' => $cascade['depth'],
+                'percent' => (int) round($cascade['writes'] / $max * 100),
+            ];
+        }
+
+        return $rows;
+    }
+
+    /**
      * Contribution-style cells: intensity 0 (no activity) to 4 (peak day).
      *
      * @return list<array{day: string, count: int, level: int}>

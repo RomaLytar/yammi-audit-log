@@ -107,6 +107,18 @@
             'code' => "php artisan audit-log:detect-anomalies\nphp artisan audit-log:detect-anomalies --window=1440",
         ],
         [
+            'id' => 'correlation-analytics',
+            'icon' => 'git-fork',
+            'title' => 'Correlation analytics',
+            'intro' => 'The Statistics page ranks the heaviest root actions in the range — built from the correlation data already captured, no profiler.',
+            'points' => [
+                'Top cascades lists the correlations that wrote the most records, with how many models they spanned and how deep the job chain nested.',
+                'It honours the page filters (date range, model, actor), so you can ask "what were the biggest cascades today".',
+                'Each row links straight to that correlation\'s trace, where the cascade is drawn as a ladder by job nesting depth.',
+            ],
+            'code' => null,
+        ],
+        [
             'id' => 'tenancy',
             'icon' => 'building-2',
             'title' => 'Multi-tenancy',

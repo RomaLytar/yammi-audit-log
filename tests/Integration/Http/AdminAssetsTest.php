@@ -11,30 +11,44 @@ final class AdminAssetsTest extends TestCase
 {
     use RefreshDatabase;
 
-    public function test_external_assets_are_pinned_to_fixed_versions(): void
+    public function test_the_dashboard_references_only_locally_served_assets(): void
     {
         $response = $this->get('audit-log');
 
         $response->assertOk();
-        $response->assertSee('https://cdn.tailwindcss.com/3.4.16', false);
-        $response->assertSee('lucide@0.468.0', false);
-        $response->assertSee('@fontsource-variable/inter@5.1.0', false);
+        $response->assertSee('audit-log/assets/dashboard.css', false);
+        $response->assertSee('audit-log/assets/lucide.js', false);
+        $response->assertSee('audit-log/assets/inter-latin.woff2', false);
     }
 
-    public function test_the_icon_script_is_protected_by_subresource_integrity(): void
+    public function test_no_external_cdn_is_referenced(): void
     {
         $response = $this->get('audit-log');
 
-        $response->assertSee('integrity="sha384-', false);
-        $response->assertSee('crossorigin="anonymous"', false);
-    }
-
-    public function test_no_floating_or_unversioned_third_party_assets_remain(): void
-    {
-        $response = $this->get('audit-log');
-
-        $response->assertDontSee('lucide@latest', false);
+        $response->assertDontSee('cdn.tailwindcss.com', false);
+        $response->assertDontSee('unpkg.com', false);
+        $response->assertDontSee('jsdelivr.net', false);
         $response->assertDontSee('rsms.me', false);
-        $response->assertDontSee('cdn.tailwindcss.com"', false);
+        $response->assertDontSee('lucide@latest', false);
+    }
+
+    public function test_the_asset_route_serves_the_vendored_files(): void
+    {
+        $css = $this->get('audit-log/assets/dashboard.css');
+        $css->assertOk();
+        $this->assertSame('text/css', $css->headers->get('Content-Type'));
+
+        $js = $this->get('audit-log/assets/lucide.js');
+        $js->assertOk();
+        $this->assertSame('text/javascript', $js->headers->get('Content-Type'));
+
+        $font = $this->get('audit-log/assets/inter-latin.woff2');
+        $font->assertOk();
+        $this->assertSame('font/woff2', $font->headers->get('Content-Type'));
+    }
+
+    public function test_an_unknown_asset_is_not_found(): void
+    {
+        $this->get('audit-log/assets/secrets.env')->assertNotFound();
     }
 }

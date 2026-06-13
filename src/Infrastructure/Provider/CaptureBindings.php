@@ -102,6 +102,7 @@ final class CaptureBindings extends BindingRegistrar
                 $this->stringList($this->config()->get('audit-log.capture.exclude', [])),
                 $mode === AuditableGuard::MODE_OPT_IN ? AuditableGuard::MODE_OPT_IN : AuditableGuard::MODE_ALL,
                 $this->app->make(AuditPolicyRegistry::class),
+                $this->app->make(CorrelationResolver::class),
             );
         });
 

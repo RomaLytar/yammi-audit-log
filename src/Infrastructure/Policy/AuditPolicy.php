@@ -26,6 +26,8 @@ final class AuditPolicy
      */
     private ?Closure $condition = null;
 
+    private ?float $sampleRate = null;
+
     public function __construct(
         public readonly string $model,
     ) {}
@@ -57,11 +59,29 @@ final class AuditPolicy
     }
 
     /**
+     * Keep only a fraction (0.0–1.0) of this model's changes. The decision is
+     * made per correlation, so a whole record's history inside one unit of work
+     * is kept or dropped together, never left with holes. For thinning noisy,
+     * high-churn models without losing important ones.
+     */
+    public function sample(float $rate): self
+    {
+        $this->sampleRate = max(0.0, min(1.0, $rate));
+
+        return $this;
+    }
+
+    /**
      * @return list<string>
      */
     public function ignoredFields(): array
     {
         return $this->ignored;
+    }
+
+    public function sampleRate(): ?float
+    {
+        return $this->sampleRate;
     }
 
     public function allows(Model $model): bool

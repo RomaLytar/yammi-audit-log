@@ -246,6 +246,102 @@
             ],
             'code' => null,
         ],
+        [
+            'id' => 'pivots',
+            'icon' => 'link',
+            'title' => 'Many-to-many (pivot) auditing',
+            'intro' => 'Eloquent fires no events for attach/detach/sync, so "the user\'s roles changed" would otherwise vanish. Opt in with the AuditsPivots trait.',
+            'points' => [
+                'Add use AuditsPivots to the model, then call auditAttach / auditDetach / auditSync instead of the raw relation methods — same return value.',
+                'Records the before/after set of related keys through the full pipeline (redaction, attribution, correlation) as attached / detached / synced events.',
+                'Records only when the set actually changes; rejects a relation that is not many-to-many; fails closed.',
+            ],
+            'code' => "use Yammi\\AuditLog\\Concerns\\AuditsPivots;\n\nclass User extends Model { use AuditsPivots; }\n\n\$user->auditSync('roles', [\$admin, \$editor]);",
+        ],
+        [
+            'id' => 'access-log',
+            'icon' => 'eye',
+            'title' => 'Access log (who viewed a record)',
+            'intro' => 'A read is an event too — under HIPAA/GDPR, who looked at PII matters. Opt in per model with the LogsAccess trait, or record from anywhere.',
+            'points' => [
+                'AuditLog::recordAccess(Patient::class, $id) — or $patient->recordAccess() with the trait.',
+                'An access carries no diff; the viewer and request metadata are attributed like any captured change. The accessed event filters on the dashboard and API.',
+                'Reads are high-volume — keep retention tight when you enable this.',
+            ],
+            'code' => "use Yammi\\AuditLog\\Concerns\\LogsAccess;\n\nclass Patient extends Model { use LogsAccess; }\n\n\$patient->recordAccess();",
+        ],
+        [
+            'id' => 'value-transitions',
+            'icon' => 'arrow-left-right',
+            'title' => 'Value-transition queries',
+            'intro' => 'Find "who moved an order to cancelled" with one filter instead of scanning every diff.',
+            'points' => [
+                'changes() and the JSON API accept field, value_from and value_to.',
+                'field alone matches every record that touched the attribute; add the value pair to pin the exact old→new transition.',
+                'Field names are validated to [A-Za-z0-9_] so the JSON path is injection-safe.',
+            ],
+            'code' => "AuditLog::changes([\n    'field' => 'status',\n    'value_from' => 'pending',\n    'value_to' => 'cancelled',\n]);",
+        ],
+        [
+            'id' => 'change-reason',
+            'icon' => 'message-square-text',
+            'title' => 'Change reason (why)',
+            'intro' => 'The log already records what, who and when — withReason() adds why.',
+            'points' => [
+                'Every change recorded inside the callback (captured or manual) is stamped with the reason and shown with a "why" badge on the dashboard.',
+                'The reason is covered by the integrity hash chain, so it cannot be edited after the fact without breaking verification.',
+                'withReason() returns whatever the callback returns.',
+            ],
+            'code' => "AuditLog::withReason('ticket #4521', function () use (\$order) {\n    \$order->update(['status' => 'refunded']);\n});",
+        ],
+        [
+            'id' => 'siem',
+            'icon' => 'satellite-dish',
+            'title' => 'Stream to your SIEM',
+            'intro' => 'Ship every recorded change to Splunk, Datadog, Elastic or any JSON endpoint — off the request path, queued, fail-soft.',
+            'points' => [
+                'Configure audit-log.stream: driver (splunk | datadog | elastic | http), endpoint, token, source, extra headers.',
+                'The event is normalized once and wrapped in each platform\'s envelope; delivery is a queued job with one retry on 5xx.',
+                'Off by default; a slow or dead sink never touches the host write.',
+            ],
+            'code' => null,
+        ],
+        [
+            'id' => 'detection-as-code',
+            'icon' => 'shield-check',
+            'title' => 'Detection as code',
+            'intro' => 'Write domain-specific anomaly rules as classes — versioned in git, unit-tested in isolation — running alongside the built-in checks.',
+            'points' => [
+                'Implement AnomalyRule::evaluate(array $entries, AnomalyWindow $window): the rule receives the window\'s changes as plain DTOs — no database, no framework.',
+                'Register class strings under audit-log.anomalies.rules. A throwing rule is isolated and never breaks the scan.',
+                'Findings carry a severity (low / medium / high) shown on the anomalies page.',
+            ],
+            'code' => "final class PriceDropRule implements AnomalyRule\n{\n    public function key(): string { return 'price_drop'; }\n    public function evaluate(array \$entries, AnomalyWindow \$window): array { /* … */ }\n}",
+        ],
+        [
+            'id' => 'signed-digests',
+            'icon' => 'file-signature',
+            'title' => 'Signed integrity digests',
+            'intro' => 'The hash chain catches edits to rows; a signed digest also catches whole-segment deletion and verifies independently of the database (CloudTrail-style).',
+            'points' => [
+                'audit-log:digest records a signed snapshot of the chain head, record count and span (schedule via integrity.digest_cron).',
+                'audit-log:verify now also checks the latest digest — failing if the signed chain head was deleted or the signature does not verify.',
+                'Signed with your asymmetric key (integrity.signing); unsigned but still recorded when no key is set.',
+            ],
+            'code' => null,
+        ],
+        [
+            'id' => 'activity-viewer',
+            'icon' => 'user-check',
+            'title' => 'Per-subject activity viewer',
+            'intro' => 'Audit isn\'t only for admins — hand a tenant or user a short-lived signed link to their own read-only "Account activity" page.',
+            'points' => [
+                'AuditLog::activityUrl($user, $user->id, minutes: 30) mints a temporary signed URL — the signature is the access grant and it expires.',
+                'It renders that subject\'s history (changes to the record and changes the subject made) on a standalone page; no admin login.',
+                'Tampering with the parameters or dropping the signature returns 403.',
+            ],
+            'code' => "\$url = AuditLog::activityUrl(\$user, \$user->id, minutes: 30);",
+        ],
     ];
 @endphp
 

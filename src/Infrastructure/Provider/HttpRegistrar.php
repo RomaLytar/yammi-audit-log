@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Provider;
 
+use Illuminate\Contracts\Cache\Repository as CacheRepository;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
@@ -14,6 +15,7 @@ use Illuminate\Routing\Router;
 use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
+use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
 use Yammi\AuditLog\Infrastructure\Http\AuthGuardDetector;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\AssetController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\ScopedActivityController;
@@ -132,9 +134,27 @@ final class HttpRegistrar
                     $view->with('auditNoiseCount', 0);
                 }
 
+                $view->with('auditAnomalyCount', $this->anomalyCount());
                 $view->with('auditAssets', $this->assetUrls());
             },
         );
+    }
+
+    /**
+     * Number of anomalies in the last 24 hours, cached briefly because the scan
+     * is heavier than a single count and the nav renders on every page.
+     */
+    private function anomalyCount(): int
+    {
+        try {
+            return (int) $this->app->make(CacheRepository::class)->remember(
+                'audit-log:nav-anomaly-count',
+                60,
+                fn (): int => count($this->app->make(AnomalyScanner::class)->scan(1440)),
+            );
+        } catch (Throwable) {
+            return 0;
+        }
     }
 
     /**

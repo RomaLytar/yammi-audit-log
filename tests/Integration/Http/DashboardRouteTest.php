@@ -71,6 +71,27 @@ final class DashboardRouteTest extends TestCase
             ->assertSee('ticket #4521');
     }
 
+    public function test_the_filter_form_exposes_the_value_transition_inputs(): void
+    {
+        Post::create(['title' => 'Hello', 'status' => 'draft']);
+
+        $this->get('audit-log')
+            ->assertOk()
+            ->assertSee('Field changed')
+            ->assertSee('name="field"', false)
+            ->assertSee('name="value_from"', false)
+            ->assertSee('name="value_to"', false);
+    }
+
+    public function test_it_filters_by_a_value_transition(): void
+    {
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+        $post->update(['status' => 'published']);
+
+        $this->get('audit-log?field=status&value_from=draft&value_to=published')->assertOk()->assertSee('published');
+        $this->get('audit-log?field=status&value_from=draft&value_to=archived')->assertOk()->assertSee('No changes match these filters');
+    }
+
     public function test_it_filters_by_event(): void
     {
         $post = Post::create(['title' => 'Hello', 'status' => 'draft']);

@@ -24,6 +24,14 @@ final class AuditPolicyTest extends TestCase
         $this->assertTrue((new AuditPolicy(Post::class))->allows(new Post));
     }
 
+    public function test_sample_rate_defaults_to_null_and_clamps_to_0_1(): void
+    {
+        $this->assertNull((new AuditPolicy(Post::class))->sampleRate());
+        $this->assertSame(0.0, (new AuditPolicy(Post::class))->sample(-1.0)->sampleRate());
+        $this->assertSame(1.0, (new AuditPolicy(Post::class))->sample(5.0)->sampleRate());
+        $this->assertSame(0.25, (new AuditPolicy(Post::class))->sample(0.25)->sampleRate());
+    }
+
     public function test_allows_evaluates_the_predicate_against_the_model(): void
     {
         $post = new Post;

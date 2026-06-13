@@ -129,6 +129,9 @@
                     <a href="{{ route('audit-log.anomalies') }}" title="Anomalies"
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.anomalies') ? 'border-warning/40 bg-warning/10 text-warning' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
                         <i data-lucide="siren" class="text-[14px]"></i> <span class="hidden lg:inline">Anomalies</span>
+                        @if (($auditAnomalyCount ?? 0) > 0)
+                            <span title="{{ $auditAnomalyCount }} anomaly(ies) in the last 24h" class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-warning/20 text-warning text-[10px] font-bold tabular-nums">{{ $auditAnomalyCount }}</span>
+                        @endif
                     </a>
                     <a href="{{ route('audit-log.time-machine') }}" title="Time machine"
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.time-machine') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">

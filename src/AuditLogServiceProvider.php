@@ -80,6 +80,7 @@ use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Http\Controller\ScopedActivityController;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 use Yammi\AuditLog\Infrastructure\Integrity\IntegrityHasher;
@@ -390,6 +391,7 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         if ((bool) $config->get('audit-log.ui.enabled', true)) {
             $this->registerRoutes($config);
+            $this->registerActivityRoute($config);
             $this->registerNavComposer();
         }
 
@@ -498,6 +500,19 @@ final class AuditLogServiceProvider extends ServiceProvider
                 }
             },
         );
+    }
+
+    private function registerActivityRoute(ConfigRepository $config): void
+    {
+        $path = $config->get('audit-log.ui.path', 'audit-log');
+        $router = $this->app->make(Router::class);
+
+        $router->group([
+            'prefix' => is_string($path) ? $path : 'audit-log',
+            'middleware' => ['signed'],
+        ], static function () use ($router): void {
+            $router->get('activity', ScopedActivityController::class)->name('audit-log.activity');
+        });
     }
 
     private function registerRoutes(ConfigRepository $config): void

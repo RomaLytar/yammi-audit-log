@@ -119,6 +119,18 @@
             'code' => null,
         ],
         [
+            'id' => 'hotspots',
+            'icon' => 'flame',
+            'title' => 'Change hotspots',
+            'intro' => 'The Statistics page also shows what changes the most, useful for both audit review and spotting refactor targets.',
+            'points' => [
+                'Top models ranks the auditable types with the most recorded changes in the range.',
+                'Top fields ranks the most frequently changed attributes, resolved through the indexed changed-keys table rather than scanning every diff.',
+                'Both honour the page filters, so the hotspots are always scoped to what you are looking at.',
+            ],
+            'code' => null,
+        ],
+        [
             'id' => 'tenancy',
             'icon' => 'building-2',
             'title' => 'Multi-tenancy',

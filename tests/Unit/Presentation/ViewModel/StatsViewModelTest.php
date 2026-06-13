@@ -45,6 +45,16 @@ final class StatsViewModelTest extends TestCase
         $this->assertSame('Order', $viewModel->modelRows()[0]['label']);
     }
 
+    public function test_field_rows_carry_relative_percentages(): void
+    {
+        $viewModel = new StatsViewModel($this->stats(byField: ['status' => 8, 'price' => 2]));
+
+        $rows = $viewModel->fieldRows();
+
+        $this->assertSame(['status', 8, 100], [$rows[0]['label'], $rows[0]['count'], $rows[0]['percent']]);
+        $this->assertSame(25, $rows[1]['percent']);
+    }
+
     public function test_cascade_rows_shorten_the_id_and_scale_the_bar(): void
     {
         $viewModel = new StatsViewModel($this->stats(topCascades: [
@@ -66,8 +76,9 @@ final class StatsViewModelTest extends TestCase
      * @param  array<string, int>  $byModel
      * @param  array<string, int>  $byDay
      * @param  list<array{correlation_id: string, writes: int, models: int, depth: int}>  $topCascades
+     * @param  array<string, int>  $byField
      */
-    private function stats(array $byEvent = [], array $byModel = [], array $byDay = [], array $topCascades = []): StatsData
+    private function stats(array $byEvent = [], array $byModel = [], array $byDay = [], array $topCascades = [], array $byField = []): StatsData
     {
         return new StatsData(
             total: 0,
@@ -80,6 +91,7 @@ final class StatsViewModelTest extends TestCase
             byDay: $byDay,
             filters: new AuditFilterData,
             topCascades: $topCascades,
+            byField: $byField,
         );
     }
 }

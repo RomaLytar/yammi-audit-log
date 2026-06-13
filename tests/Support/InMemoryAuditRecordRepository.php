@@ -209,6 +209,25 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
         );
     }
 
+    public function fieldBreakdown(AuditCriteria $criteria, int $limit = 10): array
+    {
+        $counts = [];
+
+        foreach ($this->saved as $record) {
+            if (! $this->matches($record, $criteria)) {
+                continue;
+            }
+
+            foreach (array_keys($record->diff()->fields()) as $field) {
+                $counts[$field] = ($counts[$field] ?? 0) + 1;
+            }
+        }
+
+        arsort($counts);
+
+        return array_slice($counts, 0, $limit, true);
+    }
+
     public function topCascades(AuditCriteria $criteria, int $limit = 10): array
     {
         $groups = [];

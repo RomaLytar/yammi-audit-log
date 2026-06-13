@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Infrastructure\Capture;
 
 use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Contracts\ShouldAudit;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChainStateModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
 /** @internal */
@@ -25,7 +26,7 @@ final class AuditableGuard
 
     public function shouldAudit(Model $model): bool
     {
-        if ($model instanceof AuditRecordModel) {
+        if ($model instanceof AuditRecordModel || $model instanceof AuditChainStateModel) {
             return false;
         }
 

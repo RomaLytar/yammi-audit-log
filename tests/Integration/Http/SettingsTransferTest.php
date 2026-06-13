@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Tests\Integration\Http;
 use DateTimeImmutable;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Gate;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
@@ -75,5 +76,28 @@ final class SettingsTransferTest extends TestCase
         $this->from('audit-log/settings/database')
             ->post('audit-log/settings/database/transfer', ['from' => 'testing', 'to' => 'testing'])
             ->assertSessionHasErrors('to');
+    }
+
+    public function test_a_transfer_to_an_undeclared_connection_is_rejected(): void
+    {
+        $response = $this->from('audit-log/settings/database')
+            ->post('audit-log/settings/database/transfer', ['from' => 'testing', 'to' => 'ghost']);
+
+        $response->assertRedirect(route('audit-log.settings.database'));
+        $response->assertSessionHas('audit_log_error');
+        $response->assertSessionMissing('audit_log_status');
+    }
+
+    public function test_a_configured_transfer_gate_blocks_unauthorized_operators(): void
+    {
+        config(['audit-log.transfer.gate' => 'transfer-audit']);
+        Gate::define('transfer-audit', static fn (): bool => false);
+
+        $response = $this->from('audit-log/settings/database')
+            ->post('audit-log/settings/database/transfer', ['from' => 'testing', 'to' => 'audit_target']);
+
+        $response->assertRedirect(route('audit-log.settings.database'));
+        $response->assertSessionHas('audit_log_error');
+        $response->assertSessionMissing('audit_log_status');
     }
 }

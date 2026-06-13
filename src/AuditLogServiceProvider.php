@@ -80,6 +80,7 @@ use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Http\AuthGuardDetector;
 use Yammi\AuditLog\Infrastructure\Http\Controller\ScopedActivityController;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
@@ -479,10 +480,21 @@ final class AuditLogServiceProvider extends ServiceProvider
     {
         $path = $config->get('audit-log.api.path', 'audit-log/api');
         $configured = $config->get('audit-log.api.middleware', ['api']);
+        $middleware = is_array($configured) ? array_values($configured) : ['api'];
+
+        if (! (bool) $config->get('audit-log.api.allow_unauthenticated', false)
+            && ! (new AuthGuardDetector)->hasGuard($middleware)) {
+            $this->app->make(LoggerInterface::class)->error(
+                'audit-log API routes were not registered: audit-log.api.middleware carries no authentication guard. '
+                .'Add an auth guard (e.g. "auth:sanctum"), or set audit-log.api.allow_unauthenticated=true to override.',
+            );
+
+            return;
+        }
 
         $this->app->make(Router::class)->group([
             'prefix' => is_string($path) ? $path : 'audit-log/api',
-            'middleware' => is_array($configured) ? array_values($configured) : ['api'],
+            'middleware' => $middleware,
         ], function (): void {
             $this->loadRoutesFrom(self::API_ROUTES_PATH);
         });

@@ -28,12 +28,21 @@ final class DatabaseTransferRunner
         private readonly ConnectionResolverInterface $db,
         private readonly ConsoleKernel $artisan,
         private readonly ConfigRepository $config,
+        private readonly ConnectionGuard $guard,
     ) {}
 
     public function run(string $from, string $to, bool $deleteSource): TransferRunResult
     {
         if ($from === $to) {
             return TransferRunResult::failure("Source and destination are the same connection: \"{$from}\".");
+        }
+
+        $allowed = $this->configuredConnections();
+
+        foreach (['from' => $from, 'to' => $to] as $label => $name) {
+            if (! $this->guard->allows($name, $allowed)) {
+                return TransferRunResult::failure("Unknown {$label} connection: \"{$name}\". Declare it in config/database.php first.");
+            }
         }
 
         $this->tryCreateDatabase($to);
@@ -94,7 +103,12 @@ final class DatabaseTransferRunner
      */
     private function createMysqlDatabase(array $settings): void
     {
-        $name = str_replace('`', '', $this->scalarString($settings['database'] ?? ''));
+        $name = $this->scalarString($settings['database'] ?? '');
+
+        if (! $this->guard->isSafeDatabaseName($name)) {
+            return;
+        }
+
         $pdo = new PDO(
             sprintf('mysql:host=%s;port=%s', $this->scalarString($settings['host'] ?? ''), $this->scalarString($settings['port'] ?? '3306')),
             $this->scalarString($settings['username'] ?? ''),
@@ -108,12 +122,17 @@ final class DatabaseTransferRunner
      */
     private function createPgsqlDatabase(array $settings): void
     {
+        $name = $this->scalarString($settings['database'] ?? '');
+
+        if (! $this->guard->isSafeDatabaseName($name)) {
+            return;
+        }
+
         $pdo = new PDO(
             sprintf('pgsql:host=%s;port=%s;dbname=postgres', $this->scalarString($settings['host'] ?? ''), $this->scalarString($settings['port'] ?? '5432')),
             $this->scalarString($settings['username'] ?? ''),
             $this->scalarString($settings['password'] ?? ''),
         );
-        $name = str_replace('"', '', $this->scalarString($settings['database'] ?? ''));
         $statement = $pdo->query('SELECT 1 FROM pg_database WHERE datname = '.$pdo->quote($name));
         $exists = $statement !== false ? $statement->fetch() : false;
 
@@ -137,5 +156,15 @@ final class DatabaseTransferRunner
     private function scalarString(mixed $value): string
     {
         return is_scalar($value) ? (string) $value : '';
+    }
+
+    /**
+     * @return list<string>
+     */
+    private function configuredConnections(): array
+    {
+        $connections = $this->config->get('database.connections');
+
+        return is_array($connections) ? array_map(strval(...), array_keys($connections)) : [];
     }
 }

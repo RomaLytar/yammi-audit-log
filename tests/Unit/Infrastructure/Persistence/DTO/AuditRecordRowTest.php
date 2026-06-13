@@ -50,6 +50,7 @@ final class AuditRecordRowTest extends TestCase
             'chain_depth' => 0,
             'tenant_id' => 'acme',
             'reason' => 'ticket #4521',
+            'event_version' => 1,
         ], $row->toArray());
     }
 }

@@ -75,6 +75,7 @@ Optionally, defer that write to the queue (`AUDIT_LOG_WRITE_ASYNC=true`) or move
 - PHP `^8.1`, Laravel `^9.0 || ^10 || ^11 || ^12 || ^13`, any database Laravel supports.
 - Capture is built on Eloquent model events. Changes made by `Query Builder ->update()` or raw SQL are not seen automatically; record those explicitly with `AuditLog::record()`.
 - Migrations create four auto-loaded tables: `audit_log` (the records), `audit_log_settings` (the settings UI), and `audit_log_digests` + `audit_log_chain_state` (used only when integrity is enabled). They can live on a dedicated connection.
+- Every record carries an `event_version` (the record-schema version), stamped on write and included in the JSON API and SIEM payloads, so consumers can rely on the layout and branch on it if the schema ever changes.
 - A queue is needed only if you opt into async writes or SIEM streaming; the default write path is synchronous.
 
 ## Performance

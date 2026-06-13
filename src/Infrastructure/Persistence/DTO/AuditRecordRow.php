@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Persistence\DTO;
 
+use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
+
 /**
  * Typed representation of a single audit_log row. The mapper builds it from a
  * domain record; toArray() is the single, localized conversion to the column
@@ -37,6 +39,7 @@ final class AuditRecordRow
         public readonly int $chainDepth = 0,
         public readonly ?string $tenantId = null,
         public readonly ?string $reason = null,
+        public readonly int $eventVersion = AuditRecord::SCHEMA_VERSION,
     ) {}
 
     /**
@@ -64,6 +67,7 @@ final class AuditRecordRow
             'chain_depth' => $this->chainDepth,
             'tenant_id' => $this->tenantId,
             'reason' => $this->reason,
+            'event_version' => $this->eventVersion,
         ];
     }
 }

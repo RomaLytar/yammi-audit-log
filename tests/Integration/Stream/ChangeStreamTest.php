@@ -51,6 +51,7 @@ final class ChangeStreamTest extends TestCase
                 && $request->hasHeader('Authorization', 'Splunk hec-token')
                 && str_contains($request->body(), '"sourcetype":"audit"')
                 && str_contains($request->body(), '"source":"orders-api"')
+                && str_contains($request->body(), '"event_version":1')
                 && str_contains($request->body(), '"event":');
         });
     }

@@ -63,6 +63,12 @@
                                         <i data-lucide="alert-triangle" class="text-[10px]"></i> no-op
                                     </span>
                                 @endif
+                                @if ($entry->reason())
+                                    <span class="inline-flex items-center gap-1 rounded-md bg-info/10 px-1.5 py-0.5 text-[10px] font-medium text-info ring-1 ring-inset ring-info/30"
+                                          title="{{ $entry->reason() }}">
+                                        <i data-lucide="message-square-text" class="text-[10px]"></i> why
+                                    </span>
+                                @endif
                             </div>
                         </td>
                         <td class="px-4 py-3">

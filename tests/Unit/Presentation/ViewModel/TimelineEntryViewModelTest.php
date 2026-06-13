@@ -27,6 +27,28 @@ final class TimelineEntryViewModelTest extends TestCase
         $this->assertSame(2, $entry->changeCount());
     }
 
+    public function test_it_exposes_the_change_reason(): void
+    {
+        $this->assertNull($this->viewModel(chainSize: 1)->reason());
+
+        $entry = new TimelineEntryViewModel(new TimelineEntryData(
+            id: 1,
+            auditableType: 'App\\Models\\Order',
+            auditableId: '7',
+            event: 'updated',
+            actorType: 'user',
+            actorLabel: 'Jane',
+            originLabel: null,
+            changes: ['status' => ['old' => 'a', 'new' => 'b']],
+            labels: [],
+            occurredAt: '2026-01-01T10:00:00+00:00',
+            correlationId: null,
+            reason: 'ticket #4521',
+        ), 1);
+
+        $this->assertSame('ticket #4521', $entry->reason());
+    }
+
     public function test_a_single_change_has_no_chain(): void
     {
         $this->assertFalse($this->viewModel(chainSize: 1)->hasChain());

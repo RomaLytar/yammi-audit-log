@@ -43,7 +43,7 @@ final class AuditPolicyCaptureTest extends TestCase
 
         Post::create(['title' => 'A', 'status' => 'draft']);
 
-        $changes = json_decode((string) AuditRecordModel::query()->value('changes'), true);
+        $changes = AuditRecordModel::query()->value('changes');
 
         $this->assertIsArray($changes);
         $this->assertArrayHasKey('title', $changes);
@@ -54,7 +54,7 @@ final class AuditPolicyCaptureTest extends TestCase
     {
         Post::create(['title' => 'A', 'status' => 'draft']);
 
-        $changes = json_decode((string) AuditRecordModel::query()->value('changes'), true);
+        $changes = AuditRecordModel::query()->value('changes');
 
         $this->assertIsArray($changes);
         $this->assertArrayHasKey('status', $changes);

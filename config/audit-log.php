@@ -279,6 +279,12 @@ return [
         'enabled' => (bool) env('AUDIT_LOG_API_ENABLED', false),
         'path' => env('AUDIT_LOG_API_PATH', 'audit-log/api'),
         'middleware' => ['api'],
+
+        // Fail closed: when the middleware above carries no authentication guard
+        // (auth, auth:*, can:* or an Authenticate middleware) the routes are NOT
+        // registered, so flipping the API on can't silently expose audit data.
+        // Set this true only when auth is enforced by some unrecognised means.
+        'allow_unauthenticated' => (bool) env('AUDIT_LOG_API_ALLOW_UNAUTHENTICATED', false),
     ],
 
     'ui' => [
@@ -294,5 +300,21 @@ return [
         'gate' => env('AUDIT_LOG_UI_GATE'),
         // Rate limit for the UI routes, as "requests,minutes". Empty = no limit.
         'throttle' => env('AUDIT_LOG_UI_THROTTLE', '60,1'),
+    ],
+
+    'transfer' => [
+        // Optional Gate ability checked before the dashboard "Transfer data"
+        // action (host-defined). Moving and optionally deleting audit rows
+        // between databases is destructive — gate it to your most privileged
+        // operators. Source and destination are always restricted to the
+        // connections declared in config/database.php. null = no extra gate.
+        'gate' => env('AUDIT_LOG_TRANSFER_GATE'),
+    ],
+
+    'playground' => [
+        // Optional Gate ability checked before destructive facade-playground
+        // methods (record, recordAccess) that write audit rows. Read-only
+        // methods are never gated. null = no extra gate.
+        'gate' => env('AUDIT_LOG_PLAYGROUND_GATE'),
     ],
 ];

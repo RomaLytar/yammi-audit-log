@@ -4,6 +4,8 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Http\Controller;
 
+use Illuminate\Contracts\Auth\Access\Gate;
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\JsonResponse;
@@ -11,6 +13,7 @@ use Illuminate\Http\Request;
 use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Playground\MethodCatalog;
+use Yammi\AuditLog\Application\Playground\PlaygroundMethodData;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 use Yammi\AuditLog\Infrastructure\Playground\PlaygroundExecutor;
 
@@ -22,6 +25,8 @@ final class PlaygroundController
         private readonly MethodCatalog $catalog,
         private readonly PlaygroundExecutor $executor,
         private readonly LoggerInterface $logger,
+        private readonly Gate $gate,
+        private readonly ConfigRepository $config,
     ) {}
 
     public function index(): View
@@ -42,6 +47,10 @@ final class PlaygroundController
             return new JsonResponse(['error' => 'Unknown method.'], 404);
         }
 
+        if (! $this->allowsDestructive($method)) {
+            return new JsonResponse(['ok' => false, 'error' => 'You are not authorized to run destructive playground methods.'], 403);
+        }
+
         $args = $request->input('args');
 
         try {
@@ -55,5 +64,16 @@ final class PlaygroundController
 
             return new JsonResponse(['ok' => false, 'error' => 'Execution failed — see the application log.'], 500);
         }
+    }
+
+    private function allowsDestructive(PlaygroundMethodData $method): bool
+    {
+        if (! $method->destructive) {
+            return true;
+        }
+
+        $ability = $this->config->get('audit-log.playground.gate');
+
+        return ! is_string($ability) || $ability === '' || $this->gate->allows($ability);
     }
 }

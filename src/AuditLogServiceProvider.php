@@ -18,6 +18,7 @@ use Yammi\AuditLog\Infrastructure\Capture\CaptureRegistrar;
 use Yammi\AuditLog\Infrastructure\Capture\ChangeDataFactory;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
 use Yammi\AuditLog\Infrastructure\Console\ArchiveAuditLogCommand;
+use Yammi\AuditLog\Infrastructure\Console\BackfillChangedKeysCommand;
 use Yammi\AuditLog\Infrastructure\Console\DetectAnomaliesCommand;
 use Yammi\AuditLog\Infrastructure\Console\GenerateDigestCommand;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
@@ -83,7 +84,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->loadViewsFrom(self::VIEWS_PATH, 'audit-log');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class, VerifyIntegrityCommand::class, ArchiveAuditLogCommand::class, SubjectReportCommand::class, DetectAnomaliesCommand::class, GenerateDigestCommand::class]);
+            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class, VerifyIntegrityCommand::class, ArchiveAuditLogCommand::class, SubjectReportCommand::class, DetectAnomaliesCommand::class, GenerateDigestCommand::class, BackfillChangedKeysCommand::class]);
 
             $this->publishes(
                 [self::CONFIG_PATH => config_path('audit-log.php')],

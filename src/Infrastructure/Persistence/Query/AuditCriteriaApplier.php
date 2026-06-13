@@ -6,7 +6,9 @@ namespace Yammi\AuditLog\Infrastructure\Persistence\Query;
 
 use Illuminate\Database\Connection;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Query\Builder as QueryBuilder;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChangedKeyModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
 /**
@@ -48,8 +50,18 @@ final class AuditCriteriaApplier
         }
 
         if ($criteria->field !== null && preg_match('/^[A-Za-z0-9_]{1,64}$/', $criteria->field) === 1) {
-            $path = 'changes->'.$criteria->field;
-            $query->whereNotNull($path);
+            $field = $criteria->field;
+            $recordsTable = $query->getModel()->getTable();
+            $keysTable = (new AuditChangedKeyModel)->getTable();
+
+            $query->whereExists(function (QueryBuilder $exists) use ($keysTable, $recordsTable, $field): void {
+                $exists->selectRaw('1')
+                    ->from($keysTable)
+                    ->whereColumn($keysTable.'.audit_id', $recordsTable.'.id')
+                    ->where($keysTable.'.key', $field);
+            });
+
+            $path = 'changes->'.$field;
 
             if ($criteria->valueFrom !== null) {
                 $query->where($path.'->old', $criteria->valueFrom);

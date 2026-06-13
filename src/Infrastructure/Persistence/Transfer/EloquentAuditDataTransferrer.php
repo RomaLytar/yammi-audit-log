@@ -32,6 +32,7 @@ final class EloquentAuditDataTransferrer implements AuditDataTransferrer
             $rowsMoved += $this->moveTable($table, $from, $to);
         }
 
+        $rowsMoved += $this->moveChangedKeys($from, $to);
         $rowsMoved += $this->moveChainState($from, $to);
 
         if ($deleteSource) {
@@ -57,12 +58,49 @@ final class EloquentAuditDataTransferrer implements AuditDataTransferrer
      */
     private function allTables(): array
     {
-        return [...$this->appendTables(), self::CHAIN_STATE_TABLE];
+        return [...$this->appendTables(), $this->changedKeysTable(), self::CHAIN_STATE_TABLE];
     }
 
     private function digestsTable(): string
     {
         return $this->table.'_digests';
+    }
+
+    private function changedKeysTable(): string
+    {
+        return $this->table.'_changed_keys';
+    }
+
+    /**
+     * The changed-keys index has no surrogate id; order by its composite key so
+     * the chunked copy is stable, and ignore duplicates on the destination.
+     */
+    private function moveChangedKeys(string $from, string $to): int
+    {
+        $table = $this->changedKeysTable();
+
+        if (! $this->sourceHasTable($from, $table)) {
+            return 0;
+        }
+
+        $moved = 0;
+
+        $this->db->connection($from)
+            ->table($table)
+            ->orderBy('audit_id')
+            ->orderBy('key')
+            ->chunk(self::CHUNK, function (Collection $rows) use ($to, $table, &$moved): void {
+                $data = array_map(static fn (object $row): array => (array) $row, $rows->all());
+
+                if ($data === []) {
+                    return;
+                }
+
+                $this->db->connection($to)->table($table)->insertOrIgnore($data);
+                $moved += count($data);
+            });
+
+        return $moved;
     }
 
     private function moveTable(string $table, string $from, string $to): int

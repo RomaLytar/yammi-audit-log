@@ -305,6 +305,7 @@
                 'changes() and the JSON API accept field, value_from and value_to.',
                 'field alone matches every record that touched the attribute; add the value pair to pin the exact old→new transition.',
                 'Field names are validated to [A-Za-z0-9_] so the JSON path is injection-safe.',
+                'The field match seeks an indexed changed-keys table, not a full JSON scan, so it stays fast on large tables. Records written before this index existed are covered once you run php artisan audit-log:backfill-changed-keys (chunked, resumable, safe to re-run).',
             ],
             'code' => "AuditLog::changes([\n    'field' => 'status',\n    'value_from' => 'pending',\n    'value_to' => 'cancelled',\n]);",
         ],

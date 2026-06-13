@@ -362,6 +362,19 @@ The reason rides through the same pipeline, is stored per record, surfaces on ti
 
 > Note: making a reason *mandatory* for specific models (refusing the host write without one) is a planned follow-up; the write path is sacred, so that enforcement will be an explicit host-side opt-in rather than a silent capture failure.
 
+### Give a tenant or user their own activity feed
+
+Audit isn't only for admins. Hand a customer a short-lived, signed link to their own read-only "Account activity" page — scoped to one subject, no dashboard, no login:
+
+```php
+$url = AuditLog::activityUrl($user, $user->id, minutes: 30);
+// https://app.test/audit-log/activity?type=App%5CModels%5CUser&id=42&expires=…&signature=…
+```
+
+The URL is a temporary signed route — the signature is the access grant and it expires, so there's no extra auth to wire up. It renders that subject's history (changes to the record and changes the subject made) on a standalone page; tampering with the parameters or dropping the signature returns 403.
+
+> Note: a *tenant-wide* feed (all activity for a tenant, not one subject) interacts with the tenancy global scope and ships as a follow-up; this delivers the per-subject token.
+
 ### Signed integrity digests
 
 The hash chain catches edits to stored rows. A **signed digest** goes further — it proves the chain head, record count and time span at a moment in time, signed with your asymmetric key, so deleting whole segments (or the entire table) is detectable and an archived digest verifies independently of the database (CloudTrail-style).

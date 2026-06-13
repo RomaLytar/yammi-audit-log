@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Infrastructure;
 use DateTimeImmutable;
 use Exception;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Database\Eloquent\Model;
 use Yammi\AuditLog\Application\Action\BuildChainAction;
 use Yammi\AuditLog\Application\Action\BuildStatsAction;
@@ -47,6 +48,7 @@ final class AuditLogManager
         private readonly ConfigRepository $config,
         private readonly Clock $clock,
         private readonly AnomalyScanner $anomalyScanner,
+        private readonly UrlGenerator $url,
         private readonly ChangeReasonContext $reasonContext = new ChangeReasonContext,
     ) {}
 
@@ -189,6 +191,24 @@ final class AuditLogManager
         } finally {
             $this->reasonContext->pop();
         }
+    }
+
+    /**
+     * A short-lived, signed read-only URL to one subject's activity feed — give
+     * a tenant or a user their own "Account activity" page without exposing the
+     * admin dashboard. The signature is the access grant; it expires.
+     */
+    public function activityUrl(Model|string $auditable, int|string|null $id = null, int $minutes = 60): string
+    {
+        [$type, $key] = $auditable instanceof Model
+            ? [$auditable->getMorphClass(), (string) $auditable->getKey()]
+            : [$auditable, $id === null ? '' : (string) $id];
+
+        return $this->url->temporarySignedRoute(
+            'audit-log.activity',
+            $this->clock->now()->modify('+'.max(1, $minutes).' minutes'),
+            ['type' => $type, 'id' => $key],
+        );
     }
 
     private function resolveMoment(DateTimeImmutable|string|null $at): DateTimeImmutable

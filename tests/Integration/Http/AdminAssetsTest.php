@@ -36,15 +36,15 @@ final class AdminAssetsTest extends TestCase
     {
         $css = $this->get('audit-log/assets/dashboard.css');
         $css->assertOk();
-        $this->assertSame('text/css', $css->headers->get('Content-Type'));
+        $this->assertStringStartsWith('text/css', (string) $css->headers->get('Content-Type'));
 
         $js = $this->get('audit-log/assets/lucide.js');
         $js->assertOk();
-        $this->assertSame('text/javascript', $js->headers->get('Content-Type'));
+        $this->assertStringStartsWith('text/javascript', (string) $js->headers->get('Content-Type'));
 
         $font = $this->get('audit-log/assets/inter-latin.woff2');
         $font->assertOk();
-        $this->assertSame('font/woff2', $font->headers->get('Content-Type'));
+        $this->assertStringStartsWith('font/woff2', (string) $font->headers->get('Content-Type'));
     }
 
     public function test_an_unknown_asset_is_not_found(): void

@@ -229,6 +229,21 @@ return [
         // audit-log:verify can prove the history was not edited or thinned out.
         // Off by default: it costs one extra select per insert.
         'enabled' => (bool) env('AUDIT_LOG_INTEGRITY', false),
+
+        // Asymmetric key pair (RSA/EC, PEM inline or a readable file path) used
+        // to sign integrity digests. audit-log:digest records a signed snapshot
+        // of the chain head + count + span; audit-log:verify checks the latest
+        // one, catching whole-segment deletion and verifying archived digests
+        // independently of the database. No private key = digests stored
+        // unsigned. Keep the private key off the audit host where possible.
+        'signing' => [
+            'private_key' => env('AUDIT_LOG_SIGNING_PRIVATE_KEY'),
+            'public_key' => env('AUDIT_LOG_SIGNING_PUBLIC_KEY'),
+        ],
+
+        // Cron expression to record a signed digest automatically, e.g.
+        // '0 * * * *'. Empty = run audit-log:digest yourself.
+        'digest_cron' => env('AUDIT_LOG_DIGEST_CRON'),
     ],
 
     'archive' => [

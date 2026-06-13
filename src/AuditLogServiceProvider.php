@@ -66,6 +66,7 @@ use Yammi\AuditLog\Infrastructure\Capture\ChangeDataFactory;
 use Yammi\AuditLog\Infrastructure\Capture\EloquentChangeRecorder;
 use Yammi\AuditLog\Infrastructure\Console\ArchiveAuditLogCommand;
 use Yammi\AuditLog\Infrastructure\Console\DetectAnomaliesCommand;
+use Yammi\AuditLog\Infrastructure\Console\GenerateDigestCommand;
 use Yammi\AuditLog\Infrastructure\Console\PruneAuditLogCommand;
 use Yammi\AuditLog\Infrastructure\Console\SubjectReportCommand;
 use Yammi\AuditLog\Infrastructure\Console\ToggleUiCommand;
@@ -82,6 +83,7 @@ use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Http\CorrelationMiddlewareRegistrar;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 use Yammi\AuditLog\Infrastructure\Integrity\IntegrityHasher;
+use Yammi\AuditLog\Infrastructure\Integrity\IntegritySigner;
 use Yammi\AuditLog\Infrastructure\Label\ConventionLabelResolver;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
@@ -312,6 +314,17 @@ final class AuditLogServiceProvider extends ServiceProvider
             );
         });
 
+        $this->app->singleton(IntegritySigner::class, function (): IntegritySigner {
+            $config = $this->config();
+            $private = $config->get('audit-log.integrity.signing.private_key');
+            $public = $config->get('audit-log.integrity.signing.public_key');
+
+            return new IntegritySigner(
+                is_string($private) && $private !== '' ? $private : null,
+                is_string($public) && $public !== '' ? $public : null,
+            );
+        });
+
         $this->app->singleton(ConnectionStatusInspector::class, function (): ConnectionStatusInspector {
             return new ConnectionStatusInspector(
                 $this->app->make(ConnectionResolverInterface::class),
@@ -352,7 +365,7 @@ final class AuditLogServiceProvider extends ServiceProvider
         $this->loadViewsFrom(self::VIEWS_PATH, 'audit-log');
 
         if ($this->app->runningInConsole()) {
-            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class, VerifyIntegrityCommand::class, ArchiveAuditLogCommand::class, SubjectReportCommand::class, DetectAnomaliesCommand::class]);
+            $this->commands([PruneAuditLogCommand::class, TransferAuditDataCommand::class, ToggleUiCommand::class, VerifyIntegrityCommand::class, ArchiveAuditLogCommand::class, SubjectReportCommand::class, DetectAnomaliesCommand::class, GenerateDigestCommand::class]);
 
             $this->publishes(
                 [self::CONFIG_PATH => config_path('audit-log.php')],
@@ -386,6 +399,7 @@ final class AuditLogServiceProvider extends ServiceProvider
 
         $this->registerRetention($config);
         $this->registerAnomalyScan($config);
+        $this->registerDigestSchedule($config);
 
         if (! (bool) $config->get('audit-log.enabled', true)) {
             return;
@@ -439,6 +453,22 @@ final class AuditLogServiceProvider extends ServiceProvider
             $schedule->command(DetectAnomaliesCommand::class)
                 ->cron(trim($cron))
                 ->name('audit-log:detect-anomalies')
+                ->withoutOverlapping();
+        });
+    }
+
+    private function registerDigestSchedule(ConfigRepository $config): void
+    {
+        $cron = $config->get('audit-log.integrity.digest_cron');
+
+        if (! is_string($cron) || trim($cron) === '') {
+            return;
+        }
+
+        $this->callAfterResolving(Schedule::class, static function (Schedule $schedule) use ($cron): void {
+            $schedule->command(GenerateDigestCommand::class)
+                ->cron(trim($cron))
+                ->name('audit-log:digest')
                 ->withoutOverlapping();
         });
     }

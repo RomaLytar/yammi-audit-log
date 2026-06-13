@@ -295,9 +295,30 @@ class Document extends Model
 class Order extends Model implements \Yammi\AuditLog\Contracts\ShouldAudit {}
 ```
 
+### Many-to-many (attach / detach / sync)
+
+Eloquent fires no model events for pivot writes, so a plain `$user->roles()->sync([...])` leaves no trace — "the user's roles changed" would silently vanish from the log. Add the `AuditsPivots` trait and use the audited wrappers instead; they run the relation operation and record the before/after set of related keys through the full pipeline (redaction, attribution, correlation):
+
+```php
+use Yammi\AuditLog\Concerns\AuditsPivots;
+
+class User extends Model
+{
+    use AuditsPivots;
+
+    public function roles(): BelongsToMany { return $this->belongsToMany(Role::class); }
+}
+
+$user->auditAttach('roles', $roleId);          // event: attached
+$user->auditDetach('roles', [$a, $b]);         // event: detached
+$user->auditSync('roles', [$a, $c]);           // event: synced
+```
+
+Each wrapper is a drop-in for the underlying relation method (same return value), records only when the set actually changes, and rejects a relation that is not many-to-many. The new `attached` / `detached` / `synced` events filter on the dashboard and API like any other.
+
 ### Honest limitations
 
-Eloquent events never fire for mass `Query Builder ->update()`, raw SQL or pivot `sync()`, no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):
+Eloquent events never fire for mass `Query Builder ->update()` or raw SQL either, no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):
 
 ```php
 Order::where('status', 'pending')->update(['status' => 'cancelled']);

@@ -14,6 +14,13 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\LabelSnapshot;
 final class AuditRecord
 {
     /**
+     * Version of the stored record's schema. Bump it whenever the record shape
+     * changes, so consumers (SIEM, exports) can rely on the layout per version.
+     * Stamped on write and carried through to every consumer.
+     */
+    public const SCHEMA_VERSION = 1;
+
+    /**
      * @param  array<string, string>  $context
      */
     public function __construct(
@@ -30,7 +37,13 @@ final class AuditRecord
         private readonly array $context = [],
         private readonly int $chainDepth = 0,
         private readonly ?string $reason = null,
+        private readonly int $eventVersion = self::SCHEMA_VERSION,
     ) {}
+
+    public function eventVersion(): int
+    {
+        return $this->eventVersion;
+    }
 
     public function id(): ?int
     {

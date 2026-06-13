@@ -66,6 +66,7 @@ final class ChangeStreamer
     private function event(TimelineEntryData $entry): array
     {
         return [
+            'event_version' => $entry->eventVersion,
             'event' => $entry->event,
             'model' => $entry->auditableType,
             'id' => $entry->auditableId,

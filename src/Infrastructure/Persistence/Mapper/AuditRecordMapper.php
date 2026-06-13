@@ -46,6 +46,7 @@ final class AuditRecordMapper
             context: $record->context(),
             chainDepth: $record->chainDepth(),
             tenantId: $this->tenants->resolve(),
+            eventVersion: $record->eventVersion(),
         );
     }
 
@@ -85,6 +86,7 @@ final class AuditRecordMapper
             context: $this->stringMap($model->getAttribute('context')),
             chainDepth: max(0, (int) $model->getAttribute('chain_depth')),
             reason: $this->nullableString($model->getAttribute('reason')),
+            eventVersion: max(1, (int) $model->getAttribute('event_version')),
         );
     }
 

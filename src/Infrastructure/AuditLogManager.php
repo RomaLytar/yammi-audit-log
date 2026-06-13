@@ -29,6 +29,7 @@ use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
 use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
 use Yammi\AuditLog\Infrastructure\Policy\AuditPolicy;
 use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
+use Yammi\AuditLog\Infrastructure\Query\AuditQueryBuilder;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Recorder\ManualChangeRecorder;
 
@@ -64,6 +65,15 @@ final class AuditLogManager
     public function policy(string $model): AuditPolicy
     {
         return $this->policies->policy($model);
+    }
+
+    /**
+     * A fluent builder over changes(), for example
+     * AuditLog::query()->field('status')->from('pending')->to('paid')->actorType('job')->get().
+     */
+    public function query(): AuditQueryBuilder
+    {
+        return new AuditQueryBuilder(fn (array $filters): ChangeListData => $this->changes($filters));
     }
 
     public function for(Model|string $auditable, int|string|null $id = null, int $limit = 50): TimelineData

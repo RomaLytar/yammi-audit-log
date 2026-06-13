@@ -24,12 +24,8 @@ final class ExportChangesAction
      */
     public function __invoke(AuditFilterData $filters): array
     {
-        $entries = [];
-
-        foreach ($this->query->all($this->criteria->fromFilters($filters), self::MAX_ROWS) as $record) {
-            $entries[] = TimelineEntryData::fromRecord($record);
-        }
-
-        return $entries;
+        return TimelineEntryData::fromRecords(
+            $this->query->all($this->criteria->fromFilters($filters), self::MAX_ROWS),
+        );
     }
 }

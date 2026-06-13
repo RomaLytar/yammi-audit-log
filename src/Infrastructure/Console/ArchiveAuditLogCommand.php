@@ -10,6 +10,8 @@ use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Filesystem\Factory as FilesystemFactory;
 use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
 use Yammi\AuditLog\Application\Contract\Clock;
+use Yammi\AuditLog\Infrastructure\Console\Support\ArchiveDisk;
+use Yammi\AuditLog\Infrastructure\Console\Support\RetentionWindow;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 
 /** @internal */
@@ -30,7 +32,7 @@ final class ArchiveAuditLogCommand extends Command
         Clock $clock,
         PruneAuditLogAction $prune,
     ): int {
-        $days = $this->resolveDays($config);
+        $days = (new RetentionWindow)->days($this->option('days'), $config);
 
         if ($days <= 0) {
             $this->info('Retention is disabled and no --days given; nothing to archive.');
@@ -41,11 +43,7 @@ final class ArchiveAuditLogCommand extends Command
         $days = PruneAuditLogAction::clampDays($days);
         $cutoff = $clock->now()->sub(new DateInterval('P'.$days.'D'));
 
-        $diskOption = $this->option('disk');
-        $configuredDisk = $config->get('audit-log.archive.disk', 'local');
-        $disk = $storage->disk(is_string($diskOption) && $diskOption !== ''
-            ? $diskOption
-            : (is_string($configuredDisk) && $configuredDisk !== '' ? $configuredDisk : 'local'));
+        $disk = $storage->disk((new ArchiveDisk)->name($this->option('disk'), $config));
 
         $path = 'audit-log/audit-archive-'.$clock->now()->format('Ymd-His').'.ndjson';
         $archived = 0;
@@ -79,18 +77,5 @@ final class ArchiveAuditLogCommand extends Command
         }
 
         return self::SUCCESS;
-    }
-
-    private function resolveDays(ConfigRepository $config): int
-    {
-        $override = $this->option('days');
-
-        if (is_numeric($override)) {
-            return (int) $override;
-        }
-
-        $configured = $config->get('audit-log.retention.days', PruneAuditLogAction::DEFAULT_DAYS);
-
-        return is_numeric($configured) ? (int) $configured : PruneAuditLogAction::DEFAULT_DAYS;
     }
 }

@@ -76,6 +76,23 @@ final class TimelineEntryDataTest extends TestCase
         $this->assertSame('orders', $entry->model());
     }
 
+    public function test_from_records_maps_a_collection_preserving_order(): void
+    {
+        $entries = TimelineEntryData::fromRecords([
+            $this->recordFor('App\\Models\\Order'),
+            $this->recordFor('App\\Models\\Invoice'),
+        ]);
+
+        $this->assertCount(2, $entries);
+        $this->assertSame('Order', $entries[0]->model());
+        $this->assertSame('Invoice', $entries[1]->model());
+    }
+
+    public function test_from_records_returns_an_empty_list_for_no_records(): void
+    {
+        $this->assertSame([], TimelineEntryData::fromRecords([]));
+    }
+
     private function recordFor(string $type): AuditRecord
     {
         return new AuditRecord(

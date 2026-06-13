@@ -60,7 +60,7 @@ final class BuildStatsAction
             filters: $filters,
             models: $this->query->distinctModels(),
             actorTypes: $this->query->distinctActorTypes(),
-            events: array_map(static fn (ChangeType $type): string => $type->value, ChangeType::cases()),
+            events: ChangeType::values(),
         );
     }
 

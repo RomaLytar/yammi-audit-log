@@ -53,6 +53,21 @@ final class TimelineEntryData
         );
     }
 
+    /**
+     * @param  iterable<AuditRecord>  $records
+     * @return list<self>
+     */
+    public static function fromRecords(iterable $records): array
+    {
+        $entries = [];
+
+        foreach ($records as $record) {
+            $entries[] = self::fromRecord($record);
+        }
+
+        return $entries;
+    }
+
     public function model(): string
     {
         $parts = explode('\\', $this->auditableType);

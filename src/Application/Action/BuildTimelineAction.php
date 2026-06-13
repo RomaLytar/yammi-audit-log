@@ -18,11 +18,7 @@ final class BuildTimelineAction
 
     public function __invoke(AuditableReference $auditable, int $limit = 50): TimelineData
     {
-        $entries = [];
-
-        foreach ($this->repository->timelineFor($auditable, $limit) as $record) {
-            $entries[] = TimelineEntryData::fromRecord($record);
-        }
+        $entries = TimelineEntryData::fromRecords($this->repository->timelineFor($auditable, $limit));
 
         return new TimelineData($auditable->type, $auditable->id, $entries);
     }

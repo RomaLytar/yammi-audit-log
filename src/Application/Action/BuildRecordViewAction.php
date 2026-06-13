@@ -37,11 +37,7 @@ final class BuildRecordViewAction
     {
         $history = $this->query->historyFor($auditable, $this->clock->now(), self::HISTORY_LIMIT);
 
-        $entries = [];
-
-        foreach (array_reverse($history) as $record) {
-            $entries[] = TimelineEntryData::fromRecord($record);
-        }
+        $entries = TimelineEntryData::fromRecords(array_reverse($history));
 
         $referenceField = $this->referenceField($auditable->type);
 

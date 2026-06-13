@@ -31,17 +31,13 @@ final class BuildSubjectReportAction
     {
         $now = $this->clock->now();
 
-        $recordChanges = [];
+        $recordChanges = TimelineEntryData::fromRecords(
+            $this->query->historyFor($subject, $now, self::SECTION_LIMIT),
+        );
 
-        foreach ($this->query->historyFor($subject, $now, self::SECTION_LIMIT) as $record) {
-            $recordChanges[] = TimelineEntryData::fromRecord($record);
-        }
-
-        $actorChanges = [];
-
-        foreach ($this->query->byActor($actorType, $subject->id, self::SECTION_LIMIT) as $record) {
-            $actorChanges[] = TimelineEntryData::fromRecord($record);
-        }
+        $actorChanges = TimelineEntryData::fromRecords(
+            $this->query->byActor($actorType, $subject->id, self::SECTION_LIMIT),
+        );
 
         return new SubjectReportData(
             auditableType: $subject->type,

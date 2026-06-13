@@ -10,6 +10,7 @@ use Throwable;
 use Yammi\AuditLog\Application\Action\RecordChangeAction;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
+use Yammi\AuditLog\Infrastructure\Stream\ChangeStreamer;
 
 /** @internal */
 final class EloquentChangeRecorder
@@ -20,6 +21,7 @@ final class EloquentChangeRecorder
         private readonly AuditableGuard $guard,
         private readonly LoggerInterface $logger,
         private readonly AlertDispatcher $alerts,
+        private readonly ?ChangeStreamer $stream = null,
     ) {}
 
     /**
@@ -44,6 +46,7 @@ final class EloquentChangeRecorder
 
             if ($record !== null) {
                 $this->alerts->inspect($record);
+                $this->stream?->push($record);
             }
         } catch (Throwable $exception) {
             $this->logger->error(

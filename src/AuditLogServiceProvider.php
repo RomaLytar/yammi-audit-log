@@ -27,6 +27,7 @@ use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
 use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\LabelResolver;
+use Yammi\AuditLog\Application\Contract\LogStreamDriver;
 use Yammi\AuditLog\Application\Contract\ReasonResolver;
 use Yammi\AuditLog\Application\Contract\RequestContextResolver;
 use Yammi\AuditLog\Application\Contract\TenantResolver;
@@ -93,6 +94,11 @@ use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
 use Yammi\AuditLog\Infrastructure\Settings\Persistence\Repository\EloquentGeneralSettingRepository;
 use Yammi\AuditLog\Infrastructure\Settings\StoredSettingsApplier;
+use Yammi\AuditLog\Infrastructure\Stream\ChangeStreamer;
+use Yammi\AuditLog\Infrastructure\Stream\Driver\DatadogLogsDriver;
+use Yammi\AuditLog\Infrastructure\Stream\Driver\ElasticDriver;
+use Yammi\AuditLog\Infrastructure\Stream\Driver\HttpStreamDriver;
+use Yammi\AuditLog\Infrastructure\Stream\Driver\SplunkHecDriver;
 use Yammi\AuditLog\Infrastructure\Support\SystemClock;
 use Yammi\AuditLog\Infrastructure\Tenancy\NullTenantResolver;
 use Yammi\AuditLog\Infrastructure\Transfer\ConnectionStatusInspector;
@@ -256,6 +262,18 @@ final class AuditLogServiceProvider extends ServiceProvider
                 $this->stringList($config->get('audit-log.alerts.mail_to', [])),
                 $this->app->make(AlertChannels::class),
                 $this->app->make(AlertLinker::class),
+            );
+        });
+
+        $this->app->singleton(ChangeStreamer::class, function (): ChangeStreamer {
+            $config = $this->config();
+            $queue = $config->get('audit-log.stream.queue');
+
+            return new ChangeStreamer(
+                (bool) $config->get('audit-log.stream.enabled', false) ? $this->makeStreamDriver($config) : null,
+                $this->app->make(BusDispatcher::class),
+                $this->app->make(LoggerInterface::class),
+                is_string($queue) && $queue !== '' ? $queue : null,
             );
         });
 
@@ -499,6 +517,50 @@ final class AuditLogServiceProvider extends ServiceProvider
         foreach ($value as $field => $class) {
             if (is_string($field) && $field !== '' && is_string($class) && $class !== '') {
                 $out[$field] = $class;
+            }
+        }
+
+        return $out;
+    }
+
+    private function makeStreamDriver(ConfigRepository $config): ?LogStreamDriver
+    {
+        $endpoint = $config->get('audit-log.stream.endpoint');
+
+        if (! is_string($endpoint) || trim($endpoint) === '') {
+            return null;
+        }
+
+        $endpoint = trim($endpoint);
+        $token = $config->get('audit-log.stream.token');
+        $token = is_string($token) ? $token : '';
+        $source = $config->get('audit-log.stream.source');
+        $source = is_string($source) && $source !== '' ? $source : 'audit-log';
+        $headers = $this->stringMap($config->get('audit-log.stream.headers', []));
+        $driver = $config->get('audit-log.stream.driver');
+
+        return match (is_string($driver) ? $driver : 'http') {
+            'splunk' => new SplunkHecDriver($endpoint, $token, $source, $headers),
+            'datadog' => new DatadogLogsDriver($endpoint, $token, $source, $headers),
+            'elastic' => new ElasticDriver($endpoint, $token !== '' ? $token : null, $headers),
+            default => new HttpStreamDriver($endpoint, $token !== '' ? $token : null, $headers),
+        };
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function stringMap(mixed $value): array
+    {
+        if (! is_array($value)) {
+            return [];
+        }
+
+        $out = [];
+
+        foreach ($value as $key => $item) {
+            if (is_string($key) && $key !== '' && is_scalar($item)) {
+                $out[$key] = (string) $item;
             }
         }
 

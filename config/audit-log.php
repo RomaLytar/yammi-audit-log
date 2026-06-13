@@ -161,6 +161,32 @@ return [
         ],
     ],
 
+    'stream' => [
+        // Ship every recorded change to a SIEM / log platform off the request
+        // path (queued, fail-soft). Empty endpoint or enabled=false = off.
+        'enabled' => env('AUDIT_LOG_STREAM_ENABLED', false),
+
+        // splunk (HEC) | datadog | elastic | http (generic JSON sink).
+        'driver' => env('AUDIT_LOG_STREAM_DRIVER', 'http'),
+
+        // Full ingest URL: Splunk HEC collector, Datadog logs intake,
+        // Elastic <index>/_doc, or any JSON endpoint for the http driver.
+        'endpoint' => env('AUDIT_LOG_STREAM_ENDPOINT'),
+
+        // Auth credential: Splunk HEC token, Datadog API key, Elastic API key
+        // or a bearer token for the http driver.
+        'token' => env('AUDIT_LOG_STREAM_TOKEN'),
+
+        // Logical source/service name attached to each event where supported.
+        'source' => env('AUDIT_LOG_STREAM_SOURCE', 'audit-log'),
+
+        // Extra headers merged into every request (e.g. a proxy auth header).
+        'headers' => [],
+
+        // Queue connection/name for delivery. Empty = default queue.
+        'queue' => env('AUDIT_LOG_STREAM_QUEUE'),
+    ],
+
     'tenancy' => [
         // Class implementing Yammi\AuditLog\Application\Contract\TenantResolver.
         // When it returns a tenant id, every new record is stamped with it and

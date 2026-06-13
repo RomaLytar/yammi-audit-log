@@ -348,6 +348,20 @@ AuditLog::changes([
 
 > Note: this currently filters via JSON extraction on the `changes` column. A dedicated indexed `changed_keys` column for true index-hit lookups on large tables is a planned follow-up.
 
+### Why a change happened (reason)
+
+The log already answers *what*, *who* and *when* — `withReason()` adds *why*. Wrap a unit of work and every change recorded inside it (captured or manual) is stamped with the reason:
+
+```php
+AuditLog::withReason('ticket #4521', function () use ($order) {
+    $order->update(['status' => 'refunded']);   // captured change carries the reason
+});
+```
+
+The reason rides through the same pipeline, is stored per record, surfaces on timelines and the JSON API, and is covered by the integrity hash chain — so it can't be edited after the fact without breaking verification. `withReason()` returns whatever the callback returns.
+
+> Note: making a reason *mandatory* for specific models (refusing the host write without one) is a planned follow-up; the write path is sacred, so that enforcement will be an explicit host-side opt-in rather than a silent capture failure.
+
 ### Honest limitations
 
 Eloquent events never fire for mass `Query Builder ->update()` or raw SQL either, no event-based audit package sees those. Record them explicitly through the same pipeline (redaction, attribution, correlation included):

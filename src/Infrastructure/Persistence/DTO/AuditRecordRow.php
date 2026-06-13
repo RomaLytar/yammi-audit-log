@@ -36,6 +36,7 @@ final class AuditRecordRow
         public readonly array $context = [],
         public readonly int $chainDepth = 0,
         public readonly ?string $tenantId = null,
+        public readonly ?string $reason = null,
     ) {}
 
     /**
@@ -62,6 +63,7 @@ final class AuditRecordRow
             'context' => $this->context,
             'chain_depth' => $this->chainDepth,
             'tenant_id' => $this->tenantId,
+            'reason' => $this->reason,
         ];
     }
 }

@@ -42,6 +42,7 @@ final class AuditRecordMapper
             correlationId: $record->correlationId(),
             isNoise: $record->isNoise(),
             occurredAt: $record->occurredAt()->format('Y-m-d H:i:s'),
+            reason: $record->reason(),
             context: $record->context(),
             chainDepth: $record->chainDepth(),
             tenantId: $this->tenants->resolve(),
@@ -83,6 +84,7 @@ final class AuditRecordMapper
             id: (int) $model->getAttribute('id'),
             context: $this->stringMap($model->getAttribute('context')),
             chainDepth: max(0, (int) $model->getAttribute('chain_depth')),
+            reason: $this->nullableString($model->getAttribute('reason')),
         );
     }
 

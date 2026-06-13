@@ -29,6 +29,7 @@ final class TimelineEntryData
         public readonly bool $isNoise = false,
         public readonly array $context = [],
         public readonly int $chainDepth = 0,
+        public readonly ?string $reason = null,
     ) {}
 
     public static function fromRecord(AuditRecord $record): self
@@ -48,6 +49,7 @@ final class TimelineEntryData
             isNoise: $record->isNoise(),
             context: $record->context(),
             chainDepth: $record->chainDepth(),
+            reason: $record->reason(),
         );
     }
 

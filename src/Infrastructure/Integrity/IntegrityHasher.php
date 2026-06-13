@@ -26,6 +26,7 @@ final class IntegrityHasher
         'origin_label',
         'correlation_id',
         'occurred_at',
+        'reason',
     ];
 
     /**

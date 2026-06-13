@@ -6,7 +6,9 @@ namespace Yammi\AuditLog\Infrastructure\Persistence\Repository;
 
 use Yammi\AuditLog\Infrastructure\Integrity\IntegrityHasher;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChainStateModel;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChangedKeyModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\ChangedKeyRows;
 
 /**
  * The single insert path for audit rows (synchronous and queued). With
@@ -29,7 +31,8 @@ final class AuditRowWriter
     public function insert(array $row): void
     {
         if (! $this->integrityEnabled) {
-            AuditRecordModel::query()->create($row);
+            $record = AuditRecordModel::query()->create($row);
+            $this->indexChangedKeys($record, $row);
 
             return;
         }
@@ -45,10 +48,23 @@ final class AuditRowWriter
 
             $row['integrity_hash'] = $hash;
 
-            AuditRecordModel::query()->create($row);
+            $record = AuditRecordModel::query()->create($row);
+            $this->indexChangedKeys($record, $row);
 
             $state->setAttribute('last_hash', $hash);
             $state->save();
         });
+    }
+
+    /**
+     * @param  array<string, mixed>  $row
+     */
+    private function indexChangedKeys(AuditRecordModel $record, array $row): void
+    {
+        $rows = ChangedKeyRows::build((int) $record->getKey(), $row['changes'] ?? null);
+
+        if ($rows !== []) {
+            AuditChangedKeyModel::query()->insert($rows);
+        }
     }
 }

@@ -82,9 +82,10 @@ Optionally, defer that write to the queue (`AUDIT_LOG_WRITE_ASYNC=true`) or move
 
 A log package lives on your hot path, so the cost is kept deliberate and predictable:
 
-- One insert per audited change, nothing else on the write path.
+- One insert for the record, plus a single batched insert for its changed-field index, on the write path.
 - Capture services are resolved once per request, not per event.
 - No extra queries during capture, with two opt-in exceptions: foreign-key label lookups for columns you map, and one chain-head select when integrity is on.
+- Field-level searches (`field('status')`) seek an indexed changed-keys table instead of scanning the JSON of every row, so they stay fast on large tables.
 - Async mode moves the insert itself off the request.
 - The write is fail-open: a failed audit insert is logged and does not block the host operation.
 - Reads are bounded: one-year ranges, 10k-row exports, chunked retention.

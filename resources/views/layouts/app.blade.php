@@ -20,18 +20,18 @@
         })();
     </script>
 
-    <link rel="stylesheet" href="{{ route('audit-log.asset', 'dashboard.css') }}">
-    <script src="{{ route('audit-log.asset', 'lucide.js') }}"></script>
+    <link rel="stylesheet" href="{{ $auditAssets['dashboard.css'] ?? route('audit-log.asset', 'dashboard.css') }}">
+    <script src="{{ $auditAssets['lucide.js'] ?? route('audit-log.asset', 'lucide.js') }}"></script>
 
     <style>
         @font-face {
             font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900;
-            src: url('{{ route('audit-log.asset', 'inter-latin.woff2') }}') format('woff2-variations');
+            src: url('{{ $auditAssets['inter-latin.woff2'] ?? route('audit-log.asset', 'inter-latin.woff2') }}') format('woff2-variations');
             unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
         }
         @font-face {
             font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900;
-            src: url('{{ route('audit-log.asset', 'inter-latin-ext.woff2') }}') format('woff2-variations');
+            src: url('{{ $auditAssets['inter-latin-ext.woff2'] ?? route('audit-log.asset', 'inter-latin-ext.woff2') }}') format('woff2-variations');
             unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
         }
         :root {

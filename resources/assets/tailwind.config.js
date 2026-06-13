@@ -1,7 +1,20 @@
 module.exports = {
   darkMode: 'class',
-  content: ['/home/roman/PetProject/AuditLog/SDK/resources/views/**/*.blade.php'],
-  safelist: ['rotate-180', 'hidden', 'dark', 'animate-fade-in', 'animate-slide-down', 'animate-pulse-soft'],
+  content: {
+    relative: true,
+    files: ['../views/**/*.blade.php'],
+  },
+  safelist: [
+    // Toggled from JS, so the scanner cannot see them on an element.
+    'rotate-180', 'hidden', 'dark',
+    'animate-fade-in', 'animate-slide-down', 'animate-pulse-soft',
+    // Anomaly badge tones are interpolated in anomalies.blade.php
+    // (bg-{tone}/10 text-{tone} ring-{tone}/30), so the scanner cannot resolve
+    // them. Keep every tone the AnomaliesViewModel can emit.
+    ...['warning', 'destructive', 'info', 'muted-foreground'].flatMap((tone) => [
+      `bg-${tone}/10`, `text-${tone}`, `ring-${tone}/30`,
+    ]),
+  ],
   theme: {
     extend: {
       fontFamily: {

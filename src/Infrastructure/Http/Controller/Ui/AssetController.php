@@ -27,7 +27,7 @@ final class AssetController
     public function __invoke(string $asset): Response
     {
         $type = self::TYPES[$asset] ?? null;
-        $path = __DIR__.'/../../../../../resources/assets/'.$asset;
+        $path = self::path($asset);
 
         if ($type === null || ! is_file($path)) {
             return new Response('Not found.', Response::HTTP_NOT_FOUND);
@@ -35,10 +35,36 @@ final class AssetController
 
         $response = new BinaryFileResponse($path);
         $response->headers->set('Content-Type', $type);
+        $response->headers->set('X-Content-Type-Options', 'nosniff');
         $response->setMaxAge(31536000);
         $response->setImmutable();
         $response->setPublic();
 
         return $response;
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function filenames(): array
+    {
+        return array_keys(self::TYPES);
+    }
+
+    /**
+     * A short content hash used to bust the immutable browser cache when an
+     * asset changes (e.g. after a package upgrade). Empty when the file is
+     * absent.
+     */
+    public static function version(string $asset): string
+    {
+        $path = self::path($asset);
+
+        return is_file($path) ? substr((string) md5_file($path), 0, 8) : '';
+    }
+
+    private static function path(string $asset): string
+    {
+        return __DIR__.'/../../../../../resources/assets/'.$asset;
     }
 }

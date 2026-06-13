@@ -21,6 +21,15 @@ final class AdminAssetsTest extends TestCase
         $response->assertSee('audit-log/assets/inter-latin.woff2', false);
     }
 
+    public function test_asset_urls_carry_a_content_version_for_cache_busting(): void
+    {
+        $response = $this->get('audit-log');
+
+        $response->assertOk();
+        $response->assertSee('audit-log/assets/dashboard.css?v=', false);
+        $response->assertSee('audit-log/assets/lucide.js?v=', false);
+    }
+
     public function test_no_external_cdn_is_referenced(): void
     {
         $response = $this->get('audit-log');
@@ -37,14 +46,17 @@ final class AdminAssetsTest extends TestCase
         $css = $this->get('audit-log/assets/dashboard.css');
         $css->assertOk();
         $this->assertStringStartsWith('text/css', (string) $css->headers->get('Content-Type'));
+        $this->assertSame('nosniff', $css->headers->get('X-Content-Type-Options'));
 
         $js = $this->get('audit-log/assets/lucide.js');
         $js->assertOk();
         $this->assertStringStartsWith('text/javascript', (string) $js->headers->get('Content-Type'));
+        $this->assertSame('nosniff', $js->headers->get('X-Content-Type-Options'));
 
         $font = $this->get('audit-log/assets/inter-latin.woff2');
         $font->assertOk();
         $this->assertStringStartsWith('font/woff2', (string) $font->headers->get('Content-Type'));
+        $this->assertSame('nosniff', $font->headers->get('X-Content-Type-Options'));
     }
 
     public function test_an_unknown_asset_is_not_found(): void

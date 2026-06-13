@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Infrastructure\Provider;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Foundation\Application;
 use Illuminate\Contracts\Foundation\CachesRoutes;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Routing\Router;
@@ -130,8 +131,26 @@ final class HttpRegistrar
                 } catch (Throwable) {
                     $view->with('auditNoiseCount', 0);
                 }
+
+                $view->with('auditAssets', $this->assetUrls());
             },
         );
+    }
+
+    /**
+     * @return array<string, string>
+     */
+    private function assetUrls(): array
+    {
+        $urls = [];
+
+        foreach (AssetController::filenames() as $name) {
+            $version = AssetController::version($name);
+            $parameters = $version === '' ? ['asset' => $name] : ['asset' => $name, 'v' => $version];
+            $urls[$name] = $this->app->make(UrlGenerator::class)->route('audit-log.asset', $parameters);
+        }
+
+        return $urls;
     }
 
     private function loadRoutes(string $path): void

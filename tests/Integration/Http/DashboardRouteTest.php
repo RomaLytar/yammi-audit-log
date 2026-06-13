@@ -73,6 +73,8 @@ final class DashboardRouteTest extends TestCase
 
     public function test_the_filter_form_exposes_the_value_transition_inputs(): void
     {
+        Post::create(['title' => 'Hello', 'status' => 'draft']);
+
         $this->get('audit-log')
             ->assertOk()
             ->assertSee('Field changed')

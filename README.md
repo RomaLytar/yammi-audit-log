@@ -93,6 +93,19 @@ A log package lives on your hot path, so the cost is kept deliberate and predict
 
 Independent capabilities built on the core, each off or zero-cost until you use it.
 
+### Capture policy and sampling
+
+The default is safe: capture everything. When you need to govern a model's volume, declare a policy in one place — ignore noisy fields, capture only under a condition, or sample a fraction of high-churn models.
+
+```php
+AuditLog::policy(Order::class)
+    ->ignore(['updated_at'])                            // drop noisy fields
+    ->when(fn ($order) => $order->tenant_id === 'acme') // capture conditionally
+    ->sample(0.1);                                      // keep ~10% of the changes
+```
+
+Sampling is decided per correlation, not per row, so the full history of one record within a unit of work is kept or dropped together — never left with holes.
+
 ### Time machine
 
 Reconstruct the exact state a record had at any past moment, folded from its diffs. Read-only: it shows real history, it never rewrites anything.

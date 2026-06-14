@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
 
 /**
  * Presents the anomaly scan for the UI: badge styles per rule, the window
@@ -18,6 +18,7 @@ final class AnomaliesViewModel
         AnomalyData::RULE_RATE_SPIKE => ['Change burst', 'warning', 'trending-up'],
         AnomalyData::RULE_MASS_DELETE => ['Mass delete', 'destructive', 'trash-2'],
         AnomalyData::RULE_OFF_HOURS => ['Off hours', 'info', 'moon'],
+        AnomalyData::RULE_CASCADE => ['Cascade', 'info', 'git-fork'],
     ];
 
     /**
@@ -44,7 +45,7 @@ final class AnomaliesViewModel
     }
 
     /**
-     * @return list<array{rule: string, tone: string, icon: string, actorType: string, actorLabel: string, count: int, description: string}>
+     * @return list<array{rule: string, tone: string, icon: string, actorType: string, actorLabel: string, count: int, description: string, severity: string, severityTone: string}>
      */
     public function rows(): array
     {
@@ -61,6 +62,12 @@ final class AnomaliesViewModel
                 'actorLabel' => $finding->actorLabel,
                 'count' => $finding->count,
                 'description' => $finding->description,
+                'severity' => $finding->severity,
+                'severityTone' => match ($finding->severity) {
+                    AnomalyData::SEVERITY_HIGH => 'destructive',
+                    AnomalyData::SEVERITY_LOW => 'muted-foreground',
+                    default => 'warning',
+                },
             ];
         }
 

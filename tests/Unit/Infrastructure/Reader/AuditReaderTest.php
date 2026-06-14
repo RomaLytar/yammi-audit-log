@@ -6,10 +6,10 @@ namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Reader;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\BuildRecordViewAction;
-use Yammi\AuditLog\Application\Action\BuildSubjectReportAction;
-use Yammi\AuditLog\Application\Action\BuildTimelineAction;
-use Yammi\AuditLog\Application\Action\ReconstructStateAction;
+use Yammi\AuditLog\Application\Action\Read\BuildRecordViewAction;
+use Yammi\AuditLog\Application\Action\Read\BuildSubjectReportAction;
+use Yammi\AuditLog\Application\Action\Read\BuildTimelineAction;
+use Yammi\AuditLog\Application\Action\Read\ReconstructStateAction;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;

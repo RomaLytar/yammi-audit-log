@@ -22,6 +22,7 @@ final class ApiRoutesTest extends TestCase
 
         $app['config']->set('audit-log.api.enabled', true);
         $app['config']->set('audit-log.api.middleware', []);
+        $app['config']->set('audit-log.api.allow_unauthenticated', true);
     }
 
     protected function defineDatabaseMigrations(): void

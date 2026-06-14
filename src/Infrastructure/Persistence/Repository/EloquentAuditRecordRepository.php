@@ -10,6 +10,7 @@ use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChangedKeyModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 
@@ -76,6 +77,8 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
             if (is_string($newestHash) && $newestHash !== '') {
                 $anchor = $newestHash;
             }
+
+            AuditChangedKeyModel::query()->whereIn('audit_id', $ids)->delete();
 
             $total += AuditRecordModel::query()->withoutGlobalScopes()->whereIn('id', $ids)->delete();
         } while (count($ids) === $this->pruneChunkSize);

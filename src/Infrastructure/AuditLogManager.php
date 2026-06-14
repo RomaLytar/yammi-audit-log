@@ -7,24 +7,29 @@ namespace Yammi\AuditLog\Infrastructure;
 use DateTimeImmutable;
 use Exception;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
+use Illuminate\Contracts\Routing\UrlGenerator;
 use Illuminate\Database\Eloquent\Model;
-use Yammi\AuditLog\Application\Action\BuildChainAction;
-use Yammi\AuditLog\Application\Action\BuildStatsAction;
-use Yammi\AuditLog\Application\Action\ListChangesAction;
+use Yammi\AuditLog\Application\Action\Read\BuildChainAction;
+use Yammi\AuditLog\Application\Action\Read\BuildStatsAction;
+use Yammi\AuditLog\Application\Action\Read\ListChangesAction;
 use Yammi\AuditLog\Application\Contract\Clock;
-use Yammi\AuditLog\Application\DTO\AnomalyData;
-use Yammi\AuditLog\Application\DTO\ChainData;
-use Yammi\AuditLog\Application\DTO\ChangeListData;
-use Yammi\AuditLog\Application\DTO\RecordViewData;
-use Yammi\AuditLog\Application\DTO\StateData;
-use Yammi\AuditLog\Application\DTO\StatsData;
-use Yammi\AuditLog\Application\DTO\SubjectReportData;
-use Yammi\AuditLog\Application\DTO\TimelineData;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Audit\ChainData;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeListData;
+use Yammi\AuditLog\Application\DTO\Audit\RecordViewData;
+use Yammi\AuditLog\Application\DTO\Audit\StateData;
+use Yammi\AuditLog\Application\DTO\Audit\SubjectReportData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Stats\StatsData;
 use Yammi\AuditLog\Application\Service\FilterParser;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
+use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicy;
+use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
+use Yammi\AuditLog\Infrastructure\Query\AuditQueryBuilder;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Recorder\ManualChangeRecorder;
 
@@ -46,7 +51,30 @@ final class AuditLogManager
         private readonly ConfigRepository $config,
         private readonly Clock $clock,
         private readonly AnomalyScanner $anomalyScanner,
+        private readonly UrlGenerator $url,
+        private readonly ChangeReasonContext $reasonContext = new ChangeReasonContext,
+        private readonly AuditPolicyRegistry $policies = new AuditPolicyRegistry,
     ) {}
+
+    /**
+     * Declare what is audited for a model, on top of the safe capture-all
+     * default: AuditLog::policy(Order::class)->ignore(['updated_at'])->when(...).
+     *
+     * @param  class-string  $model
+     */
+    public function policy(string $model): AuditPolicy
+    {
+        return $this->policies->policy($model);
+    }
+
+    /**
+     * A fluent builder over changes(), for example
+     * AuditLog::query()->field('status')->from('pending')->to('paid')->actorType('job')->get().
+     */
+    public function query(): AuditQueryBuilder
+    {
+        return new AuditQueryBuilder(fn (array $filters): ChangeListData => $this->changes($filters));
+    }
 
     public function for(Model|string $auditable, int|string|null $id = null, int $limit = 50): TimelineData
     {
@@ -157,6 +185,54 @@ final class AuditLogManager
         array $after = [],
     ): ?TimelineEntryData {
         return $this->recorder->record($auditable, $id, $event, $before, $after);
+    }
+
+    /**
+     * Records that a record was read — "who viewed this", not just who changed
+     * it. An access has no diff; the actor and request metadata are attributed
+     * through the same pipeline as any captured change.
+     */
+    public function recordAccess(Model|string $auditable, int|string|null $id = null): ?TimelineEntryData
+    {
+        return $this->recorder->recordAccess($auditable, $id);
+    }
+
+    /**
+     * Attaches a reason ("why") to every change recorded inside the callback —
+     * the audit answer the README promises alongside what, who and when.
+     *
+     * @template T
+     *
+     * @param  callable(): T  $callback
+     * @return T
+     */
+    public function withReason(string $reason, callable $callback): mixed
+    {
+        $this->reasonContext->push(mb_substr(trim($reason), 0, 1000));
+
+        try {
+            return $callback();
+        } finally {
+            $this->reasonContext->pop();
+        }
+    }
+
+    /**
+     * A short-lived, signed read-only URL to one subject's activity feed — give
+     * a tenant or a user their own "Account activity" page without exposing the
+     * admin dashboard. The signature is the access grant; it expires.
+     */
+    public function activityUrl(Model|string $auditable, int|string|null $id = null, int $minutes = 60): string
+    {
+        [$type, $key] = $auditable instanceof Model
+            ? [$auditable->getMorphClass(), (string) $auditable->getKey()]
+            : [$auditable, $id === null ? '' : (string) $id];
+
+        return $this->url->temporarySignedRoute(
+            'audit-log.activity',
+            $this->clock->now()->modify('+'.max(1, $minutes).' minutes'),
+            ['type' => $type, 'id' => $key],
+        );
     }
 
     private function resolveMoment(DateTimeImmutable|string|null $at): DateTimeImmutable

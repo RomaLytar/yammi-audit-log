@@ -6,8 +6,8 @@ namespace Yammi\AuditLog\Tests\Unit\Application\Action;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\RecordChangeAction;
-use Yammi\AuditLog\Application\DTO\ChangeData;
+use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeStage;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;

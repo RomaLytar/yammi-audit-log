@@ -22,4 +22,9 @@ final class InvalidAuditData extends DomainException
     {
         return new self("Audit data is invalid: \"{$value}\" is not a valid date.");
     }
+
+    public static function notManyToMany(string $relation): self
+    {
+        return new self("Audit data is invalid: \"{$relation}\" is not a many-to-many relation.");
+    }
 }

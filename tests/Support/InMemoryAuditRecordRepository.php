@@ -5,8 +5,8 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Support;
 
 use DateTimeImmutable;
-use Yammi\AuditLog\Application\Contract\AuditLogQuery;
-use Yammi\AuditLog\Application\Contract\AuditStatsQuery;
+use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
+use Yammi\AuditLog\Application\Contract\Query\AuditStatsQuery;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
@@ -207,6 +207,61 @@ final class InMemoryAuditRecordRepository implements AuditLogQuery, AuditRecordR
             $limit,
             true,
         );
+    }
+
+    public function fieldBreakdown(AuditCriteria $criteria, int $limit = 10): array
+    {
+        $counts = [];
+
+        foreach ($this->saved as $record) {
+            if (! $this->matches($record, $criteria)) {
+                continue;
+            }
+
+            foreach (array_keys($record->diff()->fields()) as $field) {
+                $counts[$field] = ($counts[$field] ?? 0) + 1;
+            }
+        }
+
+        arsort($counts);
+
+        return array_slice($counts, 0, $limit, true);
+    }
+
+    public function topCascades(AuditCriteria $criteria, int $limit = 10): array
+    {
+        $groups = [];
+
+        foreach ($this->saved as $record) {
+            if (! $this->matches($record, $criteria)) {
+                continue;
+            }
+
+            $correlation = $record->correlationId();
+
+            if ($correlation === null || $correlation === '') {
+                continue;
+            }
+
+            $groups[$correlation]['writes'] = ($groups[$correlation]['writes'] ?? 0) + 1;
+            $groups[$correlation]['models'][$record->auditable()->type] = true;
+            $groups[$correlation]['depth'] = max($groups[$correlation]['depth'] ?? 0, $record->chainDepth());
+        }
+
+        $out = [];
+
+        foreach ($groups as $correlation => $data) {
+            $out[] = [
+                'correlation_id' => (string) $correlation,
+                'writes' => $data['writes'],
+                'models' => count($data['models']),
+                'depth' => $data['depth'],
+            ];
+        }
+
+        usort($out, static fn (array $a, array $b): int => ($b['writes'] <=> $a['writes']) ?: ($b['models'] <=> $a['models']));
+
+        return array_slice($out, 0, $limit);
     }
 
     public function dailyCounts(AuditCriteria $criteria, DateTimeImmutable $from, int $days): array

@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Tests\Integration\Http;
 
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Gate;
 use Illuminate\Support\Facades\Schema;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Tests\Support\Models\Post;
@@ -86,6 +87,34 @@ final class PlaygroundTest extends TestCase
         $this->get('audit-log/settings')->assertSee('settings/playground');
     }
 
+    public function test_executing_record_access_logs_a_read(): void
+    {
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'recordAccess',
+            'args' => ['auditable_type' => 'App\\Models\\Order', 'auditable_id' => '42'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+        $response->assertJsonPath('result.event', 'accessed');
+    }
+
+    public function test_executing_activity_url_returns_a_signed_link(): void
+    {
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'activityUrl',
+            'args' => ['auditable_type' => 'App\\Models\\User', 'auditable_id' => '5', 'minutes' => '30'],
+        ]);
+
+        $response->assertOk();
+        $response->assertJsonPath('ok', true);
+
+        $url = $response->json('result');
+        $this->assertIsString($url);
+        $this->assertStringContainsString('/audit-log/activity', $url);
+        $this->assertStringContainsString('signature=', $url);
+    }
+
     public function test_executing_for_returns_the_timeline(): void
     {
         $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
@@ -127,6 +156,36 @@ final class PlaygroundTest extends TestCase
     {
         $this->postJson(route('audit-log.playground.execute'), ['method' => 'dropTables'])
             ->assertNotFound();
+    }
+
+    public function test_a_configured_gate_blocks_destructive_methods(): void
+    {
+        config(['audit-log.playground.gate' => 'play-write']);
+        Gate::define('play-write', static fn (): bool => false);
+
+        $response = $this->postJson(route('audit-log.playground.execute'), [
+            'method' => 'record',
+            'args' => [
+                'auditable_type' => 'App\\Models\\Order',
+                'auditable_id' => '42',
+                'event' => 'updated',
+                'after' => '{"status": "cancelled"}',
+            ],
+        ]);
+
+        $response->assertStatus(403);
+        $response->assertJsonPath('ok', false);
+        $this->assertSame(0, AuditRecordModel::query()->count());
+    }
+
+    public function test_a_configured_gate_leaves_read_only_methods_open(): void
+    {
+        config(['audit-log.playground.gate' => 'play-write']);
+        Gate::define('play-write', static fn (): bool => false);
+
+        $this->postJson(route('audit-log.playground.execute'), ['method' => 'stats'])
+            ->assertOk()
+            ->assertJsonPath('ok', true);
     }
 
     public function test_invalid_json_arguments_return_a_validation_error(): void

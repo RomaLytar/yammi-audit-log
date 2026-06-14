@@ -8,7 +8,7 @@ use Illuminate\Auth\SessionGuard;
 use Illuminate\Contracts\Auth\Factory as AuthFactory;
 use Illuminate\Database\Eloquent\Model;
 use Throwable;
-use Yammi\AuditLog\Application\Contract\ActorProvider;
+use Yammi\AuditLog\Application\Contract\Actor\ActorProvider;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
 use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
 

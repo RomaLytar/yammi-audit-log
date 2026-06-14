@@ -1,0 +1,36 @@
+<?php
+
+declare(strict_types=1);
+
+namespace Yammi\AuditLog\Application\DTO\Audit;
+
+final class AuditFilterData
+{
+    public function __construct(
+        public readonly string $type = '',
+        public readonly string $event = '',
+        public readonly string $actorType = '',
+        public readonly string $actor = '',
+        public readonly string $from = '',
+        public readonly string $to = '',
+        public readonly int $page = 1,
+        public readonly string $search = '',
+        public readonly bool $defaultRange = false,
+        public readonly string $auditableId = '',
+        public readonly string $field = '',
+        public readonly string $valueFrom = '',
+        public readonly string $valueTo = '',
+    ) {}
+
+    public function isActive(): bool
+    {
+        return $this->type !== ''
+            || $this->event !== ''
+            || $this->actorType !== ''
+            || $this->actor !== ''
+            || $this->search !== ''
+            || $this->auditableId !== ''
+            || $this->field !== ''
+            || (! $this->defaultRange && ($this->from !== '' || $this->to !== ''));
+    }
+}

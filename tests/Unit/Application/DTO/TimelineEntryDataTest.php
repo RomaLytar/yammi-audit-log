@@ -6,7 +6,7 @@ namespace Yammi\AuditLog\Tests\Unit\Application\DTO;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
@@ -74,6 +74,23 @@ final class TimelineEntryDataTest extends TestCase
         $entry = TimelineEntryData::fromRecord($this->recordFor('orders'));
 
         $this->assertSame('orders', $entry->model());
+    }
+
+    public function test_from_records_maps_a_collection_preserving_order(): void
+    {
+        $entries = TimelineEntryData::fromRecords([
+            $this->recordFor('App\\Models\\Order'),
+            $this->recordFor('App\\Models\\Invoice'),
+        ]);
+
+        $this->assertCount(2, $entries);
+        $this->assertSame('Order', $entries[0]->model());
+        $this->assertSame('Invoice', $entries[1]->model());
+    }
+
+    public function test_from_records_returns_an_empty_list_for_no_records(): void
+    {
+        $this->assertSame([], TimelineEntryData::fromRecords([]));
     }
 
     private function recordFor(string $type): AuditRecord

@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
-use Yammi\AuditLog\Application\DTO\StatsData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Stats\StatsData;
 
 /** @internal */
 final class StatsViewModel
@@ -90,6 +90,43 @@ final class StatsViewModel
             $parts = explode('\\', $row['label']);
             $row['label'] = (end($parts) ?: $row['label']);
             $rows[] = $row;
+        }
+
+        return $rows;
+    }
+
+    /**
+     * @return list<array{label: string, count: int, percent: int}>
+     */
+    public function fieldRows(): array
+    {
+        return $this->rows($this->stats->byField);
+    }
+
+    /**
+     * The heaviest correlation chains, each linkable to its trace.
+     *
+     * @return list<array{id: string, short: string, writes: int, models: int, depth: int, percent: int}>
+     */
+    public function cascadeRows(): array
+    {
+        $max = 1;
+
+        foreach ($this->stats->topCascades as $cascade) {
+            $max = max($max, $cascade['writes']);
+        }
+
+        $rows = [];
+
+        foreach ($this->stats->topCascades as $cascade) {
+            $rows[] = [
+                'id' => $cascade['correlation_id'],
+                'short' => substr($cascade['correlation_id'], 0, 8),
+                'writes' => $cascade['writes'],
+                'models' => $cascade['models'],
+                'depth' => $cascade['depth'],
+                'percent' => (int) round($cascade['writes'] / $max * 100),
+            ];
         }
 
         return $rows;

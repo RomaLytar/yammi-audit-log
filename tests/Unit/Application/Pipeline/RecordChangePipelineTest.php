@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Application\Pipeline;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\ChangeData;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;

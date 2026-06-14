@@ -54,6 +54,15 @@ final class PlaygroundExecutor
                 $this->jsonArg($args, 'before'),
                 $this->jsonArg($args, 'after'),
             ),
+            'recordAccess' => $this->manager->recordAccess(
+                $this->stringArg($args, 'auditable_type'),
+                $this->stringArg($args, 'auditable_id'),
+            ),
+            'activityUrl' => $this->manager->activityUrl(
+                $this->stringArg($args, 'auditable_type'),
+                $this->stringArg($args, 'auditable_id'),
+                $this->intArg($args, 'minutes', 60),
+            ),
             default => throw InvalidAuditData::emptyValue('playground method'),
         };
     }

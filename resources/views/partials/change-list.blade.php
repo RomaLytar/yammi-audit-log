@@ -63,6 +63,12 @@
                                         <i data-lucide="alert-triangle" class="text-[10px]"></i> no-op
                                     </span>
                                 @endif
+                                @if ($entry->reason())
+                                    <span class="inline-flex items-center gap-1 rounded-md bg-info/10 px-1.5 py-0.5 text-[10px] font-medium text-info ring-1 ring-inset ring-info/30"
+                                          title="{{ $entry->reason() }}">
+                                        <i data-lucide="message-square-text" class="text-[10px]"></i> why
+                                    </span>
+                                @endif
                             </div>
                         </td>
                         <td class="px-4 py-3">
@@ -173,19 +179,5 @@
         </table>
     </div>
 
-    <div class="mt-4 flex items-center justify-between text-xs text-muted-foreground">
-        <span>Page {{ $list->page() }} of {{ $list->lastPage() }}</span>
-        <div class="flex gap-2">
-            @if ($list->page() > 1)
-                <a href="{{ request()->fullUrlWithQuery(['page' => $list->page() - 1]) }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
-                    <i data-lucide="chevron-left" class="text-[14px]"></i> Prev
-                </a>
-            @endif
-            @if ($list->page() < $list->lastPage())
-                <a href="{{ request()->fullUrlWithQuery(['page' => $list->page() + 1]) }}" class="inline-flex items-center gap-1 rounded-md border border-border bg-card px-3 h-8 hover:bg-accent">
-                    Next <i data-lucide="chevron-right" class="text-[14px]"></i>
-                </a>
-            @endif
-        </div>
-    </div>
+    @include('audit-log::components.pagination', ['page' => $list->page(), 'lastPage' => $list->lastPage()])
 @endif

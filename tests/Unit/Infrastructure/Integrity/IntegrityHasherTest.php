@@ -33,6 +33,18 @@ final class IntegrityHasherTest extends TestCase
         $this->assertNotSame($genesis, $hasher->hash(null, $tampered));
     }
 
+    public function test_the_hash_covers_the_reason(): void
+    {
+        $hasher = new IntegrityHasher;
+        $row = $this->row();
+
+        $withReason = $row + ['reason' => 'ticket #4521'];
+        $tampered = $row + ['reason' => 'forged'];
+
+        $this->assertNotSame($hasher->hash(null, $row), $hasher->hash(null, $withReason));
+        $this->assertNotSame($hasher->hash(null, $withReason), $hasher->hash(null, $tampered));
+    }
+
     public function test_mutable_metadata_does_not_affect_the_hash(): void
     {
         $hasher = new IntegrityHasher;

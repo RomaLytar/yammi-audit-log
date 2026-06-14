@@ -46,6 +46,14 @@ final class DocsPageTest extends TestCase
             'Performance: async writes',
             'Embedding without this dashboard',
             'Secrets and redaction',
+            'Many-to-many (pivot) auditing',
+            'Access log (who viewed a record)',
+            'Value-transition queries',
+            'Change reason (why)',
+            'Stream to your SIEM',
+            'Detection as code',
+            'Signed integrity digests',
+            'Per-subject activity viewer',
         ] as $title) {
             $response->assertSee($title);
         }
@@ -54,5 +62,7 @@ final class DocsPageTest extends TestCase
         $response->assertSee('data-al-doc-link', false);
         $response->assertSee('audit-log:archive');
         $response->assertSee('AUDIT_LOG_API_ENABLED');
+        $response->assertSee('audit-log:digest');
+        $response->assertSee('AuditsPivots');
     }
 }

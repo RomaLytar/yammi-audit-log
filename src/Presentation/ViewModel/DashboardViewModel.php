@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
-use Yammi\AuditLog\Application\DTO\ChangeListData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeListData;
 
 /** @internal */
 final class DashboardViewModel

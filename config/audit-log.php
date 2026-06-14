@@ -161,8 +161,34 @@ return [
         ],
     ],
 
+    'stream' => [
+        // Ship every recorded change to a SIEM / log platform off the request
+        // path (queued, fail-soft). Empty endpoint or enabled=false = off.
+        'enabled' => env('AUDIT_LOG_STREAM_ENABLED', false),
+
+        // splunk (HEC) | datadog | elastic | http (generic JSON sink).
+        'driver' => env('AUDIT_LOG_STREAM_DRIVER', 'http'),
+
+        // Full ingest URL: Splunk HEC collector, Datadog logs intake,
+        // Elastic <index>/_doc, or any JSON endpoint for the http driver.
+        'endpoint' => env('AUDIT_LOG_STREAM_ENDPOINT'),
+
+        // Auth credential: Splunk HEC token, Datadog API key, Elastic API key
+        // or a bearer token for the http driver.
+        'token' => env('AUDIT_LOG_STREAM_TOKEN'),
+
+        // Logical source/service name attached to each event where supported.
+        'source' => env('AUDIT_LOG_STREAM_SOURCE', 'audit-log'),
+
+        // Extra headers merged into every request (e.g. a proxy auth header).
+        'headers' => [],
+
+        // Queue connection/name for delivery. Empty = default queue.
+        'queue' => env('AUDIT_LOG_STREAM_QUEUE'),
+    ],
+
     'tenancy' => [
-        // Class implementing Yammi\AuditLog\Application\Contract\TenantResolver.
+        // Class implementing Yammi\AuditLog\Application\Contract\Resolver\TenantResolver.
         // When it returns a tenant id, every new record is stamped with it and
         // every read (dashboard, facades, API, exports) is scoped to it
         // automatically. Retention, archive, transfer and integrity always run
@@ -180,6 +206,11 @@ return [
         // Flag an actor deleting more records than this inside the window. 0 = rule off.
         'delete_threshold' => 25,
 
+        // Flag a single correlation (one request -> job -> job chain) that
+        // produced more than this many changes, a possible write-amplification
+        // or N+1-style cascade. 0 = rule off.
+        'cascade_threshold' => 150,
+
         // Flag user changes recorded between these hours (inclusive, 0-23),
         // e.g. [0, 5] for night activity; [22, 5] wraps midnight. Empty = rule off.
         'off_hours' => [],
@@ -188,6 +219,14 @@ return [
         // Findings fire the AnomalyDetected event and mail alerts.mail_to.
         // Empty = run the command yourself.
         'cron' => env('AUDIT_LOG_ANOMALY_CRON'),
+
+        // Detection-as-code: your own rule classes implementing
+        // Yammi\AuditLog\Application\Contract\AnomalyRule. They run alongside
+        // the built-in checks over the same window and can set their own
+        // severity. Version them in git, unit-test them in isolation.
+        //
+        //   App\Audit\HighValueRefundRule::class,
+        'rules' => [],
     ],
 
     'integrity' => [
@@ -195,6 +234,21 @@ return [
         // audit-log:verify can prove the history was not edited or thinned out.
         // Off by default: it costs one extra select per insert.
         'enabled' => (bool) env('AUDIT_LOG_INTEGRITY', false),
+
+        // Asymmetric key pair (RSA/EC, PEM inline or a readable file path) used
+        // to sign integrity digests. audit-log:digest records a signed snapshot
+        // of the chain head + count + span; audit-log:verify checks the latest
+        // one, catching whole-segment deletion and verifying archived digests
+        // independently of the database. No private key = digests stored
+        // unsigned. Keep the private key off the audit host where possible.
+        'signing' => [
+            'private_key' => env('AUDIT_LOG_SIGNING_PRIVATE_KEY'),
+            'public_key' => env('AUDIT_LOG_SIGNING_PUBLIC_KEY'),
+        ],
+
+        // Cron expression to record a signed digest automatically, e.g.
+        // '0 * * * *'. Empty = run audit-log:digest yourself.
+        'digest_cron' => env('AUDIT_LOG_DIGEST_CRON'),
     ],
 
     'archive' => [
@@ -230,6 +284,12 @@ return [
         'enabled' => (bool) env('AUDIT_LOG_API_ENABLED', false),
         'path' => env('AUDIT_LOG_API_PATH', 'audit-log/api'),
         'middleware' => ['api'],
+
+        // Fail closed: when the middleware above carries no authentication guard
+        // (auth, auth:*, can:* or an Authenticate middleware) the routes are NOT
+        // registered, so flipping the API on can't silently expose audit data.
+        // Set this true only when auth is enforced by some unrecognised means.
+        'allow_unauthenticated' => (bool) env('AUDIT_LOG_API_ALLOW_UNAUTHENTICATED', false),
     ],
 
     'ui' => [
@@ -245,5 +305,21 @@ return [
         'gate' => env('AUDIT_LOG_UI_GATE'),
         // Rate limit for the UI routes, as "requests,minutes". Empty = no limit.
         'throttle' => env('AUDIT_LOG_UI_THROTTLE', '60,1'),
+    ],
+
+    'transfer' => [
+        // Optional Gate ability checked before the dashboard "Transfer data"
+        // action (host-defined). Moving and optionally deleting audit rows
+        // between databases is destructive — gate it to your most privileged
+        // operators. Source and destination are always restricted to the
+        // connections declared in config/database.php. null = no extra gate.
+        'gate' => env('AUDIT_LOG_TRANSFER_GATE'),
+    ],
+
+    'playground' => [
+        // Optional Gate ability checked before destructive facade-playground
+        // methods (record, recordAccess) that write audit rows. Read-only
+        // methods are never gated. null = no extra gate.
+        'gate' => env('AUDIT_LOG_PLAYGROUND_GATE'),
     ],
 ];

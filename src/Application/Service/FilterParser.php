@@ -7,7 +7,7 @@ namespace Yammi\AuditLog\Application\Service;
 use DateInterval;
 use DateTimeImmutable;
 use Yammi\AuditLog\Application\Contract\Clock;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 
@@ -32,7 +32,8 @@ final class FilterParser
     ) {}
 
     /**
-     * Recognised keys: model, event, actor_type, actor, id, from, to, search, page.
+     * Recognised keys: model, event, actor_type, actor, id, from, to, search,
+     * page, field, value_from, value_to.
      *
      * @param  array<string, mixed>  $filters
      */
@@ -42,6 +43,8 @@ final class FilterParser
         $rawTo = $this->date($filters['to'] ?? null);
 
         [$from, $to] = $this->boundedRange($rawFrom, $rawTo);
+
+        $field = $this->field($filters['field'] ?? null);
 
         return new AuditFilterData(
             type: $this->text($filters['model'] ?? null),
@@ -54,6 +57,9 @@ final class FilterParser
             search: $this->text($filters['search'] ?? null),
             defaultRange: $rawFrom === '' && $rawTo === '',
             auditableId: $this->identifier($filters['id'] ?? null),
+            field: $field,
+            valueFrom: $field !== '' ? $this->text($filters['value_from'] ?? null) : '',
+            valueTo: $field !== '' ? $this->text($filters['value_to'] ?? null) : '',
         );
     }
 
@@ -100,6 +106,15 @@ final class FilterParser
     private function text(mixed $value): string
     {
         return is_string($value) ? mb_substr($value, 0, self::MAX_TEXT) : '';
+    }
+
+    private function field(mixed $value): string
+    {
+        if (! is_string($value)) {
+            return '';
+        }
+
+        return preg_match('/^[A-Za-z0-9_]{1,64}$/', $value) === 1 ? $value : '';
     }
 
     private function identifier(mixed $value): string

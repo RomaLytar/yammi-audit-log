@@ -6,7 +6,7 @@ namespace Yammi\AuditLog\Tests\Unit\Application\Action;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\PruneAuditLogAction;
+use Yammi\AuditLog\Application\Action\Retention\PruneAuditLogAction;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;

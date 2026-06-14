@@ -7,6 +7,7 @@ namespace Yammi\AuditLog\Tests\Unit\Infrastructure\Capture;
 use Illuminate\Database\Eloquent\Model;
 use PHPUnit\Framework\TestCase;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChainStateModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Tests\Support\Models\Document;
 use Yammi\AuditLog\Tests\Support\Models\Post;
@@ -21,6 +22,14 @@ final class AuditableGuardTest extends TestCase
     public function test_the_audit_record_model_itself_is_never_audited(): void
     {
         $model = new AuditRecordModel;
+        $model->setRawAttributes(['id' => 1], true);
+
+        $this->assertFalse((new AuditableGuard([]))->shouldAudit($model));
+    }
+
+    public function test_the_chain_state_model_is_never_audited(): void
+    {
+        $model = new AuditChainStateModel;
         $model->setRawAttributes(['id' => 1], true);
 
         $this->assertFalse((new AuditableGuard([]))->shouldAudit($model));

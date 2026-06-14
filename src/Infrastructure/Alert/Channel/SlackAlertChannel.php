@@ -6,8 +6,8 @@ namespace Yammi\AuditLog\Infrastructure\Alert\Channel;
 
 use Illuminate\Http\Client\Factory as HttpFactory;
 use RuntimeException;
-use Yammi\AuditLog\Application\Contract\AlertChannel;
-use Yammi\AuditLog\Application\DTO\AlertMessageData;
+use Yammi\AuditLog\Application\Contract\Alert\AlertChannel;
+use Yammi\AuditLog\Application\DTO\Alert\AlertMessageData;
 
 /**
  * Delivers an alert to a Slack incoming webhook as Block Kit: a header

@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Illuminate\Support\Carbon;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
+use Yammi\AuditLog\Presentation\ViewModel\Support\MomentFormatter;
+use Yammi\AuditLog\Presentation\ViewModel\Support\ValuePresenter;
 
 /**
  * Presents one change for the UI: pre-formatted strings, dates and diff rows, so
@@ -84,6 +85,11 @@ final class TimelineEntryViewModel
         return $this->entry->isNoise;
     }
 
+    public function reason(): ?string
+    {
+        return $this->entry->reason;
+    }
+
     public function chainDepth(): int
     {
         return min(6, $this->entry->chainDepth);
@@ -114,13 +120,7 @@ final class TimelineEntryViewModel
 
     public function occurredAt(string $format = 'Y-m-d H:i'): string
     {
-        $moment = Carbon::parse($this->entry->occurredAt);
-
-        if ($this->timezone !== null && $this->timezone !== '') {
-            $moment = $moment->setTimezone($this->timezone);
-        }
-
-        return $moment->format($format);
+        return (new MomentFormatter($this->timezone))->format($this->entry->occurredAt, $format);
     }
 
     public function changeCount(): int
@@ -134,26 +134,18 @@ final class TimelineEntryViewModel
     public function changes(): array
     {
         $rows = [];
+        $values = new ValuePresenter;
 
         foreach ($this->entry->changes as $field => $pair) {
             $rows[] = [
                 'field' => (string) $field,
-                'old' => $this->present($pair['old'] ?? null),
-                'new' => $this->present($pair['new'] ?? null),
+                'old' => $values->present($pair['old'] ?? null),
+                'new' => $values->present($pair['new'] ?? null),
                 'oldLabel' => $this->entry->labels[$field.'.old'] ?? null,
                 'newLabel' => $this->entry->labels[$field.'.new'] ?? null,
             ];
         }
 
         return $rows;
-    }
-
-    private function present(mixed $value): string
-    {
-        if ($value === null) {
-            return '—';
-        }
-
-        return is_array($value) ? (string) json_encode($value) : (string) $value;
     }
 }

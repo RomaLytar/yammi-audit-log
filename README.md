@@ -90,6 +90,10 @@ A log package lives on your hot path, so the cost is kept deliberate and predict
 - The write is fail-open: a failed audit insert is logged and does not block the host operation.
 - Reads are bounded: one-year ranges, 10k-row exports, chunked retention.
 
+The Statistics page turns that into a picture: growth and projected size, the heaviest correlation cascades, and the most-changed models and fields.
+
+![Statistics: growth, top cascades and change hotspots](screenshots/stats.png)
+
 ## Platform features (optional)
 
 Independent capabilities built on the core, each off or zero-cost until you use it.
@@ -115,6 +119,8 @@ Reconstruct the exact state a record had at any past moment, folded from its dif
 AuditLog::stateAt(Order::class, 42, '2026-03-03');
 ```
 
+![Time machine](screenshots/time_machine.png)
+
 ### Tamper evidence
 
 Hash-chain every record (SHA-256) and verify, after the fact, that nothing was edited or removed.
@@ -134,6 +140,8 @@ The log watches itself, on demand or on a cron, and findings go to Slack, a sign
 - **Cascade weight**: one correlation (a single request → job → job chain) that produced an unusually large number of changes across many models. Because the audit log already knows the full execution chain, this surfaces likely write-amplification or N+1-style cascades as a side-effect signal, no profiler required.
 
 You can also add your own rules as code (see the Enterprise section), and tune every threshold from the Settings UI.
+
+![Anomaly detection](screenshots/anomalies.png)
 
 ### GDPR and compliance
 
@@ -310,6 +318,16 @@ The defaults aim to be safe; you stay in control of the trade-offs.
 ## How it compares
 
 Existing Laravel audit packages, [spatie/laravel-activitylog](https://github.com/spatie/laravel-activitylog) and [owen-it/laravel-auditing](https://github.com/owen-it/laravel-auditing) among them, focus on model changes and user activity. This one focuses on queue-heavy, distributed apps that need execution traceability: cross-layer attribution (request → job → job), an origin that survives async, correlation tracing, and tamper-evident history for incident investigation, in one self-contained package. If your current setup covers your needs, keep it.
+
+## Non-goals — what this package will not do
+
+These are deliberate, permanent boundaries. Each of them would force the audit log to become a *source of truth* or a *real-time system*, and that breaks the invariant that makes it safe to install: capture is fail-closed, off your write path, additive, and never changes your data.
+
+- **No event sourcing or state replay.** The Time machine reconstructs past state read-only, for forensics. It never becomes the system of record you rebuild your application from.
+- **No backpressure engine or priority queues.** Sampling governs volume; broker-grade load shaping is Kafka/SaaS territory, not a package's job.
+- **No search engine inside the package.** Search goes outward to your SIEM/Elastic (streaming is built in) and inward through the indexed changed-keys table — not a bundled Meilisearch or Elastic adapter.
+- **No distributed observability platform.** Metrics, traces and dashboards at that scale belong to Datadog / Splunk / Pulse. Our moat is application-level provenance, not competing with them.
+- **No query profiler or distributed tracing.** We surface write-side cascades from data we already capture; read-path query profiling is Telescope / Pulse territory.
 
 ## Configuration
 

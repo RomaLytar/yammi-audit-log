@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Application\Action;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\TransferAuditDataAction;
+use Yammi\AuditLog\Application\Action\Transfer\TransferAuditDataAction;
 use Yammi\AuditLog\Tests\Support\FakeAuditDataTransferrer;
 
 final class TransferAuditDataActionTest extends TestCase

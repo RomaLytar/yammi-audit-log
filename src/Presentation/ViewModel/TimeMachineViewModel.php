@@ -4,8 +4,9 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Illuminate\Support\Carbon;
-use Yammi\AuditLog\Application\DTO\StateData;
+use Yammi\AuditLog\Application\DTO\Audit\StateData;
+use Yammi\AuditLog\Presentation\ViewModel\Support\MomentFormatter;
+use Yammi\AuditLog\Presentation\ViewModel\Support\ValuePresenter;
 
 /**
  * Presents one reconstructed point-in-time state for the UI.
@@ -67,13 +68,12 @@ final class TimeMachineViewModel
     public function rows(): array
     {
         $rows = [];
+        $values = new ValuePresenter;
 
         foreach ($this->state->attributes as $field => $value) {
             $rows[] = [
                 'field' => (string) $field,
-                'value' => $value === null
-                    ? '—'
-                    : (is_array($value) ? (string) json_encode($value) : (string) $value),
+                'value' => $values->present($value),
             ];
         }
 
@@ -82,12 +82,6 @@ final class TimeMachineViewModel
 
     private function present(string $moment, string $format): string
     {
-        $parsed = Carbon::parse($moment);
-
-        if ($this->timezone !== null && $this->timezone !== '') {
-            $parsed = $parsed->setTimezone($this->timezone);
-        }
-
-        return $parsed->format($format);
+        return (new MomentFormatter($this->timezone))->format($moment, $format);
     }
 }

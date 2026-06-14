@@ -6,14 +6,14 @@ namespace Yammi\AuditLog\Infrastructure\Reader;
 
 use DateTimeImmutable;
 use Illuminate\Database\Eloquent\Model;
-use Yammi\AuditLog\Application\Action\BuildRecordViewAction;
-use Yammi\AuditLog\Application\Action\BuildSubjectReportAction;
-use Yammi\AuditLog\Application\Action\BuildTimelineAction;
-use Yammi\AuditLog\Application\Action\ReconstructStateAction;
-use Yammi\AuditLog\Application\DTO\RecordViewData;
-use Yammi\AuditLog\Application\DTO\StateData;
-use Yammi\AuditLog\Application\DTO\SubjectReportData;
-use Yammi\AuditLog\Application\DTO\TimelineData;
+use Yammi\AuditLog\Application\Action\Read\BuildRecordViewAction;
+use Yammi\AuditLog\Application\Action\Read\BuildSubjectReportAction;
+use Yammi\AuditLog\Application\Action\Read\BuildTimelineAction;
+use Yammi\AuditLog\Application\Action\Read\ReconstructStateAction;
+use Yammi\AuditLog\Application\DTO\Audit\RecordViewData;
+use Yammi\AuditLog\Application\DTO\Audit\StateData;
+use Yammi\AuditLog\Application\DTO\Audit\SubjectReportData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineData;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 
 /** @internal */

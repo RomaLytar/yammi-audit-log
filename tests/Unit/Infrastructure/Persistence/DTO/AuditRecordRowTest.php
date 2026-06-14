@@ -27,6 +27,7 @@ final class AuditRecordRowTest extends TestCase
             isNoise: true,
             occurredAt: '2026-01-01 10:00:00',
             tenantId: 'acme',
+            reason: 'ticket #4521',
         );
 
         $this->assertSame([
@@ -48,6 +49,8 @@ final class AuditRecordRowTest extends TestCase
             'context' => [],
             'chain_depth' => 0,
             'tenant_id' => 'acme',
+            'reason' => 'ticket #4521',
+            'event_version' => 1,
         ], $row->toArray());
     }
 }

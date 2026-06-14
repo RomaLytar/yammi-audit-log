@@ -15,6 +15,10 @@ final class ChangeTypeTest extends TestCase
         $this->assertSame('updated', ChangeType::Updated->value);
         $this->assertSame('deleted', ChangeType::Deleted->value);
         $this->assertSame('restored', ChangeType::Restored->value);
+        $this->assertSame('attached', ChangeType::Attached->value);
+        $this->assertSame('detached', ChangeType::Detached->value);
+        $this->assertSame('synced', ChangeType::Synced->value);
+        $this->assertSame('accessed', ChangeType::Accessed->value);
     }
 
     public function test_it_recognises_creation_and_deletion(): void
@@ -26,8 +30,46 @@ final class ChangeTypeTest extends TestCase
         $this->assertFalse(ChangeType::Created->isDeletion());
     }
 
+    public function test_it_recognises_pivot_events(): void
+    {
+        $this->assertTrue(ChangeType::Attached->isPivot());
+        $this->assertTrue(ChangeType::Detached->isPivot());
+        $this->assertTrue(ChangeType::Synced->isPivot());
+
+        $this->assertFalse(ChangeType::Updated->isPivot());
+        $this->assertFalse(ChangeType::Deleted->isPivot());
+        $this->assertFalse(ChangeType::Accessed->isPivot());
+    }
+
+    public function test_it_recognises_access_events(): void
+    {
+        $this->assertTrue(ChangeType::Accessed->isAccess());
+
+        $this->assertFalse(ChangeType::Updated->isAccess());
+        $this->assertFalse(ChangeType::Synced->isAccess());
+    }
+
+    public function test_pivot_events_are_neither_creation_nor_deletion(): void
+    {
+        foreach ([ChangeType::Attached, ChangeType::Detached, ChangeType::Synced] as $type) {
+            $this->assertFalse($type->isCreation());
+            $this->assertFalse($type->isDeletion());
+        }
+    }
+
     public function test_it_builds_a_human_label(): void
     {
         $this->assertSame('Created', ChangeType::Created->label());
+        $this->assertSame('Attached', ChangeType::Attached->label());
+        $this->assertSame('Detached', ChangeType::Detached->label());
+        $this->assertSame('Synced', ChangeType::Synced->label());
+    }
+
+    public function test_it_lists_every_backing_value(): void
+    {
+        $this->assertSame(
+            ['created', 'updated', 'deleted', 'restored', 'attached', 'detached', 'synced', 'accessed'],
+            ChangeType::values(),
+        );
     }
 }

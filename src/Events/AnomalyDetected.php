@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Events;
 
-use Yammi\AuditLog\Application\DTO\AnomalyData;
+use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
 
 /**
  * Fired for every finding of audit-log:detect-anomalies — an unusual burst

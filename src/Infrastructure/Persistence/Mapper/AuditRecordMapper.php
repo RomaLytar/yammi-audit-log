@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Persistence\Mapper;
 
 use DateTimeImmutable;
-use Yammi\AuditLog\Application\Contract\TenantResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\TenantResolver;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
@@ -42,9 +42,11 @@ final class AuditRecordMapper
             correlationId: $record->correlationId(),
             isNoise: $record->isNoise(),
             occurredAt: $record->occurredAt()->format('Y-m-d H:i:s'),
+            reason: $record->reason(),
             context: $record->context(),
             chainDepth: $record->chainDepth(),
             tenantId: $this->tenants->resolve(),
+            eventVersion: $record->eventVersion(),
         );
     }
 
@@ -83,6 +85,8 @@ final class AuditRecordMapper
             id: (int) $model->getAttribute('id'),
             context: $this->stringMap($model->getAttribute('context')),
             chainDepth: max(0, (int) $model->getAttribute('chain_depth')),
+            reason: $this->nullableString($model->getAttribute('reason')),
+            eventVersion: max(1, (int) $model->getAttribute('event_version')),
         );
     }
 

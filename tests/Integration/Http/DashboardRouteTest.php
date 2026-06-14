@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Tests\Integration\Http;
 
+use DateTimeImmutable;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
@@ -51,6 +52,46 @@ final class DashboardRouteTest extends TestCase
         $response->assertSee('No changes recorded yet');
     }
 
+    public function test_the_dashboard_surfaces_the_change_reason(): void
+    {
+        $this->app->make(AuditRecordRepository::class)->save(new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 1),
+            event: ChangeType::Updated,
+            diff: Diff::between(['status' => 'a'], ['status' => 'b']),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: new DateTimeImmutable,
+            reason: 'ticket #4521',
+        ));
+
+        $this->get('audit-log')
+            ->assertOk()
+            ->assertSee('why')
+            ->assertSee('ticket #4521');
+    }
+
+    public function test_the_filter_form_exposes_the_value_transition_inputs(): void
+    {
+        Post::create(['title' => 'Hello', 'status' => 'draft']);
+
+        $this->get('audit-log')
+            ->assertOk()
+            ->assertSee('Field changed')
+            ->assertSee('name="field"', false)
+            ->assertSee('name="value_from"', false)
+            ->assertSee('name="value_to"', false);
+    }
+
+    public function test_it_filters_by_a_value_transition(): void
+    {
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+        $post->update(['status' => 'published']);
+
+        $this->get('audit-log?field=status&value_from=draft&value_to=published')->assertOk()->assertSee('published');
+        $this->get('audit-log?field=status&value_from=draft&value_to=archived')->assertOk()->assertSee('No changes match these filters');
+    }
+
     public function test_it_filters_by_event(): void
     {
         $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
@@ -72,7 +113,7 @@ final class DashboardRouteTest extends TestCase
                 actor: Actor::system(),
                 origin: null,
                 labels: LabelSnapshot::empty(),
-                occurredAt: (new \DateTimeImmutable('today'))->setTime(1, 0),
+                occurredAt: (new DateTimeImmutable('today'))->setTime(1, 0),
             ),
         );
 

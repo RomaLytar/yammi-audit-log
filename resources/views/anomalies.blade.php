@@ -65,6 +65,7 @@
                 <thead>
                     <tr class="bg-muted/40 text-[11px] uppercase tracking-wider text-muted-foreground text-left">
                         <th class="px-4 py-2.5 font-medium">Rule</th>
+                        <th class="px-4 py-2.5 font-medium">Severity</th>
                         <th class="px-4 py-2.5 font-medium">Actor</th>
                         <th class="px-4 py-2.5 font-medium">Count</th>
                         <th class="px-4 py-2.5 font-medium">Details</th>
@@ -76,6 +77,11 @@
                             <td class="px-4 py-3 whitespace-nowrap">
                                 <span class="inline-flex items-center gap-1.5 rounded-md bg-{{ $row['tone'] }}/10 px-2 py-0.5 text-[11px] font-medium text-{{ $row['tone'] }} ring-1 ring-inset ring-{{ $row['tone'] }}/30">
                                     <i data-lucide="{{ $row['icon'] }}" class="text-[11px]"></i> {{ $row['rule'] }}
+                                </span>
+                            </td>
+                            <td class="px-4 py-3 whitespace-nowrap">
+                                <span class="inline-flex items-center rounded-md bg-{{ $row['severityTone'] }}/10 px-2 py-0.5 text-[11px] font-medium text-{{ $row['severityTone'] }} ring-1 ring-inset ring-{{ $row['severityTone'] }}/30 capitalize">
+                                    {{ $row['severity'] }}
                                 </span>
                             </td>
                             <td class="px-4 py-3">

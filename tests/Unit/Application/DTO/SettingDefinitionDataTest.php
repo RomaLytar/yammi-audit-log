@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Application\DTO;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\SettingDefinitionData;
+use Yammi\AuditLog\Application\DTO\Settings\SettingDefinitionData;
 use Yammi\AuditLog\Domain\Settings\Enum\SettingType;
 
 final class SettingDefinitionDataTest extends TestCase

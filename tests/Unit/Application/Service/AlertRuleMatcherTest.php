@@ -5,7 +5,7 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Tests\Unit\Application\Service;
 
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Application\Service\AlertRuleMatcher;
 
 final class AlertRuleMatcherTest extends TestCase

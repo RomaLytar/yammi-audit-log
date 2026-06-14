@@ -5,12 +5,13 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Recorder;
 
 use Illuminate\Database\Eloquent\Model;
-use Yammi\AuditLog\Application\Action\RecordChangeAction;
-use Yammi\AuditLog\Application\DTO\ChangeData;
-use Yammi\AuditLog\Application\DTO\TimelineEntryData;
+use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
+use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
+use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Exception\InvalidAuditData;
 use Yammi\AuditLog\Infrastructure\Alert\AlertDispatcher;
+use Yammi\AuditLog\Infrastructure\Stream\ChangeStreamer;
 
 /**
  * Records a change that Eloquent events cannot see — mass updates, raw SQL,
@@ -24,6 +25,7 @@ final class ManualChangeRecorder
     public function __construct(
         private readonly RecordChangeAction $action,
         private readonly AlertDispatcher $alerts,
+        private readonly ?ChangeStreamer $stream = null,
     ) {}
 
     /**
@@ -54,7 +56,13 @@ final class ManualChangeRecorder
         }
 
         $this->alerts->inspect($record);
+        $this->stream?->push($record);
 
         return TimelineEntryData::fromRecord($record);
+    }
+
+    public function recordAccess(Model|string $auditable, int|string|null $id = null): ?TimelineEntryData
+    {
+        return $this->record($auditable, $id, ChangeType::Accessed);
     }
 }

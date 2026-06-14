@@ -6,8 +6,8 @@ namespace Yammi\AuditLog\Tests\Unit\Application\Action;
 
 use DateTimeImmutable;
 use PHPUnit\Framework\TestCase;
-use Yammi\AuditLog\Application\Action\ListChangesAction;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\Action\Read\ListChangesAction;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
 use Yammi\AuditLog\Application\Service\CriteriaFactory;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
@@ -37,7 +37,7 @@ final class ListChangesActionTest extends TestCase
         $this->assertCount(3, $list->entries);
         $this->assertContains('App\\Models\\Order', $list->models);
         $this->assertContains('job', $list->actorTypes);
-        $this->assertSame(['created', 'updated', 'deleted', 'restored'], $list->events);
+        $this->assertSame(['created', 'updated', 'deleted', 'restored', 'attached', 'detached', 'synced', 'accessed'], $list->events);
     }
 
     public function test_it_filters_by_event(): void

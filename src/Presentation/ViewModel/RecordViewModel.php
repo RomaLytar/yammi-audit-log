@@ -4,8 +4,8 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\RecordViewData;
-use Yammi\AuditLog\Application\DTO\RelatedChangeData;
+use Yammi\AuditLog\Application\DTO\Audit\RecordViewData;
+use Yammi\AuditLog\Application\DTO\Audit\RelatedChangeData;
 
 /**
  * Presents the single-record page: the record's own timeline and the

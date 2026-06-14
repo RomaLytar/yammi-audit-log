@@ -53,6 +53,30 @@
         @include('audit-log::components.date-field', ['name' => 'to', 'label' => 'To', 'value' => $filters->to, 'min' => $filters->from])
     </div>
 
+    <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-6 gap-3 mt-3">
+        <div class="lg:col-span-2">
+            <label class="block text-[11px] font-medium text-muted-foreground mb-1">Field changed</label>
+            <input type="text" name="field" value="{{ $filters->field }}" placeholder="e.g. status"
+                   onchange="this.form && this.form.requestSubmit()"
+                   class="al-input {{ $filters->field !== '' ? 'al-input--active' : '' }}">
+        </div>
+        <div class="lg:col-span-2">
+            <label class="block text-[11px] font-medium text-muted-foreground mb-1">From value</label>
+            <input type="text" name="value_from" value="{{ $filters->valueFrom }}" placeholder="e.g. pending"
+                   onchange="this.form && this.form.requestSubmit()"
+                   class="al-input {{ $filters->valueFrom !== '' ? 'al-input--active' : '' }}">
+        </div>
+        <div class="lg:col-span-2">
+            <label class="block text-[11px] font-medium text-muted-foreground mb-1">To value</label>
+            <input type="text" name="value_to" value="{{ $filters->valueTo }}" placeholder="e.g. cancelled"
+                   onchange="this.form && this.form.requestSubmit()"
+                   class="al-input {{ $filters->valueTo !== '' ? 'al-input--active' : '' }}">
+        </div>
+        <p class="sm:col-span-2 lg:col-span-6 text-[10px] text-muted-foreground/70 -mt-1">
+            Find a specific transition — set a field to see every change to it, plus an optional old/new value to pin the exact step (e.g. status pending → cancelled).
+        </p>
+    </div>
+
     <noscript>
         <button type="submit" class="mt-3 inline-flex items-center gap-1.5 rounded-md bg-primary text-primary-foreground px-4 h-9 text-sm font-semibold">
             Apply

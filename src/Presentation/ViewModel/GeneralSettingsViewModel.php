@@ -4,7 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Presentation\ViewModel;
 
-use Yammi\AuditLog\Application\DTO\ResolvedSettingData;
+use Yammi\AuditLog\Application\DTO\Settings\ResolvedSettingData;
 use Yammi\AuditLog\Application\Service\SettingRegistry;
 
 /** @internal */

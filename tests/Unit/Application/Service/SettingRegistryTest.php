@@ -43,6 +43,7 @@ final class SettingRegistryTest extends TestCase
             'alerts_webhook_url' => 'audit-log.alerts.webhook.url',
             'anomalies_rate_threshold' => 'audit-log.anomalies.rate_threshold',
             'anomalies_delete_threshold' => 'audit-log.anomalies.delete_threshold',
+            'anomalies_cascade_threshold' => 'audit-log.anomalies.cascade_threshold',
             'anomalies_off_hours' => 'audit-log.anomalies.off_hours',
             'anomalies_cron' => 'audit-log.anomalies.cron',
             'timezone' => 'audit-log.timezone',

@@ -20,64 +20,20 @@
         })();
     </script>
 
-    <script src="https://cdn.tailwindcss.com"></script>
-    <script>
-        tailwind.config = {
-            darkMode: 'class',
-            theme: {
-                extend: {
-                    fontFamily: {
-                        sans: ['Inter var', 'Inter', 'ui-sans-serif', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-                        mono: ['JetBrains Mono', 'ui-monospace', 'SFMono-Regular', 'Menlo', 'Consolas', 'monospace'],
-                    },
-                    colors: {
-                        border: 'hsl(var(--border))',
-                        input: 'hsl(var(--input))',
-                        ring: 'hsl(var(--ring))',
-                        background: 'hsl(var(--background))',
-                        foreground: 'hsl(var(--foreground))',
-                        primary: { DEFAULT: 'hsl(var(--primary))', foreground: 'hsl(var(--primary-foreground))' },
-                        secondary: { DEFAULT: 'hsl(var(--secondary))', foreground: 'hsl(var(--secondary-foreground))' },
-                        destructive: { DEFAULT: 'hsl(var(--destructive))', foreground: 'hsl(var(--destructive-foreground))' },
-                        success: { DEFAULT: 'hsl(var(--success))', foreground: 'hsl(var(--success-foreground))' },
-                        warning: { DEFAULT: 'hsl(var(--warning))', foreground: 'hsl(var(--warning-foreground))' },
-                        info: { DEFAULT: 'hsl(var(--info))', foreground: 'hsl(var(--info-foreground))' },
-                        muted: { DEFAULT: 'hsl(var(--muted))', foreground: 'hsl(var(--muted-foreground))' },
-                        accent: { DEFAULT: 'hsl(var(--accent))', foreground: 'hsl(var(--accent-foreground))' },
-                        popover: { DEFAULT: 'hsl(var(--popover))', foreground: 'hsl(var(--popover-foreground))' },
-                        card: { DEFAULT: 'hsl(var(--card))', foreground: 'hsl(var(--card-foreground))' },
-                        brand: { DEFAULT: 'hsl(var(--brand))', foreground: 'hsl(var(--brand-foreground))' },
-                    },
-                    borderRadius: {
-                        xl: 'calc(var(--radius) + 4px)',
-                        lg: 'var(--radius)',
-                        md: 'calc(var(--radius) - 2px)',
-                        sm: 'calc(var(--radius) - 4px)',
-                    },
-                    boxShadow: {
-                        xs: '0 1px 2px 0 rgb(0 0 0 / 0.04)',
-                        glow: '0 0 0 1px hsl(var(--ring) / 0.15), 0 8px 24px -8px hsl(var(--ring) / 0.25)',
-                    },
-                    keyframes: {
-                        'fade-in': { from: { opacity: '0', transform: 'translateY(-2px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-                        'slide-down': { from: { opacity: '0', transform: 'translateY(-6px)' }, to: { opacity: '1', transform: 'translateY(0)' } },
-                        'pulse-soft': { '0%, 100%': { opacity: '1' }, '50%': { opacity: '0.55' } },
-                    },
-                    animation: {
-                        'fade-in': 'fade-in .2s ease-out',
-                        'slide-down': 'slide-down .22s ease-out',
-                        'pulse-soft': 'pulse-soft 1.8s ease-in-out infinite',
-                    },
-                },
-            },
-        };
-    </script>
-
-    <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.min.js"></script>
-    <link rel="preconnect" href="https://rsms.me/">
-    <link rel="stylesheet" href="https://rsms.me/inter/inter.css">
+    <link rel="stylesheet" href="{{ $auditAssets['dashboard.css'] ?? route('audit-log.asset', 'dashboard.css') }}">
+    <script src="{{ $auditAssets['lucide.js'] ?? route('audit-log.asset', 'lucide.js') }}"></script>
 
     <style>
+        @font-face {
+            font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900;
+            src: url('{{ $auditAssets['inter-latin.woff2'] ?? route('audit-log.asset', 'inter-latin.woff2') }}') format('woff2-variations');
+            unicode-range: U+0000-00FF,U+0131,U+0152-0153,U+02BB-02BC,U+02C6,U+02DA,U+02DC,U+0304,U+0308,U+0329,U+2000-206F,U+2074,U+20AC,U+2122,U+2191,U+2193,U+2212,U+2215,U+FEFF,U+FFFD;
+        }
+        @font-face {
+            font-family: 'Inter Variable'; font-style: normal; font-display: swap; font-weight: 100 900;
+            src: url('{{ $auditAssets['inter-latin-ext.woff2'] ?? route('audit-log.asset', 'inter-latin-ext.woff2') }}') format('woff2-variations');
+            unicode-range: U+0100-02AF,U+0304,U+0308,U+0329,U+1E00-1E9F,U+1EF2-1EFF,U+2020,U+20A0-20AB,U+20AD-20C0,U+2113,U+2C60-2C7F,U+A720-A7FF;
+        }
         :root {
             --background: 0 0% 100%; --foreground: 240 10% 3.9%;
             --card: 0 0% 100%; --card-foreground: 240 10% 3.9%;
@@ -108,7 +64,7 @@
             --border: 240 3.7% 16%; --input: 240 3.7% 18%; --ring: 240 4.9% 83.9%;
             --brand: 263 75% 70%; --brand-foreground: 240 10% 4%;
         }
-        html, body { font-family: 'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
+        html, body { font-family: 'Inter Variable', 'Inter var', 'Inter', ui-sans-serif, system-ui, -apple-system, sans-serif; }
         body { font-feature-settings: 'cv02','cv03','cv04','cv11'; -webkit-font-smoothing: antialiased; }
         *::-webkit-scrollbar { width: 10px; height: 10px; }
         *::-webkit-scrollbar-track { background: transparent; }
@@ -173,6 +129,9 @@
                     <a href="{{ route('audit-log.anomalies') }}" title="Anomalies"
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.anomalies') ? 'border-warning/40 bg-warning/10 text-warning' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
                         <i data-lucide="siren" class="text-[14px]"></i> <span class="hidden lg:inline">Anomalies</span>
+                        @if (($auditAnomalyCount ?? 0) > 0)
+                            <span title="{{ $auditAnomalyCount }} anomaly(ies) in the last 24h" class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-warning/20 text-warning text-[10px] font-bold tabular-nums">{{ $auditAnomalyCount }}</span>
+                        @endif
                     </a>
                     <a href="{{ route('audit-log.time-machine') }}" title="Time machine"
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.time-machine') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">

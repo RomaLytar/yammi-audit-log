@@ -8,10 +8,11 @@ use Illuminate\Console\Command;
 use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\Filesystem\Factory as FilesystemFactory;
 use Illuminate\Contracts\View\Factory as ViewFactory;
-use Yammi\AuditLog\Application\Action\BuildSubjectReportAction;
+use Yammi\AuditLog\Application\Action\Read\BuildSubjectReportAction;
 use Yammi\AuditLog\Application\Contract\Clock;
-use Yammi\AuditLog\Application\DTO\SubjectReportData;
+use Yammi\AuditLog\Application\DTO\Audit\SubjectReportData;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
+use Yammi\AuditLog\Infrastructure\Console\Support\ArchiveDisk;
 
 /** @internal */
 final class SubjectReportCommand extends Command
@@ -47,11 +48,7 @@ final class SubjectReportCommand extends Command
 
         $report = $build(AuditableReference::to($model, $id));
 
-        $diskOption = $this->option('disk');
-        $configuredDisk = $config->get('audit-log.archive.disk', 'local');
-        $disk = $storage->disk(is_string($diskOption) && $diskOption !== ''
-            ? $diskOption
-            : (is_string($configuredDisk) && $configuredDisk !== '' ? $configuredDisk : 'local'));
+        $disk = $storage->disk((new ArchiveDisk)->name($this->option('disk'), $config));
 
         $slug = strtolower((string) preg_replace('/[^A-Za-z0-9_-]+/', '-', $report->model().'-'.$id));
         $path = 'audit-log/subject-report-'.$slug.'-'.$clock->now()->format('Ymd-His').'.'.$format;

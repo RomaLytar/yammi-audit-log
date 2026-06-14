@@ -6,7 +6,7 @@ namespace Yammi\AuditLog\Application\Service;
 
 use DateTimeImmutable;
 use Exception;
-use Yammi\AuditLog\Application\DTO\AuditFilterData;
+use Yammi\AuditLog\Application\DTO\Audit\AuditFilterData;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Query\AuditCriteria;
@@ -33,6 +33,9 @@ final class CriteriaFactory
             onlyNoise: $onlyNoise,
             search: $filters->search !== '' ? $filters->search : null,
             auditableId: $filters->auditableId !== '' ? $filters->auditableId : null,
+            field: $filters->field !== '' ? $filters->field : null,
+            valueFrom: $filters->valueFrom !== '' ? $filters->valueFrom : null,
+            valueTo: $filters->valueTo !== '' ? $filters->valueTo : null,
         );
     }
 

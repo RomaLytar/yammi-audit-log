@@ -10,6 +10,10 @@ enum ChangeType: string
     case Updated = 'updated';
     case Deleted = 'deleted';
     case Restored = 'restored';
+    case Attached = 'attached';
+    case Detached = 'detached';
+    case Synced = 'synced';
+    case Accessed = 'accessed';
 
     public function isCreation(): bool
     {
@@ -21,8 +25,28 @@ enum ChangeType: string
         return $this === self::Deleted;
     }
 
+    public function isPivot(): bool
+    {
+        return $this === self::Attached
+            || $this === self::Detached
+            || $this === self::Synced;
+    }
+
+    public function isAccess(): bool
+    {
+        return $this === self::Accessed;
+    }
+
     public function label(): string
     {
         return ucfirst($this->value);
+    }
+
+    /**
+     * @return list<string>
+     */
+    public static function values(): array
+    {
+        return array_map(static fn (self $type): string => $type->value, self::cases());
     }
 }

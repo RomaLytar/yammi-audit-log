@@ -319,6 +319,16 @@ The defaults aim to be safe; you stay in control of the trade-offs.
 
 Existing Laravel audit packages, [spatie/laravel-activitylog](https://github.com/spatie/laravel-activitylog) and [owen-it/laravel-auditing](https://github.com/owen-it/laravel-auditing) among them, focus on model changes and user activity. This one focuses on queue-heavy, distributed apps that need execution traceability: cross-layer attribution (request → job → job), an origin that survives async, correlation tracing, and tamper-evident history for incident investigation, in one self-contained package. If your current setup covers your needs, keep it.
 
+## Non-goals — what this package will not do
+
+These are deliberate, permanent boundaries. Each of them would force the audit log to become a *source of truth* or a *real-time system*, and that breaks the invariant that makes it safe to install: capture is fail-closed, off your write path, additive, and never changes your data.
+
+- **No event sourcing or state replay.** The Time machine reconstructs past state read-only, for forensics. It never becomes the system of record you rebuild your application from.
+- **No backpressure engine or priority queues.** Sampling governs volume; broker-grade load shaping is Kafka/SaaS territory, not a package's job.
+- **No search engine inside the package.** Search goes outward to your SIEM/Elastic (streaming is built in) and inward through the indexed changed-keys table — not a bundled Meilisearch or Elastic adapter.
+- **No distributed observability platform.** Metrics, traces and dashboards at that scale belong to Datadog / Splunk / Pulse. Our moat is application-level provenance, not competing with them.
+- **No query profiler or distributed tracing.** We surface write-side cascades from data we already capture; read-path query profiling is Telescope / Pulse territory.
+
 ## Configuration
 
 ```php

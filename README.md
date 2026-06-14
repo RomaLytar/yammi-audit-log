@@ -90,6 +90,10 @@ A log package lives on your hot path, so the cost is kept deliberate and predict
 - The write is fail-open: a failed audit insert is logged and does not block the host operation.
 - Reads are bounded: one-year ranges, 10k-row exports, chunked retention.
 
+The Statistics page turns that into a picture: growth and projected size, the heaviest correlation cascades, and the most-changed models and fields.
+
+![Statistics: growth, top cascades and change hotspots](screenshots/stats.png)
+
 ## Platform features (optional)
 
 Independent capabilities built on the core, each off or zero-cost until you use it.
@@ -115,6 +119,8 @@ Reconstruct the exact state a record had at any past moment, folded from its dif
 AuditLog::stateAt(Order::class, 42, '2026-03-03');
 ```
 
+![Time machine](screenshots/time_machine.png)
+
 ### Tamper evidence
 
 Hash-chain every record (SHA-256) and verify, after the fact, that nothing was edited or removed.
@@ -134,6 +140,8 @@ The log watches itself, on demand or on a cron, and findings go to Slack, a sign
 - **Cascade weight**: one correlation (a single request → job → job chain) that produced an unusually large number of changes across many models. Because the audit log already knows the full execution chain, this surfaces likely write-amplification or N+1-style cascades as a side-effect signal, no profiler required.
 
 You can also add your own rules as code (see the Enterprise section), and tune every threshold from the Settings UI.
+
+![Anomaly detection](screenshots/anomalies.png)
 
 ### GDPR and compliance
 

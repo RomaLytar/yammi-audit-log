@@ -4,9 +4,24 @@
 
 @section('content')
     <style>
-        .al-tree-wrap { width: 100vw; margin-left: calc(50% - 50vw); overflow-x: auto; padding: 8px 1.5rem 36px; cursor: grab; }
-        .al-tree-wrap.al-grabbing { cursor: grabbing; user-select: none; }
-        .al-tree { display: inline-block; min-width: 100%; }
+        .al-canvas-shell { position: relative; margin-top: 6px; }
+        .al-canvas {
+            border: 1px solid hsl(var(--border)); border-radius: 16px;
+            background-color: hsl(var(--muted) / 0.22);
+            background-image: radial-gradient(hsl(var(--muted-foreground) / 0.16) 1px, transparent 1.5px);
+            background-size: 22px 22px;
+            overflow: auto; max-height: 74vh; cursor: grab;
+        }
+        .al-canvas.al-grabbing { cursor: grabbing; user-select: none; }
+        .al-canvas__hint {
+            position: absolute; top: 10px; right: 12px; z-index: 5; pointer-events: none;
+            display: inline-flex; align-items: center; gap: 5px;
+            background: hsl(var(--card) / 0.88); border: 1px solid hsl(var(--border));
+            border-radius: 8px; padding: 3px 9px; font-size: 11px; font-weight: 500; color: hsl(var(--muted-foreground));
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+        }
+        .al-canvas__hint [data-lucide] { width: 13px; height: 13px; }
+        .al-tree { display: inline-block; min-width: 100%; padding: 30px 22px 34px; }
         .al-tree ul { display: flex; justify-content: center; padding-top: 26px; position: relative; list-style: none; margin: 0; }
         .al-tree li { position: relative; padding: 26px 14px 0; display: flex; flex-direction: column; align-items: center; }
         .al-tree li::before, .al-tree li::after {
@@ -29,7 +44,7 @@
 
         .al-node {
             position: relative;
-            width: clamp(320px, calc((min(100vw, 84rem) - 6rem) / var(--al-cols, 3)), calc(min(100vw, 84rem) - 6rem));
+            width: clamp(300px, calc((min(100vw, 80rem) - 8rem) / var(--al-cols, 3)), calc(min(100vw, 80rem) - 8rem));
             background: hsl(var(--card)); border: 1px solid hsl(var(--border));
             border-top: 3px solid hsl(var(--muted-foreground));
             border-radius: 12px;
@@ -102,13 +117,16 @@
         <p class="mt-1 text-[11px] font-mono text-muted-foreground/70 break-all">{{ $chain->correlationId() }}</p>
     </div>
 
-    <div class="al-tree-wrap">
-        <div class="al-tree" style="--al-cols: {{ $chain->columns() }}">
-            <ul>
-                @foreach ($chain->tree as $node)
-                    @include('audit-log::partials.trace-node', ['node' => $node, 'focus' => $focus])
-                @endforeach
-            </ul>
+    <div class="al-canvas-shell">
+        <span class="al-canvas__hint"><i data-lucide="move"></i> Drag to pan</span>
+        <div class="al-canvas">
+            <div class="al-tree" style="--al-cols: {{ $chain->columns() }}">
+                <ul>
+                    @foreach ($chain->tree as $node)
+                        @include('audit-log::partials.trace-node', ['node' => $node, 'focus' => $focus])
+                    @endforeach
+                </ul>
+            </div>
         </div>
     </div>
 
@@ -117,22 +135,22 @@
     @push('scripts')<script>
         __alIcons();
         (function () {
-            var wrap = document.querySelector('.al-tree-wrap');
-            if (wrap) {
-                var down = false, startX, startY, scrollLeft, winTop;
-                wrap.addEventListener('mousedown', function (e) {
+            var canvas = document.querySelector('.al-canvas');
+            if (canvas) {
+                var down = false, startX, startY, sLeft, sTop;
+                canvas.addEventListener('mousedown', function (e) {
                     if (e.button !== 0 || e.target.closest('button, a')) { return; }
                     down = true; startX = e.clientX; startY = e.clientY;
-                    scrollLeft = wrap.scrollLeft; winTop = window.scrollY;
-                    wrap.classList.add('al-grabbing');
+                    sLeft = canvas.scrollLeft; sTop = canvas.scrollTop;
+                    canvas.classList.add('al-grabbing');
                 });
-                window.addEventListener('mouseup', function () { down = false; wrap.classList.remove('al-grabbing'); });
+                window.addEventListener('mouseup', function () { down = false; canvas.classList.remove('al-grabbing'); });
                 window.addEventListener('mousemove', function (e) {
                     if (!down) { return; }
-                    wrap.scrollLeft = scrollLeft - (e.clientX - startX);
-                    window.scrollTo(0, winTop - (e.clientY - startY));
+                    canvas.scrollLeft = sLeft - (e.clientX - startX);
+                    canvas.scrollTop = sTop - (e.clientY - startY);
                 });
-                wrap.scrollLeft = Math.max(0, (wrap.scrollWidth - wrap.clientWidth) / 2);
+                canvas.scrollLeft = Math.max(0, (canvas.scrollWidth - canvas.clientWidth) / 2);
             }
             var focus = document.getElementById('al-focus-entry');
             if (focus) { focus.scrollIntoView({ block: 'center' }); }

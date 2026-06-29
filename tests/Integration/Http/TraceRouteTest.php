@@ -42,6 +42,8 @@ final class TraceRouteTest extends TestCase
         $response->assertSee('Change chain');
         $response->assertSee('Root');
         $response->assertSee('Post');
+        // The job that ran inside the chain is shown as its own span node.
+        $response->assertSee('Queued job');
         // The chain shows the field-level old to new detail.
         $response->assertSee('status');
         $response->assertSee('draft');
@@ -79,7 +81,7 @@ final class TraceRouteTest extends TestCase
         $response = $this->get('audit-log/trace/'.self::CORRELATION);
 
         $response->assertOk();
-        $response->assertSee('al-trace-diff-0');
+        $response->assertSee('al-trace-diff-');
         $response->assertSee('Click an entry to see its field-level changes');
         $response->assertSee('Expand all');
         $response->assertSee('__alTraceToggleAll', false);

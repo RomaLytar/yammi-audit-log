@@ -12,6 +12,9 @@ final class TraceViewModel
     /** @var list<TimelineEntryViewModel> */
     public readonly array $entries;
 
+    /** @var list<ChainNodeViewModel> */
+    public readonly array $tree;
+
     public function __construct(
         private readonly ChainData $chain,
         ?string $jobsMonitorUrl = null,
@@ -24,6 +27,14 @@ final class TraceViewModel
         }
 
         $this->entries = $entries;
+
+        $tree = [];
+
+        foreach ($chain->tree as $node) {
+            $tree[] = new ChainNodeViewModel($node, $jobsMonitorUrl, $timezone);
+        }
+
+        $this->tree = $tree;
     }
 
     public function correlationId(): string

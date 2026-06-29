@@ -166,6 +166,9 @@
             document.querySelectorAll('.al-node').forEach(function (card) {
                 card.classList.toggle('al-node--open', expand);
             });
+            document.querySelectorAll('.al-node__diff').forEach(function (diff) {
+                diff.classList.toggle('hidden', !expand);
+            });
             button.setAttribute('data-expanded', expand ? '1' : '0');
             button.querySelector('[data-al-toggle-label]').textContent = expand ? 'Collapse all' : 'Expand all';
         }

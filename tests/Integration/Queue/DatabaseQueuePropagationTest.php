@@ -17,7 +17,9 @@ use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
+use Yammi\AuditLog\Domain\Audit\ValueObject\Span;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Correlation\SpanContext;
 use Yammi\AuditLog\Tests\Support\Jobs\PublishPostJob;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 use Yammi\AuditLog\Tests\Support\Models\User;
@@ -65,8 +67,11 @@ final class DatabaseQueuePropagationTest extends TestCase
 
         $correlation = $this->app->make(CorrelationContext::class);
         $correlation->push('5b29f077-90d2-46a3-9d97-2bbb7f7202df');
+        $spans = $this->app->make(SpanContext::class);
+        $spans->push(new Span('a1b2c3d4-0000-1111-2222-333344445555'));
         $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
         PublishPostJob::dispatch($post->getKey());
+        $spans->pop();
         $correlation->pop();
 
         $payload = (string) DB::table('jobs')->value('payload');
@@ -75,6 +80,25 @@ final class DatabaseQueuePropagationTest extends TestCase
         $this->assertStringContainsString('Jane Doe', $payload);
         $this->assertStringContainsString('audit_correlation', $payload);
         $this->assertStringContainsString('5b29f077-90d2-46a3-9d97-2bbb7f7202df', $payload);
+        $this->assertStringContainsString('audit_parent_span', $payload);
+        $this->assertStringContainsString('a1b2c3d4-0000-1111-2222-333344445555', $payload);
+    }
+
+    public function test_the_parent_span_from_dispatch_time_links_the_worker_record(): void
+    {
+        $spans = $this->app->make(SpanContext::class);
+        $spans->push(new Span('c4d5e6f7-1111-2222-3333-444455556666'));
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+        PublishPostJob::dispatch($post->getKey());
+        $spans->pop();
+
+        $this->artisan('queue:work', ['--once' => true, '--sleep' => 0])->assertSuccessful();
+
+        $update = $this->latestRecordFor($post);
+
+        $this->assertSame('c4d5e6f7-1111-2222-3333-444455556666', $update->parentSpanId());
+        $this->assertNotNull($update->spanId());
+        $this->assertNotSame('c4d5e6f7-1111-2222-3333-444455556666', $update->spanId());
     }
 
     public function test_a_user_origin_survives_a_real_database_worker(): void

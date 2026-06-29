@@ -9,6 +9,7 @@ use Yammi\AuditLog\Application\Contract\Resolver\ActorResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\ReasonResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\RequestContextResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\SpanResolver;
 use Yammi\AuditLog\Application\Contract\ValueRedactor;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
@@ -29,7 +30,9 @@ use Yammi\AuditLog\Infrastructure\Context\HttpRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
+use Yammi\AuditLog\Infrastructure\Correlation\ContextSpanResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Correlation\SpanContext;
 use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
 
@@ -45,9 +48,11 @@ final class CaptureBindings extends BindingRegistrar
     {
         $this->app->singleton(ActorContext::class);
         $this->app->singleton(CorrelationContext::class);
+        $this->app->singleton(SpanContext::class);
         $this->app->singleton(ChangeReasonContext::class);
         $this->app->singleton(RequestContextHolder::class);
         $this->app->singleton(CorrelationResolver::class, ContextCorrelationResolver::class);
+        $this->app->singleton(SpanResolver::class, ContextSpanResolver::class);
         $this->app->singleton(ReasonResolver::class, ContextReasonResolver::class);
 
         $this->app->singleton(RequestContextResolver::class, function (): RequestContextResolver {

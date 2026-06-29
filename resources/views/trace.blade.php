@@ -3,6 +3,74 @@
 @section('title', 'Change chain — Yammi')
 
 @section('content')
+    <style>
+        .al-tree-wrap { overflow-x: auto; padding: 8px 4px 32px; }
+        .al-tree { display: inline-block; min-width: 100%; }
+        .al-tree ul { display: flex; justify-content: center; padding-top: 26px; position: relative; list-style: none; margin: 0; }
+        .al-tree li { position: relative; padding: 26px 14px 0; display: flex; flex-direction: column; align-items: center; }
+        .al-tree li::before, .al-tree li::after {
+            content: ''; position: absolute; top: 0; right: 50%;
+            border-top: 2px solid hsl(var(--border)); width: 50%; height: 26px;
+        }
+        .al-tree li::after { right: auto; left: 50%; border-left: 2px solid hsl(var(--border)); }
+        .al-tree li:only-child::before, .al-tree li:only-child::after { display: none; }
+        .al-tree li:only-child { padding-top: 26px; }
+        .al-tree li:first-child::before, .al-tree li:last-child::after { border: 0 none; }
+        .al-tree li:last-child::before { border-right: 2px solid hsl(var(--border)); border-top-right-radius: 8px; }
+        .al-tree li:first-child::after { border-top-left-radius: 8px; }
+        .al-tree ul ul::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            border-left: 2px solid hsl(var(--border)); width: 0; height: 26px;
+        }
+        .al-tree > ul { padding-top: 0; }
+        .al-tree > ul > li { padding-top: 0; }
+        .al-tree > ul > li::before, .al-tree > ul > li::after { display: none; }
+
+        .al-node {
+            position: relative; text-align: left; width: 268px;
+            background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+            border-top: 3px solid hsl(var(--muted-foreground));
+            border-radius: 12px; padding: 9px 11px 6px;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+        }
+        .al-node--user { border-top-color: hsl(var(--brand)); }
+        .al-node--job { border-top-color: hsl(var(--info)); }
+        .al-node--command { border-top-color: hsl(var(--warning)); }
+        .al-node--scheduler { border-top-color: hsl(var(--success)); }
+        .al-node--root { box-shadow: 0 0 0 3px hsl(var(--brand) / 0.14), 0 1px 2px rgb(0 0 0 / 0.05); }
+
+        .al-node__head { display: flex; align-items: center; justify-content: space-between; gap: 6px; }
+        .al-node__proc { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; letter-spacing: .01em; color: hsl(var(--brand)); text-transform: uppercase; }
+        .al-node__proc [data-lucide] { width: 13px; height: 13px; }
+        .al-node__flag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: hsl(var(--brand)); background: hsl(var(--brand) / 0.1); border: 1px solid hsl(var(--brand) / 0.3); border-radius: 6px; padding: 1px 6px; }
+        .al-node__flag [data-lucide] { width: 10px; height: 10px; }
+        .al-node__actor { margin-top: 2px; font-size: 13px; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; word-break: break-word; }
+        .al-node__from { margin-top: 1px; display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: hsl(var(--muted-foreground)); }
+        .al-node__from [data-lucide] { width: 12px; height: 12px; color: hsl(var(--brand)); }
+
+        .al-node__body { margin-top: 7px; display: flex; flex-direction: column; gap: 2px; }
+        .al-node__entry { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; background: transparent; border: 0; padding: 5px 6px; border-radius: 8px; cursor: pointer; font-size: 12px; color: hsl(var(--foreground)); }
+        .al-node__entry:hover { background: hsl(var(--accent)); }
+        .al-node__entry--focus { background: hsl(var(--brand) / 0.1); box-shadow: inset 0 0 0 1px hsl(var(--brand) / 0.4); }
+        .al-node__dot { width: 8px; height: 8px; border-radius: 99px; flex: 0 0 auto; background: hsl(var(--muted-foreground)); }
+        .al-node__dot--created { background: hsl(var(--success)); }
+        .al-node__dot--updated { background: hsl(var(--info)); }
+        .al-node__dot--deleted { background: hsl(var(--destructive)); }
+        .al-node__dot--restored { background: hsl(var(--warning)); }
+        .al-node__entry-model { font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .al-node__entry-id { color: hsl(var(--muted-foreground)); font-family: ui-monospace, monospace; font-size: 11px; }
+        .al-node__entry-fields { margin-left: auto; font-size: 11px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+        .al-node__here { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: hsl(var(--brand-foreground)); background: hsl(var(--brand)); border-radius: 6px; padding: 1px 6px; }
+        .al-node__here [data-lucide] { width: 11px; height: 11px; }
+
+        .al-node__diff { margin: 1px 2px 5px; border: 1px solid hsl(var(--border)); border-radius: 8px; overflow-x: auto; }
+        .al-node__diff table { width: 100%; border-collapse: collapse; font-family: ui-monospace, monospace; font-size: 11px; }
+        .al-node__diff th { text-align: left; padding: 4px 8px; font-size: 9px; letter-spacing: .04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); background: hsl(var(--muted) / 0.5); }
+        .al-node__diff td { padding: 4px 8px; border-top: 1px solid hsl(var(--border)); vertical-align: top; overflow-wrap: anywhere; word-break: normal; }
+        .al-node__diff .al-old { color: hsl(var(--destructive)); }
+        .al-node__diff .al-new { color: hsl(var(--success)); }
+    </style>
+
     <div class="mb-6">
         <a href="{{ route('audit-log.dashboard') }}" class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3">
             <i data-lucide="arrow-left" class="text-[13px]"></i> Back to log
@@ -25,13 +93,17 @@
         <p class="mt-1 text-[11px] font-mono text-muted-foreground/70 break-all">{{ $chain->correlationId() }}</p>
     </div>
 
-    <div class="space-y-2">
-        @foreach ($chain->tree as $node)
-            @include('audit-log::partials.trace-node', ['node' => $node, 'focus' => $focus])
-        @endforeach
+    <div class="al-tree-wrap">
+        <div class="al-tree">
+            <ul>
+                @foreach ($chain->tree as $node)
+                    @include('audit-log::partials.trace-node', ['node' => $node, 'focus' => $focus])
+                @endforeach
+            </ul>
+        </div>
     </div>
 
-    <p class="mt-3 text-[11px] text-muted-foreground">Each box is one unit of work; nesting shows which change caused which. Click an entry to see its field-level changes.</p>
+    <p class="mt-2 text-[11px] text-muted-foreground">Each box is one unit of work (a request, job or command); a line runs from the change that caused the next one. Click an entry to see its field-level changes.</p>
 
     @push('scripts')<script>
         __alIcons();

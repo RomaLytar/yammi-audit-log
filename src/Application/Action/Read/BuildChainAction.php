@@ -36,6 +36,7 @@ final class BuildChainAction
         }
 
         $root = $entries[0];
+        $tree = $this->buildTree($records);
 
         return new ChainData(
             correlationId: $correlationId,
@@ -43,8 +44,36 @@ final class BuildChainAction
             modelCount: count($models),
             rootActorLabel: $root->actorLabel,
             rootModel: $root->model(),
-            tree: $this->buildTree($records),
+            tree: $tree,
+            maxBreadth: $this->maxBreadth($tree),
         );
+    }
+
+    /**
+     * The largest number of spans sitting on any one level of the tree. Drives
+     * how wide the nodes can be drawn before the canvas needs to scroll.
+     *
+     * @param  list<ChainNodeData>  $tree
+     */
+    private function maxBreadth(array $tree): int
+    {
+        $level = $tree;
+        $max = count($level);
+
+        while ($level !== []) {
+            $next = [];
+
+            foreach ($level as $node) {
+                foreach ($node->children as $child) {
+                    $next[] = $child;
+                }
+            }
+
+            $max = max($max, count($next));
+            $level = $next;
+        }
+
+        return max(1, $max);
     }
 
     /**

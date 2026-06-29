@@ -17,6 +17,7 @@ final class ChainData
         public readonly string $rootActorLabel,
         public readonly string $rootModel,
         public readonly array $tree = [],
+        public readonly int $maxBreadth = 1,
     ) {}
 
     public function count(): int

@@ -68,6 +68,8 @@ final class BuildChainActionTest extends TestCase
 
         $this->assertSame('job-c', $root->children[1]->spanId);
         $this->assertCount(0, $root->children[1]->children);
+
+        $this->assertSame(2, $chain->maxBreadth);
     }
 
     public function test_records_without_spans_collapse_into_one_root(): void

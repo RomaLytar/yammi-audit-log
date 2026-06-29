@@ -1,18 +1,30 @@
-@php $focus = $focus ?? null; @endphp
+@php
+    $focus = $focus ?? null;
+    $open = false;
+    if ($focus !== null) {
+        foreach ($node->entries as $focusCandidate) {
+            if ($focusCandidate->recordId() === $focus) { $open = true; break; }
+        }
+    }
+@endphp
 <li>
-    <div class="al-node al-node--{{ $node->actorType() }}{{ $node->isRoot() ? ' al-node--root' : '' }}">
-        <div class="al-node__head">
-            <span class="al-node__proc"><i data-lucide="{{ $node->processIcon() }}"></i> {{ $node->processLabel() }}</span>
-            @if ($node->isRoot())
-                <span class="al-node__flag"><i data-lucide="flag"></i> Root</span>
-            @endif
-        </div>
-
-        <div class="al-node__actor" title="{{ $node->actorLabel() }}">{{ \Illuminate\Support\Str::afterLast($node->actorLabel(), '\\') }}</div>
-
-        @if ($node->originLabel())
-            <div class="al-node__from"><i data-lucide="corner-down-right"></i> from {{ \Illuminate\Support\Str::afterLast($node->originLabel(), '\\') }}</div>
-        @endif
+    <div class="al-node al-node--{{ $node->actorType() }}{{ $node->isRoot() ? ' al-node--root' : '' }}{{ $open ? ' al-node--open' : '' }}">
+        <button type="button" class="al-node__head" onclick="__alToggleCard(this)" aria-expanded="{{ $open ? 'true' : 'false' }}">
+            <span class="al-node__head-main">
+                <span class="al-node__proc"><i data-lucide="{{ $node->processIcon() }}"></i> {{ $node->processLabel() }}</span>
+                <span class="al-node__actor" title="{{ $node->actorLabel() }}">{{ \Illuminate\Support\Str::afterLast($node->actorLabel(), '\\') }}</span>
+                @if ($node->originLabel())
+                    <span class="al-node__from"><i data-lucide="corner-down-right"></i> from {{ \Illuminate\Support\Str::afterLast($node->originLabel(), '\\') }}</span>
+                @endif
+            </span>
+            <span class="al-node__head-side">
+                @if ($node->isRoot())
+                    <span class="al-node__flag"><i data-lucide="flag"></i> Root</span>
+                @endif
+                <span class="al-node__count">{{ $node->entryCount() }} {{ \Illuminate\Support\Str::plural('change', $node->entryCount()) }}</span>
+                <i data-lucide="chevron-down" class="al-node__chev"></i>
+            </span>
+        </button>
 
         <div class="al-node__body">
             @foreach ($node->entries as $entry)

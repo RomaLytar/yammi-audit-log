@@ -61,4 +61,13 @@ final class TraceViewModel
     {
         return $this->chain->rootModel;
     }
+
+    /**
+     * How many nodes to fit across the canvas width: up to three so each stays
+     * readable; wider trees scroll instead of shrinking further.
+     */
+    public function columns(): int
+    {
+        return max(1, min(3, $this->chain->maxBreadth));
+    }
 }

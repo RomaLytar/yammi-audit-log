@@ -82,7 +82,7 @@ final class TraceRouteTest extends TestCase
 
         $response->assertOk();
         $response->assertSee('al-trace-diff-');
-        $response->assertSee('Click an entry to see its field-level changes');
+        $response->assertSee('Click a box to see its field-level changes');
         $response->assertSee('Expand all');
         $response->assertSee('__alTraceToggleAll', false);
     }

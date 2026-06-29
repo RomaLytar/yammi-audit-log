@@ -47,6 +47,7 @@ final class TraceViewModelTest extends TestCase
             rootActorLabel: 'Jane',
             rootModel: 'Order',
             tree: [$node],
+            maxBreadth: 5,
         ));
 
         $this->assertSame('corr-1', $viewModel->correlationId());
@@ -58,5 +59,6 @@ final class TraceViewModelTest extends TestCase
         $this->assertCount(1, $viewModel->tree);
         $this->assertSame('Request', $viewModel->tree[0]->processLabel());
         $this->assertSame(2, $viewModel->tree[0]->entryCount());
+        $this->assertSame(3, $viewModel->columns());
     }
 }

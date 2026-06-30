@@ -16,6 +16,7 @@ use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
 use Yammi\AuditLog\Application\DTO\Audit\ChainData;
 use Yammi\AuditLog\Application\DTO\Audit\ChangeListData;
+use Yammi\AuditLog\Application\DTO\Audit\LegalHoldData;
 use Yammi\AuditLog\Application\DTO\Audit\RecordViewData;
 use Yammi\AuditLog\Application\DTO\Audit\StateData;
 use Yammi\AuditLog\Application\DTO\Audit\SubjectReportData;
@@ -32,6 +33,7 @@ use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
 use Yammi\AuditLog\Infrastructure\Query\AuditQueryBuilder;
 use Yammi\AuditLog\Infrastructure\Reader\AuditReader;
 use Yammi\AuditLog\Infrastructure\Recorder\ManualChangeRecorder;
+use Yammi\AuditLog\Infrastructure\Retention\LegalHoldRegistry;
 
 /**
  * The facade root: everything the bundled dashboard shows, exposed as plain
@@ -52,6 +54,7 @@ final class AuditLogManager
         private readonly Clock $clock,
         private readonly AnomalyScanner $anomalyScanner,
         private readonly UrlGenerator $url,
+        private readonly LegalHoldRegistry $legalHolds,
         private readonly ChangeReasonContext $reasonContext = new ChangeReasonContext,
         private readonly AuditPolicyRegistry $policies = new AuditPolicyRegistry,
     ) {}
@@ -107,6 +110,43 @@ final class AuditLogManager
      * of other records connected through correlation chains and foreign-key
      * references.
      */
+    /**
+     * Place a legal hold on a subject's audit trail: retention then skips every
+     * one of its records, past and future, until the hold is released. For
+     * litigation or investigation, where pruning held data is not allowed.
+     */
+    public function placeLegalHold(Model|string $auditable, int|string|null $id = null, ?string $reason = null): void
+    {
+        [$type, $key] = $this->subject($auditable, $id);
+
+        $this->legalHolds->place($type, $key, $reason);
+    }
+
+    public function releaseLegalHold(Model|string $auditable, int|string|null $id = null): bool
+    {
+        [$type, $key] = $this->subject($auditable, $id);
+
+        return $this->legalHolds->release($type, $key);
+    }
+
+    /**
+     * @return list<LegalHoldData>
+     */
+    public function legalHolds(): array
+    {
+        return $this->legalHolds->all();
+    }
+
+    /**
+     * @return array{0: string, 1: string}
+     */
+    private function subject(Model|string $auditable, int|string|null $id): array
+    {
+        return $auditable instanceof Model
+            ? [$auditable->getMorphClass(), (string) $auditable->getKey()]
+            : [$auditable, $id === null ? '' : (string) $id];
+    }
+
     public function recordView(Model|string $auditable, int|string|null $id = null): RecordViewData
     {
         return $this->reader->recordView($auditable, $id);

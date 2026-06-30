@@ -9,6 +9,7 @@ use PHPUnit\Framework\TestCase;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditCaptureFailureModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChainStateModel;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditLegalHoldModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Tests\Support\Models\Document;
 use Yammi\AuditLog\Tests\Support\Models\Post;
@@ -39,6 +40,14 @@ final class AuditableGuardTest extends TestCase
     public function test_the_capture_failure_model_is_never_audited(): void
     {
         $model = new AuditCaptureFailureModel;
+        $model->setRawAttributes(['id' => 1], true);
+
+        $this->assertFalse((new AuditableGuard([]))->shouldAudit($model));
+    }
+
+    public function test_the_legal_hold_model_is_never_audited(): void
+    {
+        $model = new AuditLegalHoldModel;
         $model->setRawAttributes(['id' => 1], true);
 
         $this->assertFalse((new AuditableGuard([]))->shouldAudit($model));

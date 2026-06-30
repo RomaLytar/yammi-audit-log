@@ -14,6 +14,7 @@ use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
 use Yammi\AuditLog\Application\DTO\Anomaly\AnomalyData;
 use Yammi\AuditLog\Application\DTO\Audit\ChainData;
 use Yammi\AuditLog\Application\DTO\Audit\ChangeListData;
+use Yammi\AuditLog\Application\DTO\Audit\LegalHoldData;
 use Yammi\AuditLog\Application\DTO\Audit\RecordViewData;
 use Yammi\AuditLog\Application\DTO\Audit\StateData;
 use Yammi\AuditLog\Application\DTO\Audit\SubjectReportData;
@@ -46,6 +47,9 @@ use Yammi\AuditLog\Infrastructure\Testing\AuditLogFake;
  * @method static TimelineEntryData|null recordAccess(Model|string $auditable, int|string|null $id = null)
  * @method static mixed withReason(string $reason, callable $callback)
  * @method static string activityUrl(Model|string $auditable, int|string|null $id = null, int $minutes = 60)
+ * @method static void placeLegalHold(Model|string $auditable, int|string|null $id = null, ?string $reason = null)
+ * @method static bool releaseLegalHold(Model|string $auditable, int|string|null $id = null)
+ * @method static list<LegalHoldData> legalHolds()
  *
  * @see AuditLogManager
  */

@@ -59,6 +59,20 @@ final class SettingsUpdateTest extends TestCase
         $this->assertSame('audit', $this->app['config']->get('audit-log.write.queue'));
     }
 
+    public function test_observability_settings_overlay_config(): void
+    {
+        $this->post('audit-log/settings/general', $this->payload([
+            'observability_trace_url' => 'https://apm.example.test/trace/{trace_id}',
+            'observability_postman' => '0',
+        ]))->assertSessionHas('audit_log_status');
+
+        $this->assertSame(
+            'https://apm.example.test/trace/{trace_id}',
+            $this->app['config']->get('audit-log.integrations.observability.trace_url'),
+        );
+        $this->assertFalse($this->app['config']->get('audit-log.api.postman'));
+    }
+
     public function test_the_saved_value_survives_for_the_next_request(): void
     {
         $this->post('audit-log/settings/general', $this->payload(['retention_days' => 365]));

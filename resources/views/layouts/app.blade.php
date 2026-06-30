@@ -125,6 +125,9 @@
                     <a href="{{ route('audit-log.stats') }}" title="Stats"
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.stats') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
                         <i data-lucide="bar-chart-3" class="text-[14px]"></i> <span class="hidden sm:inline">Stats</span>
+                        @if (($auditCaptureFailureCount ?? 0) > 0)
+                            <span title="{{ $auditCaptureFailureCount }} audit capture failure(s) in the last 24h" class="inline-flex items-center justify-center min-w-[1.1rem] h-[1.1rem] px-1 rounded-full bg-destructive/10 text-destructive text-[10px] font-bold tabular-nums">{{ $auditCaptureFailureCount }}</span>
+                        @endif
                     </a>
                     <a href="{{ route('audit-log.anomalies') }}" title="Anomalies"
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.anomalies') ? 'border-warning/40 bg-warning/10 text-warning' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">

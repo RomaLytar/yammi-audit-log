@@ -30,6 +30,7 @@ final class AuditRecordRowTest extends TestCase
             reason: 'ticket #4521',
             spanId: 'span-9',
             parentSpanId: 'span-8',
+            traceId: 'trace-7',
         );
 
         $this->assertSame([
@@ -55,6 +56,7 @@ final class AuditRecordRowTest extends TestCase
             'event_version' => 1,
             'span_id' => 'span-9',
             'parent_span_id' => 'span-8',
+            'trace_id' => 'trace-7',
         ], $row->toArray());
     }
 }

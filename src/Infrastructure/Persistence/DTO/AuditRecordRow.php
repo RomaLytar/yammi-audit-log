@@ -42,6 +42,7 @@ final class AuditRecordRow
         public readonly int $eventVersion = AuditRecord::SCHEMA_VERSION,
         public readonly ?string $spanId = null,
         public readonly ?string $parentSpanId = null,
+        public readonly ?string $traceId = null,
     ) {}
 
     /**
@@ -72,6 +73,7 @@ final class AuditRecordRow
             'event_version' => $this->eventVersion,
             'span_id' => $this->spanId,
             'parent_span_id' => $this->parentSpanId,
+            'trace_id' => $this->traceId,
         ];
     }
 }

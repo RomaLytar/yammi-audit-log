@@ -8,6 +8,7 @@ use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
+use Yammi\AuditLog\Infrastructure\Correlation\TraceContext;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Tests\Support\Jobs\PublishPostJob;
 use Yammi\AuditLog\Tests\Support\Models\Post;
@@ -85,6 +86,24 @@ final class TraceRouteTest extends TestCase
         $response->assertSee('Click a box to see its field-level changes');
         $response->assertSee('Expand all');
         $response->assertSee('__alTraceToggleAll', false);
+    }
+
+    public function test_it_deep_links_to_the_tracing_backend_when_configured(): void
+    {
+        config()->set('audit-log.integrations.observability.trace_url', 'https://apm.example.test/trace/{trace_id}');
+
+        $correlation = $this->app->make(CorrelationContext::class);
+        $trace = $this->app->make(TraceContext::class);
+        $correlation->push(self::CORRELATION);
+        $trace->push('4bf92f3577b34da6a3ce929d0e0e4736');
+        Post::create(['title' => 'Order', 'status' => 'draft']);
+        $trace->pop();
+        $correlation->pop();
+
+        $this->get('audit-log/trace/'.self::CORRELATION)
+            ->assertOk()
+            ->assertSee('Open distributed trace')
+            ->assertSee('https://apm.example.test/trace/4bf92f3577b34da6a3ce929d0e0e4736');
     }
 
     public function test_an_unknown_correlation_returns_404(): void

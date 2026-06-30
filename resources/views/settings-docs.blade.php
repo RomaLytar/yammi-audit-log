@@ -210,8 +210,57 @@
             'points' => [
                 'OFF by default. When enabling, put real auth into the middleware — the endpoints expose audit data.',
                 'Endpoints accept the same filter query parameters as the facade (model, event, actor_type, actor, from, to, search, page).',
+                'Import the whole API into Postman — all nine endpoints with example parameters and a bearer {{token}} variable — from the button below, or run php artisan audit-log:postman.',
             ],
             'code' => "# .env\nAUDIT_LOG_API_ENABLED=true\n\n// config/audit-log.php\n'api' => ['middleware' => ['api', 'auth:sanctum']],\n\nGET /audit-log/api/changes?event=updated&search=refund\nGET /audit-log/api/noise\nGET /audit-log/api/chain/{correlation-uuid}\nGET /audit-log/api/stats\nGET /audit-log/api/timeline?auditable_type=App\\Models\\Order&auditable_id=42\nGET /audit-log/api/state?auditable_type=App\\Models\\Order&auditable_id=42&at=2026-03-03\nGET /audit-log/api/record-view?auditable_type=App\\Models\\Order&auditable_id=42\nGET /audit-log/api/subject-report?auditable_type=App\\Models\\User&auditable_id=5\nGET /audit-log/api/anomalies?window=1440",
+            'postman' => true,
+        ],
+        [
+            'id' => 'trace-bridge',
+            'icon' => 'radio-tower',
+            'title' => 'Distributed-trace bridge',
+            'intro' => 'Cross from a change to the APM trace that drove it, and back.',
+            'points' => [
+                'An incoming W3C traceparent header is captured as a trace_id alongside the correlation id, and propagated across the queue with it.',
+                'Set integrations.observability.trace_url (or the Observability setting) to a {trace_id} template.',
+                'The chain then shows an "Open distributed trace" link into Datadog, Jaeger, Tempo or Honeycomb. Empty config shows the raw id only.',
+                'A bridge, not a replacement: metrics and traces at scale stay in your observability platform.',
+            ],
+            'code' => "# .env\nAUDIT_LOG_TRACE_URL=https://app.datadoghq.com/apm/trace/{trace_id}",
+        ],
+        [
+            'id' => 'capture-health',
+            'icon' => 'shield-alert',
+            'title' => 'Audit gaps (capture health)',
+            'intro' => 'The write path is fail-open, so a failed audit insert never breaks your request — but the gap is now visible.',
+            'points' => [
+                'Each capture failure is recorded (audit_log_capture_failures) and fires an AuditCaptureFailed event you can alert on.',
+                'The Statistics page shows a banner and the nav a badge when there were failures in the last 24h.',
+                'Completeness evidence: tamper-evidence proves stored records were not changed; this proves none silently went missing.',
+            ],
+            'code' => null,
+        ],
+        [
+            'id' => 'testing',
+            'icon' => 'flask-conical',
+            'title' => 'Testing what you audited',
+            'intro' => 'Assert what your code recorded without hitting the database.',
+            'points' => [
+                'AuditLog::fake() swaps the writer for an in-memory fake; both automatic (Eloquent) and manual (AuditLog::record) changes flow into it.',
+                'Assert with assertRecorded(), assertNotRecorded(), assertNothingRecorded(), assertRecordedCount().',
+            ],
+            'code' => "AuditLog::fake();\n\n\$order->update(['status' => 'paid']);\n\nAuditLog::assertRecorded(Order::class, \$order->id, 'updated',\n    fn (\$record) => \$record->diff()->field('status')?->new === 'paid');\nAuditLog::assertRecordedCount(1);",
+        ],
+        [
+            'id' => 'legal-hold',
+            'icon' => 'gavel',
+            'title' => 'Legal holds',
+            'intro' => 'Exempt a subject from retention for litigation or investigation; held data is never pruned.',
+            'points' => [
+                'Place or lift a hold on a subject; retention then skips every one of its records, past and future, until released.',
+                'Available on the facade and as php artisan audit-log:legal-hold place|release|list.',
+            ],
+            'code' => "AuditLog::placeLegalHold(\$user, reason: 'case #4521');\n// ... retention now skips this user's records ...\nAuditLog::releaseLegalHold(\$user);",
         ],
         [
             'id' => 'event-version',
@@ -452,6 +501,13 @@
 
                     @if ($section['code'] !== null)
                         <pre class="mt-4 rounded-lg border border-border bg-muted/30 p-4 text-[12px] font-mono overflow-x-auto leading-relaxed max-w-3xl"><code>{{ $section['code'] }}</code></pre>
+                    @endif
+
+                    @if (($section['postman'] ?? false) && ($postmanEnabled ?? false))
+                        <a href="{{ route('audit-log.postman') }}" download
+                           class="mt-4 inline-flex items-center gap-2 rounded-lg border border-border bg-card px-4 h-9 text-sm font-semibold text-foreground hover:bg-accent transition-colors">
+                            <i data-lucide="download" class="text-[15px]"></i> Download Postman collection
+                        </a>
                     @endif
                 </section>
             @endforeach

@@ -10,6 +10,28 @@
         <p class="text-sm text-muted-foreground mt-1">How the audit log grows and what it is made of. All filters apply.</p>
     </div>
 
+    @if (($captureFailureCount ?? 0) > 0)
+        <div class="mb-6 rounded-xl border border-border bg-card p-4">
+            <div class="flex items-center gap-2 text-sm font-semibold text-destructive">
+                <i data-lucide="shield-alert" class="text-[15px]"></i>
+                {{ $captureFailureCount }} audit {{ \Illuminate\Support\Str::plural('capture failure', $captureFailureCount) }} in the last 24h
+            </div>
+            <p class="mt-1 text-xs text-muted-foreground">A change was made but could not be recorded. The write path is fail-open, so these are gaps in the audit trail, not failed business operations.</p>
+            @if (! empty($captureFailures))
+                <ul class="mt-3 space-y-1 text-xs font-mono">
+                    @foreach ($captureFailures as $failure)
+                        <li class="flex items-center gap-2 flex-wrap">
+                            <span class="text-muted-foreground">{{ $failure->occurredAt }}</span>
+                            <span class="font-semibold">{{ $failure->model() }}</span>
+                            @if ($failure->event)<span class="text-muted-foreground">{{ $failure->event }}</span>@endif
+                            <span class="text-destructive truncate max-w-[60%]">{{ $failure->message }}</span>
+                        </li>
+                    @endforeach
+                </ul>
+            @endif
+        </div>
+    @endif
+
     @include('audit-log::partials.filters', [
         'filters' => $stats->filters(),
         'action' => route('audit-log.stats'),

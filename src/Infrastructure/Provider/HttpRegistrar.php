@@ -14,8 +14,10 @@ use Illuminate\Contracts\View\View;
 use Illuminate\Routing\Router;
 use Psr\Log\LoggerInterface;
 use Throwable;
+use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\Query\AuditLogQuery;
 use Yammi\AuditLog\Infrastructure\Anomaly\AnomalyScanner;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureFailureLog;
 use Yammi\AuditLog\Infrastructure\Http\AuthGuardDetector;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\AssetController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\ScopedActivityController;
@@ -135,6 +137,7 @@ final class HttpRegistrar
                 }
 
                 $view->with('auditAnomalyCount', $this->anomalyCount());
+                $view->with('auditCaptureFailureCount', $this->captureFailureCount());
                 $view->with('auditAssets', $this->assetUrls());
             },
         );
@@ -155,6 +158,17 @@ final class HttpRegistrar
         } catch (Throwable) {
             return 0;
         }
+    }
+
+    /**
+     * Audit capture failures in the last 24 hours, surfaced as a nav warning so a
+     * fail-open audit gap does not stay invisible. Fail-soft on a missing store.
+     */
+    private function captureFailureCount(): int
+    {
+        $cutoff = $this->app->make(Clock::class)->now()->modify('-24 hours');
+
+        return $this->app->make(CaptureFailureLog::class)->health($cutoff)['count'];
     }
 
     /**

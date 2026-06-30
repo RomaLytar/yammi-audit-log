@@ -22,6 +22,7 @@ use Yammi\AuditLog\Infrastructure\Actor\ActorContext;
 use Yammi\AuditLog\Infrastructure\Actor\ActorSerializer;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Correlation\SpanContext;
+use Yammi\AuditLog\Infrastructure\Correlation\TraceContext;
 
 /**
  * Maintains the actor and correlation context across jobs and commands, and
@@ -39,6 +40,7 @@ final class ContextRegistrar
         private readonly ActorSerializer $serializer,
         private readonly ActorResolver $resolver,
         private readonly SpanContext $spans,
+        private readonly TraceContext $traces,
     ) {}
 
     public function register(): void
@@ -48,8 +50,9 @@ final class ContextRegistrar
         $serializer = $this->serializer;
         $resolver = $this->resolver;
         $spans = $this->spans;
+        $traces = $this->traces;
 
-        $this->events->listen(JobProcessing::class, static function (JobProcessing $event) use ($actors, $correlation, $spans, $serializer, $resolver): void {
+        $this->events->listen(JobProcessing::class, static function (JobProcessing $event) use ($actors, $correlation, $spans, $traces, $serializer, $resolver): void {
             $payload = $event->job->payload();
 
             $origin = isset($payload['audit_origin']) && is_array($payload['audit_origin'])
@@ -69,15 +72,22 @@ final class ContextRegistrar
                 : $spans->current()?->id;
 
             $spans->push(new Span((string) Str::uuid(), $parentSpan));
+
+            $trace = isset($payload['audit_trace']) && is_string($payload['audit_trace'])
+                ? $payload['audit_trace']
+                : $traces->current();
+
+            $traces->push($trace);
         });
 
-        $this->events->listen([JobProcessed::class, JobFailed::class], static function () use ($actors, $correlation, $spans): void {
+        $this->events->listen([JobProcessed::class, JobFailed::class], static function () use ($actors, $correlation, $spans, $traces): void {
             $actors->leaveJob();
             $correlation->pop();
             $spans->pop();
+            $traces->pop();
         });
 
-        $this->events->listen(CommandStarting::class, static function (CommandStarting $event) use ($actors, $correlation, $spans): void {
+        $this->events->listen(CommandStarting::class, static function (CommandStarting $event) use ($actors, $correlation, $spans, $traces): void {
             $command = self::commandName($event->command);
 
             if ($command !== null) {
@@ -86,15 +96,17 @@ final class ContextRegistrar
 
             $correlation->push((string) Str::uuid());
             $spans->push(new Span((string) Str::uuid(), $spans->current()?->id));
+            $traces->push($traces->current());
         });
 
-        $this->events->listen(CommandFinished::class, static function (CommandFinished $event) use ($actors, $correlation, $spans): void {
+        $this->events->listen(CommandFinished::class, static function (CommandFinished $event) use ($actors, $correlation, $spans, $traces): void {
             if (self::commandName($event->command) !== null) {
                 $actors->leaveCommand();
             }
 
             $correlation->pop();
             $spans->pop();
+            $traces->pop();
         });
 
         $this->events->listen(ScheduledTaskStarting::class, static function (ScheduledTaskStarting $event) use ($actors): void {
@@ -105,7 +117,7 @@ final class ContextRegistrar
             $actors->leaveScheduledTask();
         });
 
-        Queue::createPayloadUsing(static function ($connection, $queue, $payload) use ($correlation, $spans, $serializer, $resolver): array {
+        Queue::createPayloadUsing(static function ($connection, $queue, $payload) use ($correlation, $spans, $traces, $serializer, $resolver): array {
             $extra = ['audit_correlation' => $correlation->current() ?? (string) Str::uuid()];
 
             $origin = $resolver->resolve();
@@ -118,6 +130,12 @@ final class ContextRegistrar
 
             if ($currentSpan !== null) {
                 $extra['audit_parent_span'] = $currentSpan->id;
+            }
+
+            $currentTrace = $traces->current();
+
+            if ($currentTrace !== null) {
+                $extra['audit_trace'] = $currentTrace;
             }
 
             return $extra;

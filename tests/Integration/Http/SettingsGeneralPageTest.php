@@ -23,6 +23,9 @@ final class SettingsGeneralPageTest extends TestCase
         $response->assertSee('Capture changes');
         $response->assertSee('Async writes');
         $response->assertSee('JobsMonitor URL');
+        $response->assertSee('Observability');
+        $response->assertSee('APM trace URL');
+        $response->assertSee('Postman export');
     }
 
     public function test_the_timezone_field_shows_the_effective_zone(): void

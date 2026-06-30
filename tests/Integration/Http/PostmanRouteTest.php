@@ -38,17 +38,17 @@ final class PostmanRouteTest extends TestCase
         $this->get('audit-log/postman')->assertNotFound();
     }
 
-    public function test_the_dashboard_shows_a_postman_button_when_the_api_is_on(): void
+    public function test_the_docs_page_shows_a_postman_button_when_the_api_is_on(): void
     {
         config()->set('audit-log.api.enabled', true);
 
-        $this->get('audit-log')->assertOk()->assertSee('Download Postman collection');
+        $this->get('audit-log/settings/docs')->assertOk()->assertSee('Download Postman collection');
     }
 
-    public function test_the_dashboard_hides_the_postman_button_when_the_api_is_off(): void
+    public function test_the_docs_page_hides_the_postman_button_when_the_api_is_off(): void
     {
         config()->set('audit-log.api.enabled', false);
 
-        $this->get('audit-log')->assertOk()->assertDontSee('Download Postman collection');
+        $this->get('audit-log/settings/docs')->assertOk()->assertDontSee('Download Postman collection');
     }
 }

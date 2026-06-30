@@ -11,6 +11,7 @@ use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\AnomaliesController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\DashboardController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\ExportController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\NoiseController;
+use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\PostmanController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\RecordController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\StatsController;
 use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\TimeMachineController;
@@ -18,6 +19,7 @@ use Yammi\AuditLog\Infrastructure\Http\Controller\Ui\TraceController;
 
 Route::get('/', DashboardController::class)->name('audit-log.dashboard');
 Route::get('/export', ExportController::class)->name('audit-log.export');
+Route::get('/postman', PostmanController::class)->name('audit-log.postman');
 Route::get('/noise', NoiseController::class)->name('audit-log.noise');
 Route::get('/stats', StatsController::class)->name('audit-log.stats');
 Route::get('/anomalies', AnomaliesController::class)->name('audit-log.anomalies');

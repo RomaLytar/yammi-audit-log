@@ -49,6 +49,7 @@ final class AuditRecordMapper
             eventVersion: $record->eventVersion(),
             spanId: $record->spanId(),
             parentSpanId: $record->parentSpanId(),
+            traceId: $record->traceId(),
         );
     }
 
@@ -91,6 +92,7 @@ final class AuditRecordMapper
             eventVersion: max(1, (int) $model->getAttribute('event_version')),
             spanId: $this->nullableString($model->getAttribute('span_id')),
             parentSpanId: $this->nullableString($model->getAttribute('parent_span_id')),
+            traceId: $this->nullableString($model->getAttribute('trace_id')),
         );
     }
 

@@ -4,6 +4,7 @@ declare(strict_types=1);
 
 namespace Yammi\AuditLog\Infrastructure\Http\Controller\Ui;
 
+use Illuminate\Contracts\Config\Repository as ConfigRepository;
 use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
@@ -20,6 +21,7 @@ final class TraceController
         private readonly BuildChainAction $buildChain,
         private readonly JobsMonitorBridge $jobsMonitor,
         private readonly AuditTimezone $timezone,
+        private readonly ConfigRepository $config,
     ) {}
 
     public function __invoke(Request $request, string $correlation): View
@@ -31,9 +33,15 @@ final class TraceController
         }
 
         $entry = $request->query('entry');
+        $traceUrl = $this->config->get('audit-log.integrations.observability.trace_url');
 
         return $this->view->make('audit-log::trace', [
-            'chain' => new TraceViewModel($chain, $this->jobsMonitor->url(), $this->timezone->name()),
+            'chain' => new TraceViewModel(
+                $chain,
+                $this->jobsMonitor->url(),
+                $this->timezone->name(),
+                is_string($traceUrl) ? $traceUrl : null,
+            ),
             'focus' => is_numeric($entry) ? (int) $entry : null,
         ]);
     }

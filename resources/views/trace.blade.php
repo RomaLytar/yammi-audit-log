@@ -93,6 +93,10 @@
         .al-node__diff td { padding: 4px 8px; border-top: 1px solid hsl(var(--border)); vertical-align: top; overflow-wrap: anywhere; word-break: normal; }
         .al-node__diff .al-old { color: hsl(var(--destructive)); }
         .al-node__diff .al-new { color: hsl(var(--success)); }
+
+        .al-trace-link { display: inline-flex; align-items: center; gap: 4px; margin-top: 4px; font-size: 11px; font-weight: 500; color: hsl(var(--primary)); text-decoration: none; }
+        .al-trace-link:hover { text-decoration: underline; }
+        .al-trace-link [data-lucide] { width: 11px; height: 11px; }
     </style>
 
     <div class="mb-6">
@@ -115,6 +119,14 @@
             on <span class="font-medium text-foreground">{{ $chain->rootModel() }}</span>.
         </p>
         <p class="mt-1 text-[11px] font-mono text-muted-foreground/70 break-all">{{ $chain->correlationId() }}</p>
+        @if ($chain->traceUrl())
+            <a href="{{ $chain->traceUrl() }}" target="_blank" rel="noopener noreferrer" class="al-trace-link">
+                <i data-lucide="external-link"></i>
+                Open distributed trace
+            </a>
+        @elseif ($chain->traceId())
+            <p class="mt-0.5 text-[11px] font-mono text-muted-foreground/70 break-all">trace {{ $chain->traceId() }}</p>
+        @endif
     </div>
 
     <div class="al-canvas-shell">

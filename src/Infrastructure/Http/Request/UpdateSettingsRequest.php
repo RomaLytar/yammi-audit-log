@@ -41,6 +41,8 @@ final class UpdateSettingsRequest extends FormRequest
             'ui_enabled' => ['sometimes', 'boolean'],
             'ui_throttle' => ['nullable', 'string', 'max:20', 'regex:/^\d+,\d+$/'],
             'jobs_monitor_url' => ['nullable', 'string', 'max:255'],
+            'observability_trace_url' => ['nullable', 'string', 'max:500'],
+            'observability_postman' => ['sometimes', 'boolean'],
         ];
     }
 
@@ -65,6 +67,8 @@ final class UpdateSettingsRequest extends FormRequest
             'ui_enabled' => $this->boolean('ui_enabled'),
             'ui_throttle' => $this->stringValue('ui_throttle'),
             'jobs_monitor_url' => $this->stringValue('jobs_monitor_url'),
+            'observability_trace_url' => $this->stringValue('observability_trace_url'),
+            'observability_postman' => $this->boolean('observability_postman'),
         ];
     }
 

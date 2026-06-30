@@ -7,6 +7,8 @@ namespace Yammi\AuditLog\Tests\Integration\Http;
 use Illuminate\Database\Schema\Blueprint;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Schema;
+use RuntimeException;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureFailureLog;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 use Yammi\AuditLog\Tests\TestCase;
 
@@ -52,5 +54,16 @@ final class StatsRouteTest extends TestCase
     public function test_the_nav_links_to_the_stats_page(): void
     {
         $this->get('audit-log')->assertSee('audit-log/stats');
+    }
+
+    public function test_the_stats_page_warns_about_capture_failures(): void
+    {
+        $this->app->make(CaptureFailureLog::class)->record(null, null, new RuntimeException('boom in capture'));
+
+        $response = $this->get('audit-log/stats');
+
+        $response->assertOk();
+        $response->assertSee('capture failure');
+        $response->assertSee('boom in capture');
     }
 }

@@ -10,6 +10,7 @@ use Yammi\AuditLog\Application\Contract\Resolver\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\ReasonResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\RequestContextResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\SpanResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\TraceResolver;
 use Yammi\AuditLog\Application\Contract\ValueRedactor;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Pipeline\Stage\ComputeDiffStage;
@@ -23,7 +24,10 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\ConsoleActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\ImpersonationAwareUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
+use Yammi\AuditLog\Infrastructure\Actor\Provider\TokenAwareUserProvider;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureFailureLog;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureFailureReporter;
 use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
 use Yammi\AuditLog\Infrastructure\Context\ContextReasonResolver;
 use Yammi\AuditLog\Infrastructure\Context\HttpRequestContextResolver;
@@ -31,8 +35,10 @@ use Yammi\AuditLog\Infrastructure\Context\NullRequestContextResolver;
 use Yammi\AuditLog\Infrastructure\Context\RequestContextHolder;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextCorrelationResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\ContextSpanResolver;
+use Yammi\AuditLog\Infrastructure\Correlation\ContextTraceResolver;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Correlation\SpanContext;
+use Yammi\AuditLog\Infrastructure\Correlation\TraceContext;
 use Yammi\AuditLog\Infrastructure\Policy\AuditPolicyRegistry;
 use Yammi\AuditLog\Infrastructure\Redaction\ConfigValueRedactor;
 
@@ -49,11 +55,15 @@ final class CaptureBindings extends BindingRegistrar
         $this->app->singleton(ActorContext::class);
         $this->app->singleton(CorrelationContext::class);
         $this->app->singleton(SpanContext::class);
+        $this->app->singleton(TraceContext::class);
         $this->app->singleton(ChangeReasonContext::class);
         $this->app->singleton(RequestContextHolder::class);
         $this->app->singleton(CorrelationResolver::class, ContextCorrelationResolver::class);
         $this->app->singleton(SpanResolver::class, ContextSpanResolver::class);
+        $this->app->singleton(TraceResolver::class, ContextTraceResolver::class);
         $this->app->singleton(ReasonResolver::class, ContextReasonResolver::class);
+        $this->app->singleton(CaptureFailureLog::class);
+        $this->app->alias(CaptureFailureLog::class, CaptureFailureReporter::class);
 
         $this->app->singleton(RequestContextResolver::class, function (): RequestContextResolver {
             if (! (bool) $this->config()->get('audit-log.capture.request_context', false)) {
@@ -80,12 +90,20 @@ final class CaptureBindings extends BindingRegistrar
             );
         });
 
+        $this->app->singleton(TokenAwareUserProvider::class, function (): TokenAwareUserProvider {
+            return new TokenAwareUserProvider(
+                $this->app->make(ImpersonationAwareUserProvider::class),
+                $this->app->make(AuthFactory::class),
+                $this->stringList($this->config()->get('audit-log.actor.guards', [])),
+            );
+        });
+
         $this->app->singleton(ActorResolver::class, function (): ActorResolver {
             return new ActorResolverChain([
                 $this->app->make(QueuedJobActorProvider::class),
                 $this->app->make(SchedulerActorProvider::class),
                 $this->app->make(ConsoleActorProvider::class),
-                $this->app->make(ImpersonationAwareUserProvider::class),
+                $this->app->make(TokenAwareUserProvider::class),
             ], $this->app->make(ActorContext::class));
         });
 

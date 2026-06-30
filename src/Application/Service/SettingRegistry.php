@@ -9,6 +9,7 @@ use Yammi\AuditLog\Application\Service\Definition\AlertSettings;
 use Yammi\AuditLog\Application\Service\Definition\AnomalySettings;
 use Yammi\AuditLog\Application\Service\Definition\CaptureSettings;
 use Yammi\AuditLog\Application\Service\Definition\GeneralSettings;
+use Yammi\AuditLog\Application\Service\Definition\ObservabilitySettings;
 use Yammi\AuditLog\Application\Service\Definition\RedactionSettings;
 use Yammi\AuditLog\Application\Service\Definition\SettingGroupProvider;
 use Yammi\AuditLog\Application\Service\Definition\UiSettings;
@@ -41,6 +42,8 @@ final class SettingRegistry
     public const GROUP_ANOMALIES = 'anomalies';
 
     public const GROUP_UI = 'ui';
+
+    public const GROUP_OBSERVABILITY = 'observability';
 
     /**
      * @return list<SettingDefinitionData>
@@ -96,6 +99,7 @@ final class SettingRegistry
             new AlertSettings,
             new AnomalySettings,
             new UiSettings,
+            new ObservabilitySettings,
         ];
     }
 }

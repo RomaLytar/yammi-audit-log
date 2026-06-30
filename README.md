@@ -15,13 +15,33 @@
 
 That is what separates it from most audit packages, which record only *what* changed.
 
+## Install
+
+```bash
+composer require romalytar/yammi-audit-log-laravel
+php artisan migrate
+php artisan audit-log:ui enable          # optional dashboard at /audit-log
+```
+
+Capture is global from the first migration: no traits, no interfaces, no per-model registration. Defaults are safe out of the box (UI off until you enable it, 180-day retention, secrets redacted).
+
+## Try it
+
+```php
+User::first()->update(['name' => 'Test']);
+```
+
+Open `/audit-log`. The change is already there, with its actor, origin and correlation id filled in. To explore richer data without writing any code, the in-app **Playground** (`/audit-log/settings/playground`) generates realistic sample cascades you can trace.
+
+![Audit log dashboard](screenshots/dashboard.png)
+
 ## Contents
 
 - [Why this exists](#why-this-exists)
 - [The provenance chain](#the-provenance-chain)
 - [Zero model setup](#zero-model-setup)
-- [Quickstart](#quickstart)
 - [What makes it different](#what-makes-it-different)
+- [What's new in v2.2](#whats-new-in-v22)
 - [How Yammi differs from traditional audit logs](#how-yammi-differs-from-traditional-audit-logs)
 - [How it works](#how-it-works)
 - [Requirements](#requirements)
@@ -93,27 +113,47 @@ User::first()->update(['name' => 'Test']);
 
 Install, migrate, done. Capture is global from the first migration. The optional traits exist only for special cases (pivot writes, read access).
 
-## Quickstart
+## Testing
 
-```bash
-composer require romalytar/yammi-audit-log-laravel
-php artisan migrate
-php artisan audit-log:ui enable          # optional dashboard at /audit-log
-```
+Assert what your code audited without hitting the database:
 
 ```php
-User::first()->update(['name' => 'Test']);
+AuditLog::fake();
+
+$order->update(['status' => 'paid']);
+
+AuditLog::assertRecorded(Order::class, $order->id, 'updated',
+    fn ($record) => $record->diff()->field('status')?->new === 'paid');
+AuditLog::assertRecordedCount(1);
 ```
 
-Open `/audit-log`. The change is already there, with its actor, origin and correlation id filled in. Defaults are safe out of the box (UI off until you enable it, 180-day retention, secrets redacted).
-
-![Audit log dashboard](screenshots/dashboard.png)
+`fake()` routes both automatic (Eloquent) and manual (`AuditLog::record`) changes into an in-memory fake; `assertNotRecorded()` and `assertNothingRecorded()` round out the set.
 
 ## What makes it different
 
 **Core: provenance.** Actor, origin and a correlation id on every change, with no per-model setup (the chain above). This is the part that sets it apart from most audit packages.
 
 **Optional add-ons**, each off or zero-cost until you use it: a time machine, a tamper-evident hash chain, SIEM streaming, anomaly detection, GDPR tooling and multi-tenancy. They build on the core; they are not the point of it. Details in [Advanced features](#advanced-features).
+
+## What's new in v2.2
+
+The provenance core is unchanged; v2.2 deepens completeness, observability and DX.
+
+**Bridge to your APM.** An incoming W3C `traceparent` is captured as a `trace_id` alongside the correlation id and shown on the chain as an **Open distributed trace** link straight into Datadog, Jaeger or Tempo, so you cross from who-changed-what to the distributed trace that drove it. Set the URL template in [Configuration](docs/configuration.md) or the Settings UI.
+
+![Trace bridge with an Open distributed trace link](screenshots/trace-bridge.png)
+
+**Proven completeness.** The write path is fail-open, so a failed audit insert never breaks your request. Those failures are now recorded and surfaced (a Stats banner and a nav badge), so a gap in the trail can no longer pass unnoticed, answering the auditor's "is the log actually complete?".
+
+![Capture-health banner on the statistics page](screenshots/capture-health.png)
+
+**More in this release:**
+
+- **Testing API** - `AuditLog::fake()` with `assertRecorded()` / `assertNotRecorded()` / `assertRecordedCount()`, so you assert what your code audited without touching the database (see [Testing](#testing)).
+- **Token & client attribution** - a change made through a Sanctum token or Passport client names it on the actor ("Jane Doe via mobile-app").
+- **Per-model trail** - an opt-in `HasAuditTrail` trait for `$order->auditTrail()` and `$order->auditStateAt($date)`.
+- **Legal holds** - `AuditLog::placeLegalHold($subject)` (or `php artisan audit-log:legal-hold`) exempts a subject from retention for litigation; held data is never pruned.
+- **Postman export** - import the read API into Postman from the docs page or `php artisan audit-log:postman`.
 
 ## How Yammi differs from traditional audit logs
 

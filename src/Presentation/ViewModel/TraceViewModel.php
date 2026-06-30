@@ -19,6 +19,7 @@ final class TraceViewModel
         private readonly ChainData $chain,
         ?string $jobsMonitorUrl = null,
         ?string $timezone = null,
+        private readonly ?string $traceUrlTemplate = null,
     ) {
         $entries = [];
 
@@ -49,6 +50,22 @@ final class TraceViewModel
     public function traceId(): ?string
     {
         return $this->chain->entries[0]->traceId ?? null;
+    }
+
+    /**
+     * A deep link into the configured tracing backend for this chain's trace,
+     * so the raw id becomes a jump to the actual distributed trace. Null when no
+     * trace was captured or no backend URL is configured.
+     */
+    public function traceUrl(): ?string
+    {
+        $traceId = $this->traceId();
+
+        if ($traceId === null || $this->traceUrlTemplate === null || $this->traceUrlTemplate === '') {
+            return null;
+        }
+
+        return str_replace(['{trace_id}', '{trace}'], $traceId, $this->traceUrlTemplate);
     }
 
     public function count(): int

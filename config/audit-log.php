@@ -275,6 +275,16 @@ return [
             // job class, e.g. '/jobs-monitor'. null = no links.
             'url' => env('AUDIT_LOG_JOBS_MONITOR_URL'),
         ],
+
+        'observability' => [
+            // Template URL of your tracing backend (Datadog, Jaeger, Tempo,
+            // Honeycomb...). When set, a chain that carried a W3C traceparent
+            // shows an "Open distributed trace" link, so you jump from
+            // who-changed-what to the trace that drove it. Use {trace_id} as the
+            // placeholder, e.g. 'https://app.datadoghq.com/apm/trace/{trace_id}'.
+            // null = show the raw id only.
+            'trace_url' => env('AUDIT_LOG_TRACE_URL'),
+        ],
     ],
 
     'api' => [

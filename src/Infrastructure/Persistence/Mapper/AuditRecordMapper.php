@@ -47,6 +47,8 @@ final class AuditRecordMapper
             chainDepth: $record->chainDepth(),
             tenantId: $this->tenants->resolve(),
             eventVersion: $record->eventVersion(),
+            spanId: $record->spanId(),
+            parentSpanId: $record->parentSpanId(),
         );
     }
 
@@ -87,6 +89,8 @@ final class AuditRecordMapper
             chainDepth: max(0, (int) $model->getAttribute('chain_depth')),
             reason: $this->nullableString($model->getAttribute('reason')),
             eventVersion: max(1, (int) $model->getAttribute('event_version')),
+            spanId: $this->nullableString($model->getAttribute('span_id')),
+            parentSpanId: $this->nullableString($model->getAttribute('parent_span_id')),
         );
     }
 

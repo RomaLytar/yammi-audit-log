@@ -38,6 +38,8 @@ final class AuditRecord
         private readonly int $chainDepth = 0,
         private readonly ?string $reason = null,
         private readonly int $eventVersion = self::SCHEMA_VERSION,
+        private readonly ?string $spanId = null,
+        private readonly ?string $parentSpanId = null,
     ) {}
 
     public function eventVersion(): int
@@ -88,6 +90,24 @@ final class AuditRecord
     public function correlationId(): ?string
     {
         return $this->correlationId;
+    }
+
+    /**
+     * Id of this record's unit of work (request, command or job). Shared by every
+     * change the unit makes; the node it hangs from in the causation tree.
+     */
+    public function spanId(): ?string
+    {
+        return $this->spanId;
+    }
+
+    /**
+     * Id of the span that caused this record's unit of work, linking it to its
+     * parent in the causation tree. Null for a root unit of work.
+     */
+    public function parentSpanId(): ?string
+    {
+        return $this->parentSpanId;
     }
 
     /**

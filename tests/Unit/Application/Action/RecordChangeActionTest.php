@@ -15,9 +15,11 @@ use Yammi\AuditLog\Application\Pipeline\Stage\ResolveActorStage;
 use Yammi\AuditLog\Domain\Audit\Enum\ActorType;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Actor;
+use Yammi\AuditLog\Domain\Audit\ValueObject\Span;
 use Yammi\AuditLog\Tests\Support\FixedActorResolver;
 use Yammi\AuditLog\Tests\Support\FixedClock;
 use Yammi\AuditLog\Tests\Support\FixedCorrelationResolver;
+use Yammi\AuditLog\Tests\Support\FixedSpanResolver;
 use Yammi\AuditLog\Tests\Support\InMemoryAuditRecordRepository;
 use Yammi\AuditLog\Tests\Support\StripKeysRedactor;
 
@@ -58,6 +60,46 @@ final class RecordChangeActionTest extends TestCase
         $this->assertSame('paid', $record->diff()->field('status')?->new);
         $this->assertSame($this->now, $record->occurredAt());
         $this->assertSame('trace-test', $record->correlationId());
+    }
+
+    public function test_it_stamps_the_current_span_on_the_record(): void
+    {
+        $action = new RecordChangeAction(
+            new RecordChangePipeline([new ComputeDiffStage(new StripKeysRedactor([]))]),
+            $this->repository,
+            new FixedClock($this->now),
+            new FixedCorrelationResolver('trace-test'),
+            span: new FixedSpanResolver(new Span('span-1', 'parent-span-1')),
+        );
+
+        $record = ($action)(new ChangeData(
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: ChangeType::Created,
+            before: [],
+            after: ['status' => 'new'],
+        ));
+
+        $this->assertNotNull($record);
+        $this->assertSame('span-1', $record->spanId());
+        $this->assertSame('parent-span-1', $record->parentSpanId());
+    }
+
+    public function test_it_leaves_the_span_empty_when_no_resolver_provides_one(): void
+    {
+        $action = $this->action([new ComputeDiffStage(new StripKeysRedactor([]))]);
+
+        $record = ($action)(new ChangeData(
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: ChangeType::Created,
+            before: [],
+            after: ['status' => 'new'],
+        ));
+
+        $this->assertNotNull($record);
+        $this->assertNull($record->spanId());
+        $this->assertNull($record->parentSpanId());
     }
 
     public function test_it_skips_an_update_that_changed_nothing(): void

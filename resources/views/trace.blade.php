@@ -3,6 +3,98 @@
 @section('title', 'Change chain — Yammi')
 
 @section('content')
+    <style>
+        .al-canvas-shell { position: relative; margin-top: 6px; }
+        .al-canvas {
+            border: 1px solid hsl(var(--border)); border-radius: 16px;
+            background-color: hsl(var(--muted) / 0.22);
+            background-image: radial-gradient(hsl(var(--muted-foreground) / 0.16) 1px, transparent 1.5px);
+            background-size: 22px 22px;
+            overflow: auto; max-height: 74vh; cursor: grab;
+        }
+        .al-canvas.al-grabbing { cursor: grabbing; user-select: none; }
+        .al-canvas__hint {
+            position: absolute; top: 10px; right: 12px; z-index: 5; pointer-events: none;
+            display: inline-flex; align-items: center; gap: 5px;
+            background: hsl(var(--card) / 0.88); border: 1px solid hsl(var(--border));
+            border-radius: 8px; padding: 3px 9px; font-size: 11px; font-weight: 500; color: hsl(var(--muted-foreground));
+            box-shadow: 0 1px 3px rgb(0 0 0 / 0.06);
+        }
+        .al-canvas__hint [data-lucide] { width: 13px; height: 13px; }
+        .al-tree { display: inline-block; min-width: 100%; padding: 30px 22px 34px; }
+        .al-tree ul { display: flex; justify-content: center; padding-top: 26px; position: relative; list-style: none; margin: 0; }
+        .al-tree li { position: relative; padding: 26px 14px 0; display: flex; flex-direction: column; align-items: center; }
+        .al-tree li::before, .al-tree li::after {
+            content: ''; position: absolute; top: 0; right: 50%;
+            border-top: 2px solid hsl(var(--border)); width: 50%; height: 26px;
+        }
+        .al-tree li::after { right: auto; left: 50%; border-left: 2px solid hsl(var(--border)); }
+        .al-tree li:only-child::before, .al-tree li:only-child::after { display: none; }
+        .al-tree li:only-child { padding-top: 26px; }
+        .al-tree li:first-child::before, .al-tree li:last-child::after { border: 0 none; }
+        .al-tree li:last-child::before { border-right: 2px solid hsl(var(--border)); border-top-right-radius: 8px; }
+        .al-tree li:first-child::after { border-top-left-radius: 8px; }
+        .al-tree ul ul::before {
+            content: ''; position: absolute; top: 0; left: 50%;
+            border-left: 2px solid hsl(var(--border)); width: 0; height: 26px;
+        }
+        .al-tree > ul { padding-top: 0; }
+        .al-tree > ul > li { padding-top: 0; }
+        .al-tree > ul > li::before, .al-tree > ul > li::after { display: none; }
+
+        .al-node {
+            position: relative;
+            width: clamp(300px, calc((min(100vw, 80rem) - 8rem) / var(--al-cols, 3)), calc(min(100vw, 80rem) - 8rem));
+            background: hsl(var(--card)); border: 1px solid hsl(var(--border));
+            border-top: 3px solid hsl(var(--muted-foreground));
+            border-radius: 12px;
+            box-shadow: 0 1px 2px rgb(0 0 0 / 0.05);
+        }
+        .al-node--user { border-top-color: hsl(var(--brand)); }
+        .al-node--job { border-top-color: hsl(var(--info)); }
+        .al-node--command { border-top-color: hsl(var(--warning)); }
+        .al-node--scheduler { border-top-color: hsl(var(--success)); }
+        .al-node--root { box-shadow: 0 0 0 3px hsl(var(--brand) / 0.14), 0 1px 2px rgb(0 0 0 / 0.05); }
+
+        .al-node__head { width: 100%; display: flex; align-items: flex-start; justify-content: space-between; gap: 10px; background: transparent; border: 0; cursor: pointer; padding: 9px 11px; text-align: left; font: inherit; color: inherit; border-radius: 11px; }
+        .al-node__head:hover { background: hsl(var(--accent) / 0.5); }
+        .al-node__head-main { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+        .al-node__head-side { display: flex; align-items: center; gap: 7px; flex: 0 0 auto; padding-top: 1px; }
+        .al-node__proc { display: inline-flex; align-items: center; gap: 5px; font-size: 11px; font-weight: 700; letter-spacing: .01em; color: hsl(var(--brand)); text-transform: uppercase; }
+        .al-node__proc [data-lucide] { width: 13px; height: 13px; }
+        .al-node__flag { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: hsl(var(--brand)); background: hsl(var(--brand) / 0.1); border: 1px solid hsl(var(--brand) / 0.3); border-radius: 6px; padding: 1px 6px; }
+        .al-node__flag [data-lucide] { width: 10px; height: 10px; }
+        .al-node__count { font-size: 11px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+        .al-node__chev { width: 15px; height: 15px; color: hsl(var(--muted-foreground)); transition: transform .15s ease; }
+        .al-node--open .al-node__chev { transform: rotate(180deg); }
+        .al-node__actor { font-size: 13px; font-weight: 600; color: hsl(var(--foreground)); line-height: 1.25; word-break: break-word; }
+        .al-node__from { display: inline-flex; align-items: center; gap: 4px; font-size: 11px; color: hsl(var(--muted-foreground)); }
+        .al-node__from [data-lucide] { width: 12px; height: 12px; color: hsl(var(--brand)); }
+
+        .al-node__body { display: none; flex-direction: column; gap: 2px; padding: 1px 9px 8px; border-top: 1px solid hsl(var(--border)); margin: 0 2px; }
+        .al-node--open .al-node__body { display: flex; }
+        .al-node__entry { display: flex; align-items: center; gap: 6px; width: 100%; text-align: left; background: transparent; border: 0; padding: 5px 6px; border-radius: 8px; cursor: pointer; font-size: 12px; color: hsl(var(--foreground)); margin-top: 4px; }
+        .al-node__entry:hover { background: hsl(var(--accent)); }
+        .al-node__entry--focus { background: hsl(var(--brand) / 0.1); box-shadow: inset 0 0 0 1px hsl(var(--brand) / 0.4); }
+        .al-node__dot { width: 8px; height: 8px; border-radius: 99px; flex: 0 0 auto; background: hsl(var(--muted-foreground)); }
+        .al-node__dot--created { background: hsl(var(--success)); }
+        .al-node__dot--updated { background: hsl(var(--info)); }
+        .al-node__dot--deleted { background: hsl(var(--destructive)); }
+        .al-node__dot--restored { background: hsl(var(--warning)); }
+        .al-node__entry-model { font-weight: 600; min-width: 0; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .al-node__entry-id { color: hsl(var(--muted-foreground)); font-family: ui-monospace, monospace; font-size: 11px; }
+        .al-node__entry-fields { margin-left: auto; font-size: 11px; color: hsl(var(--muted-foreground)); white-space: nowrap; }
+        .al-node__here { display: inline-flex; align-items: center; gap: 3px; font-size: 10px; font-weight: 700; color: hsl(var(--brand-foreground)); background: hsl(var(--brand)); border-radius: 6px; padding: 1px 6px; }
+        .al-node__here [data-lucide] { width: 11px; height: 11px; }
+
+        .al-node__diff { margin: 1px 2px 4px; border: 1px solid hsl(var(--border)); border-radius: 8px; overflow-x: auto; }
+        .al-node__diff table { width: 100%; border-collapse: collapse; font-family: ui-monospace, monospace; font-size: 11px; }
+        .al-node__diff th { text-align: left; padding: 4px 8px; font-size: 9px; letter-spacing: .04em; text-transform: uppercase; color: hsl(var(--muted-foreground)); background: hsl(var(--muted) / 0.5); }
+        .al-node__diff td { padding: 4px 8px; border-top: 1px solid hsl(var(--border)); vertical-align: top; overflow-wrap: anywhere; word-break: normal; }
+        .al-node__diff .al-old { color: hsl(var(--destructive)); }
+        .al-node__diff .al-new { color: hsl(var(--success)); }
+    </style>
+
     <div class="mb-6">
         <a href="{{ route('audit-log.dashboard') }}" class="inline-flex items-center gap-1 text-xs text-muted-foreground hover:text-foreground mb-3">
             <i data-lucide="arrow-left" class="text-[13px]"></i> Back to log
@@ -25,110 +117,56 @@
         <p class="mt-1 text-[11px] font-mono text-muted-foreground/70 break-all">{{ $chain->correlationId() }}</p>
     </div>
 
-    <ol class="relative border-s border-border ml-3">
-        @foreach ($chain->entries as $entry)
-            @php
-                $dots = ['created' => 'bg-success', 'updated' => 'bg-info', 'deleted' => 'bg-destructive', 'restored' => 'bg-warning'];
-                $dot = $entry->isNoise() ? 'bg-warning' : ($dots[$entry->event()] ?? 'bg-muted-foreground');
-            @endphp
-            @php $isFocus = $focus !== null && $entry->recordId() === $focus; @endphp
-            <li class="mb-3 ms-6" style="padding-left: {{ $entry->chainDepth() * 1.25 }}rem">
-                <span class="absolute -start-[7px] mt-2 h-3.5 w-3.5 rounded-full ring-4 ring-background {{ $dot }}"></span>
-                <div @if ($isFocus) id="al-focus-entry" @endif
-                     class="rounded-xl border shadow-xs transition-colors {{ $isFocus ? 'border-brand ring-2 ring-brand/30 bg-brand/5' : ($entry->isNoise() ? 'border-warning/40 bg-warning/5' : ($loop->first ? 'border-brand/40 bg-brand/5' : 'border-border bg-card')) }}">
-                    <div class="px-4 py-2.5 {{ $entry->changeCount() > 0 ? 'cursor-pointer' : '' }}"
-                         @if ($entry->changeCount() > 0) onclick="__alToggleRow('al-trace-diff-{{ $loop->index }}')" @endif>
-                        <div class="flex items-center justify-between gap-3 flex-wrap">
-                            <div class="flex items-center gap-2 min-w-0">
-                                <span class="font-semibold text-sm">{{ $entry->model() }}</span>
-                                <span class="text-[11px] font-mono text-muted-foreground">#{{ $entry->id() }}</span>
-                                @include('audit-log::partials.event-badge', ['event' => $entry->event()])
-                                @if ($isFocus)
-                                    <span class="inline-flex items-center gap-1 rounded-md bg-brand px-2 py-0.5 text-[11px] font-semibold text-brand-foreground">
-                                        <i data-lucide="map-pin" class="text-[11px]"></i> You came from here
-                                    </span>
-                                @endif
-                                @if ($entry->isNoise())
-                                    <span class="inline-flex items-center gap-1 rounded-md bg-warning/10 px-1.5 py-0.5 text-[11px] font-medium text-warning ring-1 ring-inset ring-warning/30"
-                                          title="No real change — only ignored attributes (e.g. timestamps) changed. Often a double write.">
-                                        <i data-lucide="alert-triangle" class="text-[11px]"></i> no-op
-                                    </span>
-                                @endif
-                                @if ($loop->first)
-                                    <span class="inline-flex items-center gap-1 rounded-md bg-brand/10 px-2 py-0.5 text-[11px] font-medium text-brand ring-1 ring-inset ring-brand/30">
-                                        <i data-lucide="flag" class="text-[11px]"></i> Root
-                                    </span>
-                                @endif
-                            </div>
-                            <div class="flex items-center gap-3">
-                                <span class="text-[11px] font-mono text-muted-foreground whitespace-nowrap">{{ $entry->occurredAt('H:i:s') }}</span>
-                                @if ($entry->changeCount() > 0)
-                                    <i data-lucide="chevron-down" class="text-[14px] text-muted-foreground"></i>
-                                @endif
-                            </div>
-                        </div>
-                        <div class="mt-1.5 flex items-center gap-x-4 gap-y-1 flex-wrap text-xs">
-                            @include('audit-log::partials.actor-badge', ['type' => $entry->actorType(), 'label' => $entry->actorLabel()])
-                            @if ($entry->originLabel())
-                                <span class="inline-flex items-center gap-1 text-muted-foreground">
-                                    <i data-lucide="corner-down-right" class="text-[12px] text-brand"></i> from {{ $entry->originLabel() }}
-                                </span>
-                            @endif
-                            @if ($entry->changeCount() > 0)
-                                <span class="text-[11px] text-muted-foreground font-mono truncate max-w-[60%]"
-                                      title="{{ implode(', ', $entry->changedFieldNames()) }}">
-                                    {{ $entry->changeCount() }} {{ \Illuminate\Support\Str::plural('field', $entry->changeCount()) }}:
-                                    {{ implode(', ', array_slice($entry->changedFieldNames(), 0, 4)) }}@if ($entry->changeCount() > 4), +{{ $entry->changeCount() - 4 }}@endif
-                                </span>
-                            @endif
-                            @if ($entry->jobsMonitorLink())
-                                <a href="{{ $entry->jobsMonitorLink() }}" target="_blank" rel="noopener" onclick="event.stopPropagation()"
-                                   class="inline-flex items-center gap-1 text-muted-foreground hover:text-foreground">
-                                    <i data-lucide="activity" class="text-[12px]"></i> JobsMonitor
-                                </a>
-                            @endif
-                        </div>
-                    </div>
-                    @if ($entry->changeCount() > 0)
-                        <div id="al-trace-diff-{{ $loop->index }}" class="{{ $isFocus ? '' : 'hidden' }} border-t border-border px-4 py-3 animate-slide-down">
-                            <div class="overflow-x-auto rounded-lg border border-border">
-                                <table class="w-full min-w-[420px] text-xs font-mono">
-                                    <thead>
-                                        <tr class="bg-muted/50 text-[10px] uppercase tracking-wider text-muted-foreground text-left">
-                                            <th class="px-3 py-1.5">Field</th>
-                                            <th class="px-3 py-1.5">Old</th>
-                                            <th class="px-3 py-1.5">New</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody class="divide-y divide-border">
-                                        @foreach ($entry->changes() as $change)
-                                            <tr>
-                                                <td class="px-3 py-1.5 font-medium text-foreground">{{ $change['field'] }}</td>
-                                                <td class="px-3 py-1.5 text-destructive break-all">{{ $change['old'] }}</td>
-                                                <td class="px-3 py-1.5 text-success break-all">{{ $change['new'] }}</td>
-                                            </tr>
-                                        @endforeach
-                                    </tbody>
-                                </table>
-                            </div>
-                        </div>
-                    @endif
-                </div>
-            </li>
-        @endforeach
-    </ol>
+    <div class="al-canvas-shell">
+        <span class="al-canvas__hint"><i data-lucide="move"></i> Drag to pan</span>
+        <div class="al-canvas">
+            <div class="al-tree" style="--al-cols: {{ $chain->columns() }}">
+                <ul>
+                    @foreach ($chain->tree as $node)
+                        @include('audit-log::partials.trace-node', ['node' => $node, 'focus' => $focus])
+                    @endforeach
+                </ul>
+            </div>
+        </div>
+    </div>
 
-    <p class="mt-2 text-[11px] text-muted-foreground">Click an entry to see its field-level changes.</p>
+    <p class="mt-2 text-[11px] text-muted-foreground">Each box is one unit of work (a request, job or command); a line runs from the change that caused the next one. Click a box to see its field-level changes, or drag the canvas to pan a wide tree.</p>
 
     @push('scripts')<script>
         __alIcons();
         (function () {
+            var canvas = document.querySelector('.al-canvas');
+            if (canvas) {
+                var down = false, startX, startY, sLeft, sTop;
+                canvas.addEventListener('mousedown', function (e) {
+                    if (e.button !== 0 || e.target.closest('button, a')) { return; }
+                    down = true; startX = e.clientX; startY = e.clientY;
+                    sLeft = canvas.scrollLeft; sTop = canvas.scrollTop;
+                    canvas.classList.add('al-grabbing');
+                });
+                window.addEventListener('mouseup', function () { down = false; canvas.classList.remove('al-grabbing'); });
+                window.addEventListener('mousemove', function (e) {
+                    if (!down) { return; }
+                    canvas.scrollLeft = sLeft - (e.clientX - startX);
+                    canvas.scrollTop = sTop - (e.clientY - startY);
+                });
+                canvas.scrollLeft = Math.max(0, (canvas.scrollWidth - canvas.clientWidth) / 2);
+            }
             var focus = document.getElementById('al-focus-entry');
             if (focus) { focus.scrollIntoView({ block: 'center' }); }
         })();
+        function __alToggleCard(btn) {
+            var card = btn.closest('.al-node');
+            if (!card) { return; }
+            var open = card.classList.toggle('al-node--open');
+            btn.setAttribute('aria-expanded', open ? 'true' : 'false');
+        }
         function __alTraceToggleAll(button) {
             var expand = button.getAttribute('data-expanded') !== '1';
-            document.querySelectorAll('[id^="al-trace-diff-"]').forEach(function (diff) {
+            document.querySelectorAll('.al-node').forEach(function (card) {
+                card.classList.toggle('al-node--open', expand);
+            });
+            document.querySelectorAll('.al-node__diff').forEach(function (diff) {
                 diff.classList.toggle('hidden', !expand);
             });
             button.setAttribute('data-expanded', expand ? '1' : '0');

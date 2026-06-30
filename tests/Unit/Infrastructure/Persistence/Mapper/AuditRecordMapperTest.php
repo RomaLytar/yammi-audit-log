@@ -119,6 +119,42 @@ final class AuditRecordMapperTest extends TestCase
         $this->assertSame('ticket #4521', $record->reason());
     }
 
+    public function test_to_row_and_to_domain_carry_the_span(): void
+    {
+        $row = $this->mapper->toRow(new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 7),
+            event: ChangeType::Updated,
+            diff: Diff::between(['status' => 'a'], ['status' => 'b']),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
+            spanId: 'span-9',
+            parentSpanId: 'span-8',
+        ));
+
+        $this->assertSame('span-9', $row->spanId);
+        $this->assertSame('span-8', $row->parentSpanId);
+        $this->assertSame('span-9', $row->toArray()['span_id']);
+        $this->assertSame('span-8', $row->toArray()['parent_span_id']);
+
+        $record = $this->mapper->toDomain($this->model([
+            'span_id' => 'span-9',
+            'parent_span_id' => 'span-8',
+        ]));
+
+        $this->assertSame('span-9', $record->spanId());
+        $this->assertSame('span-8', $record->parentSpanId());
+    }
+
+    public function test_to_domain_without_a_span(): void
+    {
+        $record = $this->mapper->toDomain($this->model());
+
+        $this->assertNull($record->spanId());
+        $this->assertNull($record->parentSpanId());
+    }
+
     public function test_to_domain_without_an_origin(): void
     {
         $record = $this->mapper->toDomain($this->model([

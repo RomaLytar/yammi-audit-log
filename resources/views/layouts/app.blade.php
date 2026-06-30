@@ -144,12 +144,6 @@
                        class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border transition-colors {{ request()->routeIs('audit-log.settings') || request()->routeIs('audit-log.settings.*') || request()->routeIs('audit-log.playground') ? 'border-brand/30 bg-brand/10 text-brand' : 'border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent' }}">
                         <i data-lucide="settings" class="text-[14px]"></i> <span class="hidden sm:inline">Settings</span>
                     </a>
-                    @if ($auditPostmanUrl ?? null)
-                        <a href="{{ $auditPostmanUrl }}" title="Download Postman collection" download
-                           class="inline-flex items-center gap-1.5 rounded-md px-2.5 sm:px-3 h-8 text-xs font-semibold border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
-                            <i data-lucide="download" class="text-[14px]"></i> <span class="hidden sm:inline">Postman</span>
-                        </a>
-                    @endif
                     <button type="button" onclick="__alToggleTheme()" title="Toggle theme"
                             class="inline-flex items-center justify-center h-8 w-8 shrink-0 rounded-md border border-border bg-card text-muted-foreground hover:text-foreground hover:bg-accent transition-colors">
                         <i data-lucide="sun-moon" class="text-[15px]"></i>

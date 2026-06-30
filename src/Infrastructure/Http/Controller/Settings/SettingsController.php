@@ -46,7 +46,10 @@ final class SettingsController
 
     public function docs(): View
     {
-        return $this->view->make('audit-log::settings-docs');
+        return $this->view->make('audit-log::settings-docs', [
+            'postmanEnabled' => (bool) $this->config->get('audit-log.api.enabled', false)
+                && (bool) $this->config->get('audit-log.api.postman', true),
+        ]);
     }
 
     public function update(

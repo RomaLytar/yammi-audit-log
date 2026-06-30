@@ -47,6 +47,8 @@ These keys configure the advanced features; each is documented in its own page:
 - `tenancy.resolver` ([Compliance](compliance.md)): your `TenantResolver`.
 - `labels.map` ([Provenance](provenance.md)): foreign-key columns to resolve into labels.
 - `actor.impersonation_keys` ([Provenance](provenance.md)): session keys for login-as.
+- `integrations.observability.trace_url` ([Provenance](provenance.md)): a `{trace_id}` template that turns a chain's W3C trace id into an "Open distributed trace" link to your APM (Datadog, Jaeger, Tempo). `AUDIT_LOG_TRACE_URL`. Empty shows the raw id only.
+- `api.postman` ([Analytics & dashboard](analytics-and-dashboard.md)): offer the read API as a Postman collection (the docs-page Download button and `audit-log:postman`). `AUDIT_LOG_API_POSTMAN`, default on, needs `api.enabled`.
 
 ## Settings UI
 

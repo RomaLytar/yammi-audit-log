@@ -5,12 +5,14 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Persistence\Repository;
 
 use DateTimeImmutable;
+use Illuminate\Database\Query\Builder;
 use Throwable;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
 use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Settings\Repository\GeneralSettingRepository;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditChangedKeyModel;
+use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditLegalHoldModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Eloquent\AuditRecordModel;
 use Yammi\AuditLog\Infrastructure\Persistence\Mapper\AuditRecordMapper;
 
@@ -54,11 +56,19 @@ final class EloquentAuditRecordRepository implements AuditRecordRepository
     {
         $total = 0;
         $anchor = null;
+        $auditTable = (new AuditRecordModel)->getTable();
+        $holdsTable = (new AuditLegalHoldModel)->getTable();
 
         do {
             $ids = AuditRecordModel::query()
                 ->withoutGlobalScopes()
                 ->where('occurred_at', '<', $cutoff->format('Y-m-d H:i:s'))
+                ->whereNotExists(function (Builder $query) use ($holdsTable, $auditTable): void {
+                    $query->selectRaw('1')
+                        ->from($holdsTable)
+                        ->whereColumn($holdsTable.'.auditable_type', $auditTable.'.auditable_type')
+                        ->whereColumn($holdsTable.'.auditable_id', $auditTable.'.auditable_id');
+                })
                 ->orderBy('id')
                 ->limit($this->pruneChunkSize)
                 ->pluck('id')

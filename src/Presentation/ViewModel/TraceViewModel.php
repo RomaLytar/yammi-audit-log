@@ -12,6 +12,9 @@ final class TraceViewModel
     /** @var list<TimelineEntryViewModel> */
     public readonly array $entries;
 
+    /** @var list<ChainNodeViewModel> */
+    public readonly array $tree;
+
     public function __construct(
         private readonly ChainData $chain,
         ?string $jobsMonitorUrl = null,
@@ -24,6 +27,14 @@ final class TraceViewModel
         }
 
         $this->entries = $entries;
+
+        $tree = [];
+
+        foreach ($chain->tree as $node) {
+            $tree[] = new ChainNodeViewModel($node, $jobsMonitorUrl, $timezone);
+        }
+
+        $this->tree = $tree;
     }
 
     public function correlationId(): string
@@ -49,5 +60,14 @@ final class TraceViewModel
     public function rootModel(): string
     {
         return $this->chain->rootModel;
+    }
+
+    /**
+     * How many nodes to fit across the canvas width: up to three so each stays
+     * readable; wider trees scroll instead of shrinking further.
+     */
+    public function columns(): int
+    {
+        return max(1, min(3, $this->chain->maxBreadth));
     }
 }

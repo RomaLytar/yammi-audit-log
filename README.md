@@ -78,7 +78,9 @@ Yammi:
   chain       = ProcessPayment  →  ChargeOrder  →  Order #42
 ```
 
-![Change chain trace](screenshots/trace.png)
+The dashboard draws that whole chain as a tree you can expand and pan, so you see at a glance who started it and which change caused the next:
+
+![Change chain drawn as a causation tree](screenshots/trace.png)
 
 ## Zero model setup
 

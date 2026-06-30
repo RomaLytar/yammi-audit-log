@@ -6,6 +6,7 @@ namespace Yammi\AuditLog\Tests\Unit\Presentation\ViewModel;
 
 use PHPUnit\Framework\TestCase;
 use Yammi\AuditLog\Application\DTO\Audit\ChainData;
+use Yammi\AuditLog\Application\DTO\Audit\ChainNodeData;
 use Yammi\AuditLog\Application\DTO\Audit\TimelineEntryData;
 use Yammi\AuditLog\Presentation\ViewModel\TraceViewModel;
 
@@ -27,12 +28,26 @@ final class TraceViewModelTest extends TestCase
             correlationId: 'corr-1',
         );
 
+        $node = new ChainNodeData(
+            spanId: 'req',
+            parentSpanId: null,
+            entries: [$entry, $entry],
+            children: [],
+            depth: 0,
+            actorType: 'user',
+            actorLabel: 'Jane',
+            originLabel: null,
+            model: 'Order',
+        );
+
         $viewModel = new TraceViewModel(new ChainData(
             correlationId: 'corr-1',
             entries: [$entry, $entry],
             modelCount: 1,
             rootActorLabel: 'Jane',
             rootModel: 'Order',
+            tree: [$node],
+            maxBreadth: 5,
         ));
 
         $this->assertSame('corr-1', $viewModel->correlationId());
@@ -41,5 +56,9 @@ final class TraceViewModelTest extends TestCase
         $this->assertSame('Jane', $viewModel->rootActorLabel());
         $this->assertSame('Order', $viewModel->rootModel());
         $this->assertCount(2, $viewModel->entries);
+        $this->assertCount(1, $viewModel->tree);
+        $this->assertSame('Request', $viewModel->tree[0]->processLabel());
+        $this->assertSame(2, $viewModel->tree[0]->entryCount());
+        $this->assertSame(3, $viewModel->columns());
     }
 }

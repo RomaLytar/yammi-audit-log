@@ -42,6 +42,15 @@ final class TraceViewModel
         return $this->chain->correlationId;
     }
 
+    /**
+     * The distributed-trace id this chain ran under, if the request carried a
+     * W3C traceparent. Lets an operator jump to the matching APM trace.
+     */
+    public function traceId(): ?string
+    {
+        return $this->chain->entries[0]->traceId ?? null;
+    }
+
     public function count(): int
     {
         return $this->chain->count();

@@ -20,6 +20,7 @@ use Yammi\AuditLog\Tests\Support\FixedActorResolver;
 use Yammi\AuditLog\Tests\Support\FixedClock;
 use Yammi\AuditLog\Tests\Support\FixedCorrelationResolver;
 use Yammi\AuditLog\Tests\Support\FixedSpanResolver;
+use Yammi\AuditLog\Tests\Support\FixedTraceResolver;
 use Yammi\AuditLog\Tests\Support\InMemoryAuditRecordRepository;
 use Yammi\AuditLog\Tests\Support\StripKeysRedactor;
 
@@ -83,6 +84,28 @@ final class RecordChangeActionTest extends TestCase
         $this->assertNotNull($record);
         $this->assertSame('span-1', $record->spanId());
         $this->assertSame('parent-span-1', $record->parentSpanId());
+    }
+
+    public function test_it_stamps_the_current_trace_on_the_record(): void
+    {
+        $action = new RecordChangeAction(
+            new RecordChangePipeline([new ComputeDiffStage(new StripKeysRedactor([]))]),
+            $this->repository,
+            new FixedClock($this->now),
+            new FixedCorrelationResolver('trace-test'),
+            trace: new FixedTraceResolver('4bf92f3577b34da6a3ce929d0e0e4736'),
+        );
+
+        $record = ($action)(new ChangeData(
+            auditableType: 'App\\Models\\Order',
+            auditableId: '1',
+            event: ChangeType::Created,
+            before: [],
+            after: ['status' => 'new'],
+        ));
+
+        $this->assertNotNull($record);
+        $this->assertSame('4bf92f3577b34da6a3ce929d0e0e4736', $record->traceId());
     }
 
     public function test_it_leaves_the_span_empty_when_no_resolver_provides_one(): void

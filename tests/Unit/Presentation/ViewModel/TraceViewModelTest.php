@@ -26,6 +26,7 @@ final class TraceViewModelTest extends TestCase
             labels: [],
             occurredAt: '2026-01-01T10:00:00+00:00',
             correlationId: 'corr-1',
+            traceId: '4bf92f3577b34da6a3ce929d0e0e4736',
         );
 
         $node = new ChainNodeData(
@@ -51,6 +52,7 @@ final class TraceViewModelTest extends TestCase
         ));
 
         $this->assertSame('corr-1', $viewModel->correlationId());
+        $this->assertSame('4bf92f3577b34da6a3ce929d0e0e4736', $viewModel->traceId());
         $this->assertSame(2, $viewModel->count());
         $this->assertSame(1, $viewModel->modelCount());
         $this->assertSame('Jane', $viewModel->rootActorLabel());

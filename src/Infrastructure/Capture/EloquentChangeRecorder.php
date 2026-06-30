@@ -5,7 +5,6 @@ declare(strict_types=1);
 namespace Yammi\AuditLog\Infrastructure\Capture;
 
 use Illuminate\Database\Eloquent\Model;
-use Psr\Log\LoggerInterface;
 use Throwable;
 use Yammi\AuditLog\Application\Action\Record\RecordChangeAction;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
@@ -19,7 +18,7 @@ final class EloquentChangeRecorder
         private readonly RecordChangeAction $action,
         private readonly ChangeDataFactory $factory,
         private readonly AuditableGuard $guard,
-        private readonly LoggerInterface $logger,
+        private readonly CaptureFailureReporter $failures,
         private readonly AlertDispatcher $alerts,
         private readonly ?ChangeStreamer $stream = null,
     ) {}
@@ -49,10 +48,7 @@ final class EloquentChangeRecorder
                 $this->stream?->push($record);
             }
         } catch (Throwable $exception) {
-            $this->logger->error(
-                'Audit capture failed: '.$exception->getMessage(),
-                ['exception' => $exception],
-            );
+            $this->failures->record($model, $type, $exception);
         }
     }
 

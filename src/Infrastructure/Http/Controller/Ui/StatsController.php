@@ -9,6 +9,8 @@ use Illuminate\Contracts\View\Factory as ViewFactory;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\Request;
 use Yammi\AuditLog\Application\Action\Read\BuildStatsAction;
+use Yammi\AuditLog\Application\Contract\Clock;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureFailureLog;
 use Yammi\AuditLog\Infrastructure\Http\FilterFactory;
 use Yammi\AuditLog\Presentation\ViewModel\StatsViewModel;
 
@@ -20,6 +22,8 @@ final class StatsController
         private readonly BuildStatsAction $buildStats,
         private readonly FilterFactory $filters,
         private readonly ConfigRepository $config,
+        private readonly CaptureFailureLog $captureFailures,
+        private readonly Clock $clock,
     ) {}
 
     public function __invoke(Request $request): View
@@ -31,6 +35,12 @@ final class StatsController
             is_numeric($retentionDays) ? (int) $retentionDays : 0,
         );
 
-        return $this->view->make('audit-log::stats', ['stats' => new StatsViewModel($stats)]);
+        $health = $this->captureFailures->health($this->clock->now()->modify('-24 hours'));
+
+        return $this->view->make('audit-log::stats', [
+            'stats' => new StatsViewModel($stats),
+            'captureFailureCount' => $health['count'],
+            'captureFailures' => $health['recent'],
+        ]);
     }
 }

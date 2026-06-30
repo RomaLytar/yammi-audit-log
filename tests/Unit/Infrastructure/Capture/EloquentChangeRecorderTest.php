@@ -22,7 +22,7 @@ use Yammi\AuditLog\Tests\Support\FixedClock;
 use Yammi\AuditLog\Tests\Support\FixedCorrelationResolver;
 use Yammi\AuditLog\Tests\Support\InMemoryAuditRecordRepository;
 use Yammi\AuditLog\Tests\Support\Models\Post;
-use Yammi\AuditLog\Tests\Support\SpyLogger;
+use Yammi\AuditLog\Tests\Support\SpyCaptureFailureReporter;
 use Yammi\AuditLog\Tests\Support\StripKeysRedactor;
 use Yammi\AuditLog\Tests\Support\ThrowingAuditRecordRepository;
 
@@ -30,12 +30,12 @@ final class EloquentChangeRecorderTest extends TestCase
 {
     private InMemoryAuditRecordRepository $repository;
 
-    private SpyLogger $logger;
+    private SpyCaptureFailureReporter $failures;
 
     protected function setUp(): void
     {
         $this->repository = new InMemoryAuditRecordRepository;
-        $this->logger = new SpyLogger;
+        $this->failures = new SpyCaptureFailureReporter;
     }
 
     public function test_each_eloquent_verb_maps_to_its_change_type(): void
@@ -86,15 +86,15 @@ final class EloquentChangeRecorderTest extends TestCase
         $this->assertSame([], $this->repository->saved);
     }
 
-    public function test_a_persistence_failure_is_logged_and_swallowed(): void
+    public function test_a_persistence_failure_is_reported_and_swallowed(): void
     {
         $recorder = $this->recorder(new ThrowingAuditRecordRepository);
 
         $recorder->handle('eloquent.created: Post', [$this->changedPost()]);
 
-        $this->assertCount(1, $this->logger->records);
-        $this->assertSame('error', $this->logger->records[0]['level']);
-        $this->assertStringContainsString('Audit capture failed', $this->logger->records[0]['message']);
+        $this->assertCount(1, $this->failures->reported);
+        $this->assertSame(ChangeType::Created, $this->failures->reported[0]['event']);
+        $this->assertInstanceOf(Post::class, $this->failures->reported[0]['model']);
     }
 
     private function recorder(AuditRecordRepository $repository): EloquentChangeRecorder
@@ -112,7 +112,7 @@ final class EloquentChangeRecorderTest extends TestCase
             $this->createStub(Mailer::class),
         );
 
-        return new EloquentChangeRecorder($action, new ChangeDataFactory, new AuditableGuard([]), $this->logger, $alerts);
+        return new EloquentChangeRecorder($action, new ChangeDataFactory, new AuditableGuard([]), $this->failures, $alerts);
     }
 
     private function changedPost(): Post

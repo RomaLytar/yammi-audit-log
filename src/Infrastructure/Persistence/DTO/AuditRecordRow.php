@@ -40,6 +40,8 @@ final class AuditRecordRow
         public readonly ?string $tenantId = null,
         public readonly ?string $reason = null,
         public readonly int $eventVersion = AuditRecord::SCHEMA_VERSION,
+        public readonly ?string $spanId = null,
+        public readonly ?string $parentSpanId = null,
     ) {}
 
     /**
@@ -68,6 +70,8 @@ final class AuditRecordRow
             'tenant_id' => $this->tenantId,
             'reason' => $this->reason,
             'event_version' => $this->eventVersion,
+            'span_id' => $this->spanId,
+            'parent_span_id' => $this->parentSpanId,
         ];
     }
 }

@@ -138,6 +138,7 @@ final class HttpRegistrar
 
                 $view->with('auditAnomalyCount', $this->anomalyCount());
                 $view->with('auditCaptureFailureCount', $this->captureFailureCount());
+                $view->with('auditPostmanUrl', $this->postmanUrl());
                 $view->with('auditAssets', $this->assetUrls());
             },
         );
@@ -169,6 +170,26 @@ final class HttpRegistrar
         $cutoff = $this->app->make(Clock::class)->now()->modify('-24 hours');
 
         return $this->app->make(CaptureFailureLog::class)->health($cutoff)['count'];
+    }
+
+    /**
+     * The Postman-collection download URL, shown as a dashboard button when the
+     * read API is on, so the endpoints can be imported into Postman. Null hides
+     * the button when the API or the export is disabled.
+     */
+    private function postmanUrl(): ?string
+    {
+        try {
+            $config = $this->app->make(ConfigRepository::class);
+
+            if (! (bool) $config->get('audit-log.api.enabled', false) || ! (bool) $config->get('audit-log.api.postman', true)) {
+                return null;
+            }
+
+            return $this->app->make(UrlGenerator::class)->route('audit-log.postman');
+        } catch (Throwable) {
+            return null;
+        }
     }
 
     /**

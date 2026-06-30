@@ -300,6 +300,11 @@ return [
         // registered, so flipping the API on can't silently expose audit data.
         // Set this true only when auth is enforced by some unrecognised means.
         'allow_unauthenticated' => (bool) env('AUDIT_LOG_API_ALLOW_UNAUTHENTICATED', false),
+
+        // Offer a Postman collection (v2.1) of these endpoints: a "Download
+        // Postman collection" button in the dashboard and the audit-log:postman
+        // command, so a host imports the API instead of hand-writing requests.
+        'postman' => (bool) env('AUDIT_LOG_API_POSTMAN', true),
     ],
 
     'ui' => [

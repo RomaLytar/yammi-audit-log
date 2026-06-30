@@ -18,6 +18,7 @@ final class GeneralSettingsViewModel
         SettingRegistry::GROUP_ALERTS => ['Alerts', 'bell-ring'],
         SettingRegistry::GROUP_ANOMALIES => ['Anomaly detection', 'siren'],
         SettingRegistry::GROUP_UI => ['Dashboard', 'layout-dashboard'],
+        SettingRegistry::GROUP_OBSERVABILITY => ['Observability', 'radio-tower'],
     ];
 
     /**

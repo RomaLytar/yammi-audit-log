@@ -50,6 +50,8 @@ final class SettingRegistryTest extends TestCase
             'ui_enabled' => 'audit-log.ui.enabled',
             'ui_throttle' => 'audit-log.ui.throttle',
             'jobs_monitor_url' => 'audit-log.integrations.jobs_monitor.url',
+            'observability_trace_url' => 'audit-log.integrations.observability.trace_url',
+            'observability_postman' => 'audit-log.api.postman',
         ];
 
         $actual = [];
@@ -86,6 +88,7 @@ final class SettingRegistryTest extends TestCase
                 SettingRegistry::GROUP_ALERTS,
                 SettingRegistry::GROUP_ANOMALIES,
                 SettingRegistry::GROUP_UI,
+                SettingRegistry::GROUP_OBSERVABILITY,
             ],
             array_keys($grouped),
         );

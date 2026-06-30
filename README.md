@@ -109,6 +109,22 @@ Open `/audit-log`. The change is already there, with its actor, origin and corre
 
 ![Audit log dashboard](screenshots/dashboard.png)
 
+## Testing
+
+Assert what your code audited without hitting the database:
+
+```php
+AuditLog::fake();
+
+$order->update(['status' => 'paid']);
+
+AuditLog::assertRecorded(Order::class, $order->id, 'updated',
+    fn ($record) => $record->diff()->field('status')?->new === 'paid');
+AuditLog::assertRecordedCount(1);
+```
+
+`fake()` routes both automatic (Eloquent) and manual (`AuditLog::record`) changes into an in-memory fake; `assertNotRecorded()` and `assertNothingRecorded()` round out the set.
+
 ## What makes it different
 
 **Core: provenance.** Actor, origin and a correlation id on every change, with no per-model setup (the chain above). This is the part that sets it apart from most audit packages.

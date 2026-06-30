@@ -24,6 +24,8 @@ use Yammi\AuditLog\Infrastructure\Actor\Provider\ImpersonationAwareUserProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\QueuedJobActorProvider;
 use Yammi\AuditLog\Infrastructure\Actor\Provider\SchedulerActorProvider;
 use Yammi\AuditLog\Infrastructure\Capture\AuditableGuard;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureFailureLog;
+use Yammi\AuditLog\Infrastructure\Capture\CaptureFailureReporter;
 use Yammi\AuditLog\Infrastructure\Context\ChangeReasonContext;
 use Yammi\AuditLog\Infrastructure\Context\ContextReasonResolver;
 use Yammi\AuditLog\Infrastructure\Context\HttpRequestContextResolver;
@@ -54,6 +56,8 @@ final class CaptureBindings extends BindingRegistrar
         $this->app->singleton(CorrelationResolver::class, ContextCorrelationResolver::class);
         $this->app->singleton(SpanResolver::class, ContextSpanResolver::class);
         $this->app->singleton(ReasonResolver::class, ContextReasonResolver::class);
+        $this->app->singleton(CaptureFailureLog::class);
+        $this->app->alias(CaptureFailureLog::class, CaptureFailureReporter::class);
 
         $this->app->singleton(RequestContextResolver::class, function (): RequestContextResolver {
             if (! (bool) $this->config()->get('audit-log.capture.request_context', false)) {

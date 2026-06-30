@@ -31,6 +31,7 @@ final class TimelineEntryData
         public readonly int $chainDepth = 0,
         public readonly ?string $reason = null,
         public readonly int $eventVersion = AuditRecord::SCHEMA_VERSION,
+        public readonly ?string $traceId = null,
     ) {}
 
     public static function fromRecord(AuditRecord $record): self
@@ -52,6 +53,7 @@ final class TimelineEntryData
             chainDepth: $record->chainDepth(),
             reason: $record->reason(),
             eventVersion: $record->eventVersion(),
+            traceId: $record->traceId(),
         );
     }
 

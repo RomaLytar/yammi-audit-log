@@ -115,6 +115,9 @@
             on <span class="font-medium text-foreground">{{ $chain->rootModel() }}</span>.
         </p>
         <p class="mt-1 text-[11px] font-mono text-muted-foreground/70 break-all">{{ $chain->correlationId() }}</p>
+        @if ($chain->traceId())
+            <p class="mt-0.5 text-[11px] font-mono text-muted-foreground/70 break-all">trace {{ $chain->traceId() }}</p>
+        @endif
     </div>
 
     <div class="al-canvas-shell">

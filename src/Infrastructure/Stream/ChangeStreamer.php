@@ -77,6 +77,7 @@ final class ChangeStreamer
             'reason' => $entry->reason,
             'labels' => $entry->labels,
             'correlation_id' => $entry->correlationId,
+            'trace_id' => $entry->traceId,
             'is_noise' => $entry->isNoise,
             'occurred_at' => $entry->occurredAt,
         ];

@@ -8,11 +8,13 @@ use Yammi\AuditLog\Application\Contract\Clock;
 use Yammi\AuditLog\Application\Contract\Resolver\CorrelationResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\ReasonResolver;
 use Yammi\AuditLog\Application\Contract\Resolver\SpanResolver;
+use Yammi\AuditLog\Application\Contract\Resolver\TraceResolver;
 use Yammi\AuditLog\Application\DTO\Audit\ChangeData;
 use Yammi\AuditLog\Application\Pipeline\RecordChangeContext;
 use Yammi\AuditLog\Application\Pipeline\RecordChangePipeline;
 use Yammi\AuditLog\Application\Service\NullReasonResolver;
 use Yammi\AuditLog\Application\Service\NullSpanResolver;
+use Yammi\AuditLog\Application\Service\NullTraceResolver;
 use Yammi\AuditLog\Domain\Audit\Entity\AuditRecord;
 use Yammi\AuditLog\Domain\Audit\Enum\ChangeType;
 use Yammi\AuditLog\Domain\Audit\Repository\AuditRecordRepository;
@@ -28,6 +30,7 @@ final class RecordChangeAction
         private readonly CorrelationResolver $correlation,
         private readonly ReasonResolver $reason = new NullReasonResolver,
         private readonly SpanResolver $span = new NullSpanResolver,
+        private readonly TraceResolver $trace = new NullTraceResolver,
     ) {}
 
     public function __invoke(ChangeData $change): ?AuditRecord
@@ -55,6 +58,7 @@ final class RecordChangeAction
             reason: $this->reason->resolve(),
             spanId: $span?->id,
             parentSpanId: $span?->parentId,
+            traceId: $this->trace->resolve(),
         );
 
         $this->repository->save($record);

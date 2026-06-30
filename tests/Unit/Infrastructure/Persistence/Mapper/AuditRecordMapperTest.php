@@ -147,6 +147,26 @@ final class AuditRecordMapperTest extends TestCase
         $this->assertSame('span-8', $record->parentSpanId());
     }
 
+    public function test_to_row_and_to_domain_carry_the_trace(): void
+    {
+        $row = $this->mapper->toRow(new AuditRecord(
+            auditable: AuditableReference::to('App\\Models\\Order', 7),
+            event: ChangeType::Updated,
+            diff: Diff::between(['status' => 'a'], ['status' => 'b']),
+            actor: Actor::system(),
+            origin: null,
+            labels: LabelSnapshot::empty(),
+            occurredAt: new DateTimeImmutable('2026-01-01T10:00:00+00:00'),
+            traceId: '4bf92f3577b34da6a3ce929d0e0e4736',
+        ));
+
+        $this->assertSame('4bf92f3577b34da6a3ce929d0e0e4736', $row->traceId);
+        $this->assertSame('4bf92f3577b34da6a3ce929d0e0e4736', $row->toArray()['trace_id']);
+
+        $record = $this->mapper->toDomain($this->model(['trace_id' => '4bf92f3577b34da6a3ce929d0e0e4736']));
+        $this->assertSame('4bf92f3577b34da6a3ce929d0e0e4736', $record->traceId());
+    }
+
     public function test_to_domain_without_a_span(): void
     {
         $record = $this->mapper->toDomain($this->model());

@@ -40,6 +40,7 @@ final class AuditRecord
         private readonly int $eventVersion = self::SCHEMA_VERSION,
         private readonly ?string $spanId = null,
         private readonly ?string $parentSpanId = null,
+        private readonly ?string $traceId = null,
     ) {}
 
     public function eventVersion(): int
@@ -108,6 +109,15 @@ final class AuditRecord
     public function parentSpanId(): ?string
     {
         return $this->parentSpanId;
+    }
+
+    /**
+     * The distributed-trace id (W3C traceparent) the request carried, linking
+     * this change to the APM trace that drove it. Null when there was none.
+     */
+    public function traceId(): ?string
+    {
+        return $this->traceId;
     }
 
     /**

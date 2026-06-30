@@ -20,6 +20,7 @@ use Yammi\AuditLog\Domain\Audit\ValueObject\AuditableReference;
 use Yammi\AuditLog\Domain\Audit\ValueObject\Span;
 use Yammi\AuditLog\Infrastructure\Correlation\CorrelationContext;
 use Yammi\AuditLog\Infrastructure\Correlation\SpanContext;
+use Yammi\AuditLog\Infrastructure\Correlation\TraceContext;
 use Yammi\AuditLog\Tests\Support\Jobs\PublishPostJob;
 use Yammi\AuditLog\Tests\Support\Models\Post;
 use Yammi\AuditLog\Tests\Support\Models\User;
@@ -69,8 +70,11 @@ final class DatabaseQueuePropagationTest extends TestCase
         $correlation->push('5b29f077-90d2-46a3-9d97-2bbb7f7202df');
         $spans = $this->app->make(SpanContext::class);
         $spans->push(new Span('a1b2c3d4-0000-1111-2222-333344445555'));
+        $traces = $this->app->make(TraceContext::class);
+        $traces->push('4bf92f3577b34da6a3ce929d0e0e4736');
         $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
         PublishPostJob::dispatch($post->getKey());
+        $traces->pop();
         $spans->pop();
         $correlation->pop();
 
@@ -82,6 +86,8 @@ final class DatabaseQueuePropagationTest extends TestCase
         $this->assertStringContainsString('5b29f077-90d2-46a3-9d97-2bbb7f7202df', $payload);
         $this->assertStringContainsString('audit_parent_span', $payload);
         $this->assertStringContainsString('a1b2c3d4-0000-1111-2222-333344445555', $payload);
+        $this->assertStringContainsString('audit_trace', $payload);
+        $this->assertStringContainsString('4bf92f3577b34da6a3ce929d0e0e4736', $payload);
     }
 
     public function test_the_parent_span_from_dispatch_time_links_the_worker_record(): void
@@ -149,6 +155,21 @@ final class DatabaseQueuePropagationTest extends TestCase
         $update = $this->latestRecordFor($post);
 
         $this->assertSame('9c1f43dd-6f08-44ab-9542-0a1a02b9a8e4', $update->correlationId());
+    }
+
+    public function test_the_trace_from_dispatch_time_is_kept_by_the_worker(): void
+    {
+        $traces = $this->app->make(TraceContext::class);
+        $traces->push('4bf92f3577b34da6a3ce929d0e0e4736');
+        $post = Post::create(['title' => 'Hello', 'status' => 'draft']);
+        PublishPostJob::dispatch($post->getKey());
+        $traces->pop();
+
+        $this->artisan('queue:work', ['--once' => true, '--sleep' => 0])->assertSuccessful();
+
+        $update = $this->latestRecordFor($post);
+
+        $this->assertSame('4bf92f3577b34da6a3ce929d0e0e4736', $update->traceId());
     }
 
     private function latestRecordFor(Post $post): AuditRecord
